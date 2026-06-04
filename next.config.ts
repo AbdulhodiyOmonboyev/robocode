@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: ["bcryptjs", "@prisma/adapter-pg", "pg"],
+  images: {
+    remotePatterns: [],
+  },
 };
 
 export default nextConfig;
