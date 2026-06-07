@@ -47,3 +47,4 @@ test-db.cjs
 run-test.bat
 db-test-result.txt
 db-test-console.txt
+vercel-env.txt
