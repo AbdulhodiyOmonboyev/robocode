@@ -1,0 +1,1 @@
+OK: ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "lessonTime" TEXT;

@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 interface DashboardData {
   kpis: { totalLeads: number; todayLeads: number; enrolledThisMonth: number; todayReminders: number; conversionRate: string };
-  statusDistribution: { status: string; count: number }[];
+  stageDistribution: { stageId: string; name: string; color: string; count: number }[];
   sourceDistribution: { source: string; count: number }[];
   leadsByDay: { date: string; count: number }[];
   topCourses: { courseId: string; course: { name: string; color: string } | null; count: number }[];
@@ -105,20 +105,20 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Status Pie */}
+        {/* Stage Pie */}
         <Card>
           <CardHeader>
-            <CardTitle>Status taqsimoti</CardTitle>
+            <CardTitle>Bosqich taqsimoti</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={data.statusDistribution} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={75} label={(props: any) => `${((props.percent ?? 0) * 100).toFixed(0)}%`} labelLine={false}>
-                  {data.statusDistribution.map((entry) => (
-                    <Cell key={entry.status} fill={STATUS_COLORS[entry.status] || "#9ca3af"} />
+                <Pie data={data.stageDistribution.filter(s=>s.count>0)} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={75} label={(props: any) => `${((props.percent ?? 0) * 100).toFixed(0)}%`} labelLine={false}>
+                  {data.stageDistribution.filter(s=>s.count>0).map((entry) => (
+                    <Cell key={entry.stageId} fill={entry.color || "#9ca3af"} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v, n) => [v, (LEAD_STATUS_LABELS as any)[n as string] || n]} />
+                <Tooltip formatter={(v, n) => [v, n]} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -184,9 +184,9 @@ export default function DashboardPage() {
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{lead.fullName}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{lead.course?.name || "Kurs tanlanmagan"}</p>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-lg font-medium ${getStatusClass(lead.status)}`}>
-                  {(LEAD_STATUS_LABELS as any)[lead.status]}
-                </span>
+                {lead.stage && (
+                  <span className="text-xs px-2 py-0.5 rounded-lg font-medium text-white" style={{ backgroundColor: lead.stage.color }}>{lead.stage.name}</span>
+                )}
               </Link>
             ))}
           </div>

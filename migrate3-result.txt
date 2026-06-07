@@ -1,0 +1,1 @@
+OK: Group table + Lead.groupId yaratildi

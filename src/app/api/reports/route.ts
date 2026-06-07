@@ -16,21 +16,27 @@ export async function GET(req: NextRequest) {
   if (to) dateFilter.lte = endOfDay(parseISO(to));
   const where: any = Object.keys(dateFilter).length ? { createdAt: dateFilter } : {};
 
+  const stages = await db.stage.findMany({ orderBy: { order: "asc" } });
+  const wonStageIds = stages.filter(s => s.isWon).map(s => s.id);
+  const inProgressStageIds = stages.filter(s => !s.isWon && !s.isLost).map(s => s.id);
+
   const [
-    totalLeads, statusDist, sourceDist, courseStats,
-    enrolledLeads, userStats,
+    totalLeads, stageGroups, sourceDist, courseStats,
+    enrolledLeads, userStats, potentialLeads,
   ] = await Promise.all([
     db.lead.count({ where }),
-    db.lead.groupBy({ by: ["status"], _count: { id: true }, where }),
+    db.lead.groupBy({ by: ["stageId"], _count: { id: true }, where }),
     db.lead.groupBy({ by: ["source"], _count: { id: true }, where }),
     db.lead.groupBy({ by: ["courseId"], _count: { id: true }, where: { ...where, courseId: { not: null } } }),
-    db.lead.findMany({ where: { ...where, status: "ENROLLED" }, include: { course: { select: { price: true, currency: true } } } }),
+    wonStageIds.length
+      ? db.lead.findMany({ where: { ...where, stageId: { in: wonStageIds } }, include: { course: { select: { price: true, currency: true } } } })
+      : Promise.resolve([]),
     db.user.findMany({
-      select: {
-        id: true, fullName: true,
-        _count: { select: { leads: true, createdLeads: true } },
-      },
+      select: { id: true, fullName: true, _count: { select: { leads: true, createdLeads: true } } },
     }),
+    inProgressStageIds.length
+      ? db.lead.findMany({ where: { ...where, stageId: { in: inProgressStageIds } }, include: { course: { select: { price: true } } } })
+      : Promise.resolve([]),
   ]);
 
   const courseIds = courseStats.map(c => c.courseId as string).filter(Boolean);
@@ -38,14 +44,10 @@ export async function GET(req: NextRequest) {
   const courseMap = Object.fromEntries(courses.map(c => [c.id, c]));
 
   const actualRevenue = enrolledLeads.reduce((sum, l) => sum + (l.course ? parseFloat(String(l.course.price)) : 0), 0);
-
-  const potentialLeads = await db.lead.findMany({
-    where: { ...where, status: { in: ["INTERESTED", "TRIAL_BOOKED", "TRIAL_COMPLETED"] } },
-    include: { course: { select: { price: true } } },
-  });
   const potentialRevenue = potentialLeads.reduce((sum, l) => sum + (l.course ? parseFloat(String(l.course.price)) : 0), 0);
 
-  const enrolled = statusDist.find(s => s.status === "ENROLLED")?._count?.id || 0;
+  const countByStage = Object.fromEntries(stageGroups.map(g => [g.stageId ?? "none", g._count.id]));
+  const enrolled = wonStageIds.reduce((sum, id) => sum + (countByStage[id] ?? 0), 0);
   const conversionRate = totalLeads > 0 ? ((enrolled / totalLeads) * 100).toFixed(1) : "0";
 
   return NextResponse.json({
@@ -54,7 +56,7 @@ export async function GET(req: NextRequest) {
     actualRevenue,
     potentialRevenue,
     enrolledCount: enrolled,
-    statusDistribution: statusDist.map(s => ({ status: s.status, count: s._count.id })),
+    stageDistribution: stages.map(s => ({ stageId: s.id, name: s.name, color: s.color, count: countByStage[s.id] ?? 0 })),
     sourceDistribution: sourceDist.map(s => ({ source: s.source, count: s._count.id })),
     courseStats: courseStats.map(c => ({
       courseId: c.courseId,

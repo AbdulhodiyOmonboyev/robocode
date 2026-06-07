@@ -47,6 +47,11 @@ export default function NewLeadPage() {
   const [saving, setSaving] = useState(false);
   const [duplicate, setDuplicate] = useState<{ id: string } | null>(null);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [timeFrom, setTimeFrom] = useState("");
+  const [timeTo, setTimeTo] = useState("");
+  const [showNewCourse, setShowNewCourse] = useState(false);
+  const [newCourseName, setNewCourseName] = useState("");
+  const [creatingCourse, setCreatingCourse] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
@@ -84,12 +89,35 @@ export default function NewLeadPage() {
     setValue("preferredDays", next.join(","));
   };
 
+  const createCourse = async () => {
+    if (newCourseName.trim().length < 2) { toast.error("Kurs nomi kamida 2 harf"); return; }
+    setCreatingCourse(true);
+    const base = newCourseName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const slug = (base || "kurs") + "-" + Date.now().toString(36).slice(-4);
+    const res = await fetch("/api/courses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newCourseName.trim(), slug, durationMonths: 6, price: 0 }),
+    });
+    if (res.ok) {
+      const c = await res.json();
+      setCourses(prev => [...prev, c]);
+      setValue("courseId", c.id);
+      setShowNewCourse(false); setNewCourseName("");
+      toast.success("Kurs yaratildi");
+    } else {
+      toast.error("Kurs yaratilmadi");
+    }
+    setCreatingCourse(false);
+  };
+
   const onSubmit = async (data: FormData) => {
     setSaving(true);
+    const lessonTime = timeFrom && timeTo ? `${timeFrom}–${timeTo}` : (timeFrom || timeTo || undefined);
     const res = await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...data, age: data.age || null }),
+      body: JSON.stringify({ ...data, lessonTime, age: data.age || null }),
     });
     if (res.ok) {
       const lead = await res.json();
@@ -160,82 +188,68 @@ export default function NewLeadPage() {
         {/* Course & Schedule */}
         <Card>
           <CardHeader><CardTitle>Kurs va vaqt</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Qaysi kursga qiziqyapti</label>
-                <select {...register("courseId")} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <CardContent className="space-y-5">
+            {/* Course + quick create */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kurs</label>
+              <div className="flex gap-2">
+                <select {...register("courseId")} className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                   <option value="">Tanlanmagan</option>
                   {courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
+                <button type="button" onClick={()=>setShowNewCourse(s=>!s)}
+                  className="px-3 py-2 text-sm font-medium rounded-xl border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition whitespace-nowrap">
+                  + Yangi kurs
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Aniq vaqt slot</label>
-                <select {...register("timeSlotId")} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                  <option value="">Tanlanmagan</option>
-                  {timeSlots.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
-                </select>
-              </div>
+              {showNewCourse && (
+                <div className="mt-2 flex gap-2">
+                  <input value={newCourseName} onChange={e=>setNewCourseName(e.target.value)}
+                    placeholder="Kurs nomi (masalan: IT Foundation)"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                  <Button type="button" size="sm" loading={creatingCourse} onClick={createCourse}>Yaratish</Button>
+                </div>
+              )}
             </div>
 
+            {/* Days */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vaqt afzalligi</label>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(TIME_PREFERENCE_LABELS).map(([val,label])=>(
-                  <label key={val} className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" value={val} {...register("timePreference")} className="text-indigo-600"/>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Qulay kunlar</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Qaysi kunlari dars oladi</label>
               <div className="flex gap-2 flex-wrap">
                 {WEEKDAYS.map(d=>(
                   <button key={d.value} type="button" onClick={()=>toggleDay(d.value)}
-                    className={`px-3 py-1 text-sm font-medium rounded-lg transition ${selectedDays.includes(d.value) ? "bg-indigo-600 text-white" : "border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>
+                    className={`px-3.5 py-1.5 text-sm font-medium rounded-lg transition ${selectedDays.includes(d.value) ? "bg-indigo-600 text-white shadow-sm" : "border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>
                     {d.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            <Input label="Sinov darsi sanasi" type="datetime-local" {...register("trialDate")}/>
+            {/* Lesson time from-to */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dars vaqti (soat dan – gacha)</label>
+              <div className="flex items-center gap-3">
+                <input type="time" value={timeFrom} onChange={e=>setTimeFrom(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                <span className="text-gray-400 font-medium">—</span>
+                <input type="time" value={timeTo} onChange={e=>setTimeTo(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                {(timeFrom || timeTo) && (
+                  <span className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">{timeFrom || "—"}–{timeTo || "—"}</span>
+                )}
+              </div>
+            </div>
+
+            <Input label="Sinov darsi sanasi (ixtiyoriy)" type="datetime-local" {...register("trialDate")}/>
           </CardContent>
         </Card>
 
-        {/* Source & Status */}
+        {/* Note */}
         <Card>
-          <CardHeader><CardTitle>Holat va manba</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Holat</label>
-                <select {...register("status")} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                  {[["NEW","Yangi"],["CONTACTED","Bog'lanildi"],["INTERESTED","Qiziqyapti"],["TRIAL_BOOKED","Sinov darsiga yozildi"],["ENROLLED","Yozildi"],["POSTPONED","Keyinroqqa"],["LOST","Yo'qotildi"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Manba</label>
-                <select {...register("source")} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                  {Object.entries(LEAD_SOURCE_LABELS).map(([v,l])=><option key={v} value={v}>{l}</option>)}
-                </select>
-              </div>
-            </div>
-            <Input label="Manba haqida qo'shimcha" {...register("sourceDetails")} placeholder="@instagram_username yoki 'Do'stim Sherzod tavsiya qildi'"/>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Mas'ul hodim</label>
-              <select {...register("assignedToId")} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Tayinlanmagan</option>
-                {users.map(u=><option key={u.id} value={u.id}>{u.fullName}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Izohlar</label>
-              <textarea {...register("notes")} rows={3} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Qo'shimcha ma'lumotlar..."/>
-            </div>
+          <CardHeader><CardTitle>Izoh</CardTitle></CardHeader>
+          <CardContent>
+            <textarea {...register("notes")} rows={6} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Mijoz haqida izoh, suhbat tafsilotlari... (masalan: 'Onasi bilan keldi, narx haqida o'ylab ko'rmoqchi')"/>
+            <p className="mt-1 text-xs text-gray-400">Keyinchalik lid sahifasida har bir suhbatni alohida izoh qilib yozib borishingiz mumkin.</p>
           </CardContent>
         </Card>
 

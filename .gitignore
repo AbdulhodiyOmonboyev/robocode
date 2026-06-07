@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# vaqtinchalik test/ishga tushirish fayllari (o'chirsa bo'ladi)
+test-db.cjs
+run-test.bat
+db-test-result.txt
+db-test-console.txt

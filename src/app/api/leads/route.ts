@@ -15,6 +15,8 @@ const createSchema = z.object({
   timeSlotId: z.string().optional().nullable(),
   timePreference: z.enum(["MORNING","AFTERNOON","EVENING","FLEXIBLE"]).default("FLEXIBLE"),
   preferredDays: z.string().optional(),
+  lessonTime: z.string().optional(),
+  stageId: z.string().optional().nullable(),
   status: z.enum(["NEW","CONTACTED","INTERESTED","TRIAL_BOOKED","TRIAL_COMPLETED","ENROLLED","POSTPONED","LOST"]).default("NEW"),
   source: z.enum(["INSTAGRAM","TELEGRAM","FACEBOOK","TIKTOK","REFERRAL","WEBSITE","WALK_IN","PHONE_CALL","OTHER"]).default("OTHER"),
   sourceDetails: z.string().optional(),
@@ -61,6 +63,8 @@ export async function GET(req: NextRequest) {
   }
 
   if (status) where.status = status as any;
+  const stageId = searchParams.get("stageId") || "";
+  if (stageId) where.stageId = stageId;
   if (courseId) where.courseId = courseId;
   if (source) where.source = source as any;
   if (timePreference) where.timePreference = timePreference as any;
@@ -86,6 +90,8 @@ export async function GET(req: NextRequest) {
       include: {
         course: { select: { id: true, name: true, color: true } },
         timeSlot: { select: { id: true, label: true } },
+        stage: { select: { id: true, name: true, color: true } },
+        group: { select: { id: true, name: true } },
         assignedTo: { select: { id: true, fullName: true } },
         createdBy: { select: { id: true, fullName: true } },
         tags: { select: { id: true, name: true, color: true } },
@@ -113,7 +119,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "duplicate", message: "Bu telefon raqam allaqachon mavjud", leadId: existing.id }, { status: 409 });
   }
 
-  const { reminderAt, reminderTitle, trialDate, age, courseId, timeSlotId, assignedToId, ...rest } = parsed.data;
+  const { reminderAt, reminderTitle, trialDate, age, courseId, timeSlotId, assignedToId, stageId, ...rest } = parsed.data;
+
+  // Default to the first stage if none chosen
+  let finalStageId = stageId || null;
+  if (!finalStageId) {
+    const firstStage = await db.stage.findFirst({ orderBy: { order: "asc" } });
+    finalStageId = firstStage?.id ?? null;
+  }
 
   const lead = await db.lead.create({
     data: {
@@ -122,6 +135,7 @@ export async function POST(req: NextRequest) {
       courseId: courseId || null,
       timeSlotId: timeSlotId || null,
       assignedToId: assignedToId || null,
+      stageId: finalStageId,
       trialDate: trialDate ? new Date(trialDate) : null,
       createdById: user.id,
     },

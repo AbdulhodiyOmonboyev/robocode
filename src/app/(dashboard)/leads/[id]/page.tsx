@@ -17,11 +17,13 @@ interface Lead {
   id: string; fullName: string; phone: string; phoneSecondary: string | null;
   email: string | null; age: number | null; address: string | null;
   status: string; source: string; sourceDetails: string | null; notes: string | null;
-  timePreference: string; preferredDays: string | null; isPinned: boolean;
+  timePreference: string; preferredDays: string | null; lessonTime: string | null; isPinned: boolean;
   trialDate: string | null; enrolledAt: string | null; lastContactedAt: string | null;
   createdAt: string; updatedAt: string;
   course: { id: string; name: string; color: string | null; price: string; durationMonths: number } | null;
   timeSlot: { id: string; label: string } | null;
+  stageId: string | null;
+  stage: { id: string; name: string; color: string } | null;
   assignedTo: { id: string; fullName: string; username: string } | null;
   createdBy: { id: string; fullName: string };
   tags: { id: string; name: string; color: string }[];
@@ -46,6 +48,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const [courses, setCourses] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [timeSlots, setTimeSlots] = useState<any[]>([]);
+  const [stages, setStages] = useState<any[]>([]);
 
   const load = async () => {
     const res = await fetch(`/api/leads/${id}`);
@@ -59,6 +62,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     fetch("/api/courses").then(r=>r.json()).then(setCourses);
     fetch("/api/users").then(r=>r.json()).then(setUsers);
     fetch("/api/timeslots").then(r=>r.json()).then(setTimeSlots);
+    fetch("/api/stages").then(r=>r.json()).then(setStages);
   }, []);
 
   const save = async () => {
@@ -72,12 +76,12 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     setSaving(false);
   };
 
-  const changeStatus = async (status: string) => {
+  const changeStage = async (stageId: string) => {
     const res = await fetch(`/api/leads/${id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ stageId }),
     });
-    if (res.ok) { toast.success("Status o'zgartirildi"); load(); }
+    if (res.ok) { const s = stages.find((x:any)=>x.id===stageId); toast.success(`Bosqich → ${s?.name||""}`); load(); }
   };
 
   const togglePin = async () => {
@@ -98,10 +102,12 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
   const saveNote = async () => {
     if (!newNote.trim()) return;
-    await fetch(`/api/leads/${id}`, { method: "PATCH", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ notes: newNote }) });
-    await fetch("/api/leads/" + id + "/activity", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ action: "note_added" }) }).catch(()=>{});
-    toast.success("Izoh saqlandi");
-    setNewNote(""); load();
+    const res = await fetch("/api/leads/" + id + "/activity", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ action: "comment", details: { text: newNote.trim() } }),
+    });
+    if (res.ok) { toast.success("Izoh qo'shildi"); setNewNote(""); load(); }
+    else toast.error("Xatolik");
   };
 
   const deleteLead = async () => {
@@ -114,8 +120,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   if (loading) return <div className="animate-pulse space-y-4"><div className="h-20 bg-white dark:bg-gray-900 rounded-2xl"/><div className="h-80 bg-white dark:bg-gray-900 rounded-2xl"/></div>;
   if (!lead) return null;
 
-  const statusFlow = ["NEW","CONTACTED","INTERESTED","TRIAL_BOOKED","TRIAL_COMPLETED","ENROLLED"];
-  const currentIdx = statusFlow.indexOf(lead.status);
+  const comments = lead.activities.filter((a:any)=>a.action==="comment");
+  const currentStageIdx = stages.findIndex((s:any)=>s.id===lead.stageId);
 
   return (
     <div className="max-w-6xl mx-auto space-y-4">
@@ -127,9 +133,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{lead.fullName}</h1>
-            <span className={`text-xs px-2 py-0.5 rounded-lg font-medium ${LEAD_STATUS_COLORS[lead.status as keyof typeof LEAD_STATUS_COLORS]}`}>
-              {LEAD_STATUS_LABELS[lead.status as keyof typeof LEAD_STATUS_LABELS]}
-            </span>
+            {lead.stage && (
+              <span className="text-xs px-2 py-0.5 rounded-lg font-medium text-white" style={{ backgroundColor: lead.stage.color }}>
+                {lead.stage.name}
+              </span>
+            )}
             {lead.isPinned && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg">📌 Pinlangan</span>}
           </div>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -152,27 +160,24 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {/* Status pipeline */}
+      {/* Stage pipeline */}
       <Card>
         <CardContent className="py-4">
           <div className="flex items-center gap-0 overflow-x-auto">
-            {statusFlow.map((s, i) => (
-              <div key={s} className="flex items-center flex-shrink-0">
-                <button onClick={()=>changeStatus(s)}
+            {stages.map((s:any, i:number) => (
+              <div key={s.id} className="flex items-center flex-shrink-0">
+                <button onClick={()=>changeStage(s.id)}
+                  style={ s.id === lead.stageId ? { backgroundColor: s.color } : undefined }
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg transition whitespace-nowrap ${
-                    s === lead.status ? "bg-indigo-600 text-white" :
-                    i < currentIdx ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                    s.id === lead.stageId ? "text-white" :
+                    i < currentStageIdx ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
                     "bg-gray-100 text-gray-500 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
                   }`}>
-                  {i < currentIdx ? "✓ " : ""}{LEAD_STATUS_LABELS[s as keyof typeof LEAD_STATUS_LABELS]}
+                  {i < currentStageIdx ? "✓ " : ""}{s.name}
                 </button>
-                {i < statusFlow.length - 1 && <div className="w-6 h-0.5 bg-gray-200 dark:bg-gray-700 flex-shrink-0"/>}
+                {i < stages.length - 1 && <div className="w-6 h-0.5 bg-gray-200 dark:bg-gray-700 flex-shrink-0"/>}
               </div>
             ))}
-            <div className="flex items-center flex-shrink-0 ml-2 gap-1">
-              <button onClick={()=>changeStatus("POSTPONED")} className="px-2 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-amber-100 hover:text-amber-700 transition">Keyinroq</button>
-              <button onClick={()=>changeStatus("LOST")} className="px-2 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-700 transition">Yo'qotildi</button>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -203,8 +208,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     ["Manzil", "address", lead.address || "—"],
                     ["Manba", null, LEAD_SOURCE_LABELS[lead.source as keyof typeof LEAD_SOURCE_LABELS]],
                     ["Manba detali", "sourceDetails", lead.sourceDetails || "—"],
-                    ["Vaqt afzalligi", null, TIME_PREFERENCE_LABELS[lead.timePreference as keyof typeof TIME_PREFERENCE_LABELS]],
-                    ["Qulay kunlar", null, lead.preferredDays || "—"],
+                    ["Dars kunlari", "preferredDays", lead.preferredDays || "—"],
+                    ["Dars vaqti", "lessonTime", lead.lessonTime || "—"],
                     ["Sinov darsi", null, lead.trialDate ? formatDateTime(lead.trialDate) : "—"],
                     ["Yozilgan sana", null, lead.enrolledAt ? formatDate(lead.enrolledAt) : "—"],
                   ].map(([label, field, value]) => (
@@ -257,6 +262,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                                 <span className="font-medium">{a.user.fullName}</span>{" "}
                                 {a.action === "status_changed" ? `statusni "${(LEAD_STATUS_LABELS as any)[a.details?.from]}" → "${(LEAD_STATUS_LABELS as any)[a.details?.to]}" ga o'zgartirdi` :
                                  a.action === "lead_created" ? "lidni qo'shdi" :
+                                 a.action === "comment" ? `izoh qoldirdi: "${a.details?.text || ""}"` :
                                  a.action === "note_added" ? "izoh qo'shdi" :
                                  a.action === "reminder_created" ? "eslatma yaratdi" :
                                  a.action === "lead_updated" ? "ma'lumotni yangiladi" : a.action}
@@ -291,13 +297,45 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
               {tab === "notes" && (
                 <div className="space-y-4">
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap min-h-[80px]">
-                    {lead.notes || <span className="text-gray-400 italic">Izoh yo'q</span>}
+                  {/* Add comment */}
+                  <div>
+                    <textarea value={newNote} onChange={e=>setNewNote(e.target.value)} rows={2}
+                      placeholder="Mijoz bilan suhbatingizni yozing... (masalan: 'Telefon qildim, 2 kundan keyin qayta aloqaga chiqaman dedi')"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                    <div className="flex justify-end mt-2">
+                      <Button size="sm" onClick={saveNote} disabled={!newNote.trim()}>Izoh qo&apos;shish</Button>
+                    </div>
                   </div>
-                  <textarea value={newNote} onChange={e=>setNewNote(e.target.value)} rows={3}
-                    placeholder="Yangi izoh yozing..."
-                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
-                  <Button size="sm" onClick={saveNote} disabled={!newNote.trim()}>Izohni saqlash</Button>
+
+                  {/* Comments timeline */}
+                  {comments.length === 0 ? (
+                    <p className="text-center text-gray-400 py-6 text-sm">Hozircha izoh yo&apos;q. Mijoz bilan har bir suhbatingizni shu yerga yozib boring.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {comments.map((a:any)=>(
+                        <div key={a.id} className="flex gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-xs font-semibold text-indigo-600 dark:text-indigo-300 flex-shrink-0">
+                            {a.user.fullName.slice(0,2).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">{a.user.fullName}</span>
+                              <span className="text-xs text-gray-400">{formatRelativeTime(a.createdAt)}</span>
+                            </div>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 whitespace-pre-wrap break-words">{a.details?.text}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Initial note (from create form) */}
+                  {lead.notes && (
+                    <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-xl p-3 text-sm">
+                      <span className="text-xs font-medium text-amber-700 dark:text-amber-400">Dastlabki izoh</span>
+                      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{lead.notes}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -368,9 +406,21 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <span className="font-medium text-gray-900 dark:text-white">{lead.assignedTo.fullName}</span>
                 </div>
               )}
+              {lead.lessonTime && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> Dars vaqti</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{lead.lessonTime}</span>
+                </div>
+              )}
+              {lead.preferredDays && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Kunlar</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{lead.preferredDays}</span>
+                </div>
+              )}
               {lead.timeSlot && (
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-500 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> Vaqt</span>
+                  <span className="text-gray-500 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> Slot</span>
                   <span className="font-medium text-gray-900 dark:text-white">{lead.timeSlot.label}</span>
                 </div>
               )}

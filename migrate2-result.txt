@@ -1,0 +1,9 @@
+OK: schema (Stage table + Lead.stageId)
+Stage "Yangi" yaratildi, 2 lid bog'landi
+Stage "Bog'lanildi" yaratildi, 2 lid bog'landi
+Stage "Qiziqyapti" yaratildi, 2 lid bog'landi
+Stage "Sinov darsiga yozildi" yaratildi, 1 lid bog'landi
+Stage "Sinov darsi o'tdi" yaratildi, 1 lid bog'landi
+Stage "Yozildi" yaratildi, 1 lid bog'landi
+Stage "Keyinroqqa" yaratildi, 1 lid bog'landi
+Stage "Yo'qotildi" yaratildi, 1 lid bog'landi

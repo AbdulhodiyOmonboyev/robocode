@@ -12,12 +12,15 @@ export async function GET() {
   const todayEnd = endOfDay(now);
   const monthStart = startOfMonth(now);
 
+  const stages = await db.stage.findMany({ orderBy: { order: "asc" } });
+  const wonStageIds = stages.filter((s) => s.isWon).map((s) => s.id);
+
   const [
     totalLeads,
     todayLeads,
     enrolledThisMonth,
     todayReminders,
-    statusDistribution,
+    stageGroups,
     sourceDistribution,
     leadsByDay,
     topCourses,
@@ -26,11 +29,13 @@ export async function GET() {
   ] = await Promise.all([
     db.lead.count(),
     db.lead.count({ where: { createdAt: { gte: todayStart, lte: todayEnd } } }),
-    db.lead.count({ where: { status: "ENROLLED", enrolledAt: { gte: monthStart } } }),
+    wonStageIds.length
+      ? db.lead.count({ where: { stageId: { in: wonStageIds }, createdAt: { gte: monthStart } } })
+      : Promise.resolve(0),
     db.reminder.count({
       where: { status: "PENDING", remindAt: { gte: todayStart, lte: todayEnd } },
     }),
-    db.lead.groupBy({ by: ["status"], _count: { id: true } }),
+    db.lead.groupBy({ by: ["stageId"], _count: { id: true } }),
     db.lead.groupBy({ by: ["source"], _count: { id: true } }),
     Promise.all(
       Array.from({ length: 30 }, (_, i) => {
@@ -50,7 +55,7 @@ export async function GET() {
     db.lead.findMany({
       take: 10,
       orderBy: { createdAt: "desc" },
-      include: { course: { select: { name: true, color: true } }, assignedTo: { select: { fullName: true } } },
+      include: { course: { select: { name: true, color: true } }, stage: { select: { name: true, color: true } }, assignedTo: { select: { fullName: true } } },
     }),
     db.activity.findMany({
       take: 20,
@@ -67,7 +72,16 @@ export async function GET() {
   });
   const courseMap = Object.fromEntries(courses.map((c) => [c.id, c]));
 
-  const totalConverted = statusDistribution.find((s) => s.status === "ENROLLED")?._count?.id ?? 0;
+  // Stage distribution in stage order
+  const countByStage = Object.fromEntries(stageGroups.map((g) => [g.stageId ?? "none", g._count.id]));
+  const stageDistribution = stages.map((s) => ({
+    stageId: s.id,
+    name: s.name,
+    color: s.color,
+    count: countByStage[s.id] ?? 0,
+  }));
+
+  const totalConverted = wonStageIds.reduce((sum, id) => sum + (countByStage[id] ?? 0), 0);
   const conversionRate = totalLeads > 0 ? ((totalConverted / totalLeads) * 100).toFixed(1) : "0";
 
   return NextResponse.json({
@@ -78,7 +92,7 @@ export async function GET() {
       todayReminders,
       conversionRate,
     },
-    statusDistribution: statusDistribution.map((s) => ({ status: s.status, count: s._count.id })),
+    stageDistribution,
     sourceDistribution: sourceDistribution.map((s) => ({ source: s.source, count: s._count.id })),
     leadsByDay,
     topCourses: topCourses.map((c) => ({

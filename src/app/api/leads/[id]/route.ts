@@ -14,6 +14,9 @@ const updateSchema = z.object({
   timeSlotId: z.string().optional().nullable(),
   timePreference: z.enum(["MORNING","AFTERNOON","EVENING","FLEXIBLE"]).optional(),
   preferredDays: z.string().optional().nullable(),
+  lessonTime: z.string().optional().nullable(),
+  stageId: z.string().optional().nullable(),
+  groupId: z.string().optional().nullable(),
   status: z.enum(["NEW","CONTACTED","INTERESTED","TRIAL_BOOKED","TRIAL_COMPLETED","ENROLLED","POSTPONED","LOST"]).optional(),
   source: z.enum(["INSTAGRAM","TELEGRAM","FACEBOOK","TIKTOK","REFERRAL","WEBSITE","WALK_IN","PHONE_CALL","OTHER"]).optional(),
   sourceDetails: z.string().optional().nullable(),
@@ -35,6 +38,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     include: {
       course: true,
       timeSlot: true,
+      stage: true,
+      group: { select: { id: true, name: true, days: true, timeFrom: true, timeTo: true } },
       assignedTo: { select: { id: true, fullName: true, username: true } },
       createdBy: { select: { id: true, fullName: true } },
       tags: true,
@@ -61,7 +66,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const user = session.user as any;
-  const current = await db.lead.findUnique({ where: { id }, select: { status: true, assignedToId: true } });
+  const current = await db.lead.findUnique({ where: { id }, select: { status: true, stageId: true, assignedToId: true } });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const { trialDate, enrolledAt, lastContactedAt, ...rest } = parsed.data;
@@ -78,10 +83,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const updated = await db.lead.update({ where: { id }, data: updateData });
 
   // Log activity
-  const details: any = {};
-  if (parsed.data.status && parsed.data.status !== current.status) {
-    details.from = current.status; details.to = parsed.data.status;
-    await db.activity.create({ data: { leadId: id, userId: user.id, action: "status_changed", details } });
+  if (parsed.data.stageId !== undefined && parsed.data.stageId !== current.stageId) {
+    const ns = parsed.data.stageId ? await db.stage.findUnique({ where: { id: parsed.data.stageId }, select: { name: true } }) : null;
+    await db.activity.create({ data: { leadId: id, userId: user.id, action: "stage_changed", details: { to: ns?.name || "" } } });
+  } else if (parsed.data.status && parsed.data.status !== current.status) {
+    await db.activity.create({ data: { leadId: id, userId: user.id, action: "status_changed", details: { from: current.status, to: parsed.data.status } } });
   } else {
     await db.activity.create({ data: { leadId: id, userId: user.id, action: "lead_updated" } });
   }

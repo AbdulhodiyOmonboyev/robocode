@@ -36,7 +36,7 @@ export default function ReportsPage() {
     if (res.ok) {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href = url; a.download = "leads.csv"; a.click();
+      const a = document.createElement("a"); a.href = url; a.download = `lidlar_${new Date().toISOString().slice(0,10)}.xlsx`; a.click(); URL.revokeObjectURL(url);
     }
   };
 
@@ -89,23 +89,23 @@ export default function ReportsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Status distribution */}
+            {/* Stage distribution */}
             <Card>
-              <CardHeader><CardTitle>Holat bo'yicha</CardTitle></CardHeader>
+              <CardHeader><CardTitle>Bosqich bo'yicha</CardTitle></CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
-                    <Pie data={data.statusDistribution} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} label={(props:any)=>`${((props.percent??0)*100).toFixed(0)}%`} labelLine={false}>
-                      {data.statusDistribution.map((e:any) => <Cell key={e.status} fill={STATUS_COLORS[e.status]||"#9ca3af"}/>)}
+                    <Pie data={(data.stageDistribution||[]).filter((s:any)=>s.count>0)} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={(props:any)=>`${((props.percent??0)*100).toFixed(0)}%`} labelLine={false}>
+                      {(data.stageDistribution||[]).filter((s:any)=>s.count>0).map((e:any) => <Cell key={e.stageId} fill={e.color||"#9ca3af"}/>)}
                     </Pie>
-                    <Tooltip formatter={(v:any,n:any)=>[v, LEAD_STATUS_LABELS[n as keyof typeof LEAD_STATUS_LABELS]||n]}/>
+                    <Tooltip formatter={(v:any,n:any)=>[v, n]}/>
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="mt-2 flex flex-wrap gap-2 justify-center">
-                  {data.statusDistribution.map((s:any) => (
-                    <div key={s.status} className="flex items-center gap-1 text-xs text-gray-600">
-                      <span className="w-2 h-2 rounded-full" style={{backgroundColor:STATUS_COLORS[s.status]}}/>
-                      {LEAD_STATUS_LABELS[s.status as keyof typeof LEAD_STATUS_LABELS]} ({s.count})
+                  {(data.stageDistribution||[]).filter((s:any)=>s.count>0).map((s:any) => (
+                    <div key={s.stageId} className="flex items-center gap-1 text-xs text-gray-600">
+                      <span className="w-2 h-2 rounded-full" style={{backgroundColor:s.color}}/>
+                      {s.name} ({s.count})
                     </div>
                   ))}
                 </div>

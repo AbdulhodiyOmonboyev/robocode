@@ -72,6 +72,7 @@ model User {
   createdLeads Lead[]     @relation("CreatedBy")
   reminders    Reminder[]
   activities   Activity[]
+  groupsTeaching Group[]  @relation("GroupTeacher")
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -89,7 +90,8 @@ model Course {
   isActive       Boolean @default(true)
   color          String?
 
-  leads Lead[]
+  leads  Lead[]
+  groups Group[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -123,6 +125,13 @@ model Lead {
 
   timePreference TimePreference @default(FLEXIBLE)
   preferredDays  String?
+  lessonTime     String?
+
+  stageId String?
+  stage   Stage?  @relation(fields: [stageId], references: [id])
+
+  groupId String?
+  group   Group?  @relation(fields: [groupId], references: [id])
 
   status        LeadStatus @default(NEW)
   source        LeadSource @default(OTHER)
@@ -214,4 +223,35 @@ model Setting {
   value       String   @db.Text
   description String?
   updatedAt   DateTime @updatedAt
+}
+
+model Group {
+  id        String    @id @default(cuid())
+  name      String
+  courseId  String?
+  course    Course?   @relation(fields: [courseId], references: [id])
+  teacherId String?
+  teacher   User?     @relation("GroupTeacher", fields: [teacherId], references: [id])
+  days      String?
+  timeFrom  String?
+  timeTo    String?
+  startDate DateTime?
+  isActive  Boolean   @default(true)
+  leads     Lead[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Stage {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#6366f1")
+  order     Int      @default(0)
+  isWon     Boolean  @default(false)
+  isLost    Boolean  @default(false)
+  leads     Lead[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
 }

@@ -23,11 +23,66 @@ export default function SettingsPage() {
   const [centerName, setCenterName] = useState("IT O'quv Markaz");
   const [tgToken, setTgToken] = useState("");
   const [saving, setSaving] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [chatIds, setChatIds] = useState<Record<string, string>>({});
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
 
   const loadSlots = () => fetch("/api/timeslots").then(r=>r.json()).then(setSlots);
   const loadTags = () => fetch("/api/tags").then(r=>r.json()).then(setTags);
+  const loadTgSettings = async () => {
+    const s = await fetch("/api/settings").then(r=>r.json());
+    setTgToken(s["telegram_bot_token"] || "");
+    if (s["center_name"]) setCenterName(s["center_name"]);
+    const cids: Record<string,string> = {};
+    Object.entries(s).forEach(([k,v]) => { if (k.startsWith("telegram_chat_id_")) cids[k.replace("telegram_chat_id_","")] = v as string; });
+    setChatIds(cids);
+  };
 
-  useEffect(() => { loadSlots(); loadTags(); }, []);
+  useEffect(() => {
+    loadSlots(); loadTags(); loadTgSettings();
+    fetch("/api/users").then(r=>r.json()).then(setUsers);
+  }, []);
+
+  const saveSetting = async (key: string, value: string) => {
+    const res = await fetch("/api/settings", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ key, value }) });
+    return res.ok;
+  };
+
+  const saveToken = async () => {
+    setSaving(true);
+    const ok = await saveSetting("telegram_bot_token", tgToken.trim());
+    setSaving(false);
+    ok ? toast.success("Token saqlandi") : toast.error("Saqlab bo'lmadi");
+  };
+
+  const saveChatId = async (userId: string) => {
+    const ok = await saveSetting("telegram_chat_id_" + userId, (chatIds[userId] || "").trim());
+    ok ? toast.success("Chat ID saqlandi") : toast.error("Xatolik");
+  };
+
+  const testChat = async (chatId: string) => {
+    if (!chatId) { toast.error("Avval chat ID kiriting"); return; }
+    const res = await fetch("/api/telegram/test", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ chatId }) });
+    const data = await res.json();
+    res.ok ? toast.success("Test xabar yuborildi! Telegram'ni tekshiring.") : toast.error(data.error || "Yuborilmadi");
+  };
+
+  const fetchContacts = async () => {
+    setLoadingContacts(true);
+    const res = await fetch("/api/telegram/contacts");
+    const data = await res.json();
+    if (res.ok) { setContacts(data.contacts || []); if (!data.contacts?.length) toast.info("Hech kim botga yozmagan. Hodimlar botga /start yuborsin."); }
+    else toast.error(data.error || "Xatolik");
+    setLoadingContacts(false);
+  };
+
+  const saveGeneral = async () => {
+    setSaving(true);
+    await saveSetting("center_name", centerName);
+    setSaving(false);
+    toast.success("Saqlandi");
+  };
 
   const addSlot = async () => {
     if (!newSlot.startTime || !newSlot.endTime) { toast.error("Vaqtlarni kiriting"); return; }
@@ -106,7 +161,7 @@ export default function SettingsPage() {
                 <option value="Europe/Moscow">Europe/Moscow (UTC+3)</option>
               </select>
             </div>
-            <Button onClick={()=>toast.success("Saqlandi")} loading={saving}><Save className="w-4 h-4"/> Saqlash</Button>
+            <Button onClick={saveGeneral} loading={saving}><Save className="w-4 h-4"/> Saqlash</Button>
           </CardContent>
         </Card>
       )}
@@ -180,24 +235,63 @@ export default function SettingsPage() {
 
       {/* Notifications */}
       {tab === "notifications" && (
-        <Card>
-          <CardHeader><CardTitle>Bildirishnomalar</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-300">
-              Telegram bot orqali eslatmalar olish uchun botni boshlang va chat ID ni kiriting.
-            </div>
-            <Input label="Telegram Bot Token (Super Admin)" value={tgToken} onChange={e=>setTgToken(e.target.value)} placeholder="123456:ABC-DEF..." type="password"/>
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Telegram ulash:</p>
-              <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-decimal list-inside">
-                <li>Bot tokenini kiriting va saqlang</li>
-                <li>Hodim Telegram botga /start yuborsin</li>
-                <li>Bot avtomatik tizimga ulaydi</li>
-              </ol>
-            </div>
-            <Button onClick={()=>toast.success("Sozlama saqlandi")}><Save className="w-4 h-4"/> Saqlash</Button>
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle>Telegram bot</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <Input label="Bot Token" value={tgToken} onChange={e=>setTgToken(e.target.value)} placeholder="123456:ABC-DEF..." type="password"/>
+                </div>
+                <Button onClick={saveToken} loading={saving}><Save className="w-4 h-4"/> Saqlash</Button>
+              </div>
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Qanday ulanadi:</p>
+                <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-decimal list-inside">
+                  <li>@BotFather dan bot yarating va tokenini bu yerga saqlang</li>
+                  <li>Har bir hodim botingizni ochib <b>Start</b> bossin</li>
+                  <li>Pastdagi <b>&quot;Botga yozganlar&quot;</b> tugmasini bosing — chat ID lar chiqadi</li>
+                  <li>Har bir hodimga mos chat ID ni qo&apos;ying va saqlang, so&apos;ng <b>Test</b> qiling</li>
+                </ol>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>Hodimlar uchun chat ID</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Button size="sm" variant="outline" onClick={fetchContacts} loading={loadingContacts}>Botga yozganlarni ko&apos;rsatish</Button>
+                {contacts.length > 0 && (
+                  <div className="mt-3 space-y-1.5">
+                    {contacts.map((c:any)=>(
+                      <div key={c.chatId} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
+                        <span className="text-gray-700 dark:text-gray-300">{c.name} {c.username && <span className="text-gray-400">{c.username}</span>}</span>
+                        <code className="text-xs text-indigo-600 dark:text-indigo-400 font-mono select-all">{c.chatId}</code>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+                {users.map((u:any)=>(
+                  <div key={u.id} className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-500 mb-1">{u.fullName} <span className="text-gray-400">@{u.username}</span></label>
+                      <input value={chatIds[u.id] || ""} onChange={e=>setChatIds(c=>({...c,[u.id]:e.target.value}))}
+                        placeholder="Chat ID (masalan: 123456789)"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={()=>saveChatId(u.id)}>Saqlash</Button>
+                    <Button size="sm" onClick={()=>testChat(chatIds[u.id] || "")}>Test</Button>
+                  </div>
+                ))}
+                {users.length === 0 && <p className="text-sm text-gray-400">Hodimlar yo&apos;q</p>}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );

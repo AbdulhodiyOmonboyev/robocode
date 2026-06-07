@@ -25,6 +25,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leads", label: "Lidlar", icon: Users },
   { href: "/leads/kanban", label: "Kanban", icon: Pin },
+  { href: "/groups", label: "Guruhlar", icon: GraduationCap },
   { href: "/reminders", label: "Eslatmalar", icon: Bell },
   { href: "/schedule", label: "Jadval", icon: Calendar },
   { href: "/courses", label: "Kurslar", icon: BookOpen },

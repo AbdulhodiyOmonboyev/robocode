@@ -12,6 +12,10 @@ export async function GET(req: NextRequest) {
 
   const now = new Date();
 
+  // Telegram bot token: prefer DB setting, fallback to env
+  const tokenSetting = await db.setting.findUnique({ where: { key: "telegram_bot_token" } });
+  const botToken = tokenSetting?.value || process.env.TELEGRAM_BOT_TOKEN || "";
+
   // Find PENDING reminders that are due (remindAt <= now, not yet notified)
   const due = await db.reminder.findMany({
     where: { status: "PENDING", remindAt: { lte: now }, notifiedAt: null },
@@ -29,11 +33,11 @@ export async function GET(req: NextRequest) {
     await db.reminder.update({ where: { id: reminder.id }, data: { notifiedAt: now } });
 
     // Telegram notification if enabled
-    if (reminder.notifyTelegram && process.env.TELEGRAM_BOT_TOKEN) {
+    if (reminder.notifyTelegram && botToken) {
       try {
         const setting = await db.setting.findUnique({ where: { key: `telegram_chat_id_${reminder.userId}` } });
         if (setting?.value) {
-          await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
