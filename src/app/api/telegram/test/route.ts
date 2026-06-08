@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
-        text: "✅ *Test xabar*\n\nIT O'quv Markaz CRM bilan Telegram muvaffaqiyatli ulandi!",
+        text: "✅ *Test xabar*\n\nRobocode Lids bilan Telegram muvaffaqiyatli ulandi!",
         parse_mode: "Markdown",
       }),
     });

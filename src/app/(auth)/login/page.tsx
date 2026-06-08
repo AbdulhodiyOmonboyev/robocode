@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Lock, User, GraduationCap } from "lucide-react";
+import { Eye, EyeOff, Lock, User } from "lucide-react";
 
 const schema = z.object({
   username: z.string().min(1, "Username kiritish shart"),
@@ -21,6 +21,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [logo, setLogo] = useState("");
+
+  useEffect(() => {
+    fetch("/api/branding").then(r=>r.json()).then(d=>{ if (d.logo) setLogo(d.logo); }).catch(()=>{});
+  }, []);
 
   const {
     register,
@@ -55,11 +60,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl mb-4 shadow-lg">
-            <GraduationCap className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">IT O'quv Markaz</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">CRM tizimiga kirish</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logo || "/icon.svg"} alt="Robocode Lids" className="inline-block w-16 h-16 rounded-2xl mb-4 shadow-lg object-contain" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Robocode Lids</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Tizimga kirish</p>
         </div>
 
         {/* Card */}

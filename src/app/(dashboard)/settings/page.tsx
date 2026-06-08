@@ -20,7 +20,7 @@ export default function SettingsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [newSlot, setNewSlot] = useState({ startTime: "", endTime: "" });
   const [newTag, setNewTag] = useState({ name: "", color: "#6366f1" });
-  const [centerName, setCenterName] = useState("IT O'quv Markaz");
+  const [centerName, setCenterName] = useState("Robocode Lids");
   const [tgToken, setTgToken] = useState("");
   const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
@@ -30,6 +30,8 @@ export default function SettingsPage() {
   const [botUsername, setBotUsername] = useState("");
   const [webhookActive, setWebhookActive] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [logo, setLogo] = useState("");
+  const [logoSaving, setLogoSaving] = useState(false);
 
   const loadSlots = () => fetch("/api/timeslots").then(r=>r.json()).then(setSlots);
   const loadTags = () => fetch("/api/tags").then(r=>r.json()).then(setTags);
@@ -37,6 +39,7 @@ export default function SettingsPage() {
     const s = await fetch("/api/settings").then(r=>r.json());
     setTgToken(s["telegram_bot_token"] || "");
     if (s["center_name"]) setCenterName(s["center_name"]);
+    if (s["brand_logo"]) setLogo(s["brand_logo"]);
     const cids: Record<string,string> = {};
     Object.entries(s).forEach(([k,v]) => { if (k.startsWith("telegram_chat_id_")) cids[k.replace("telegram_chat_id_","")] = v as string; });
     setChatIds(cids);
@@ -105,6 +108,29 @@ export default function SettingsPage() {
     await saveSetting("center_name", centerName);
     setSaving(false);
     toast.success("Saqlandi");
+  };
+
+  const onLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Rasm fayli tanlang"); return; }
+    if (file.size > 1024 * 1024) { toast.error("Rasm 1MB dan kichik bo'lsin"); return; }
+    const reader = new FileReader();
+    reader.onload = () => setLogo(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const saveLogo = async () => {
+    setLogoSaving(true);
+    const ok = await saveSetting("brand_logo", logo);
+    setLogoSaving(false);
+    ok ? toast.success("Logo saqlandi! Sahifani yangilang.") : toast.error("Saqlab bo'lmadi");
+  };
+
+  const removeLogo = async () => {
+    setLogo("");
+    const ok = await saveSetting("brand_logo", "");
+    ok ? toast.success("Standart logoga qaytarildi") : toast.error("Xatolik");
   };
 
   const addSlot = async () => {
@@ -185,6 +211,33 @@ export default function SettingsPage() {
               </select>
             </div>
             <Button onClick={saveGeneral} loading={saving}><Save className="w-4 h-4"/> Saqlash</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Logo */}
+      {tab === "general" && (
+        <Card>
+          <CardHeader><CardTitle>Logo</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-20 h-20 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logo || "/icon.svg"} alt="Logo" className="w-full h-full object-contain" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Sayt logosi</p>
+                <p className="text-xs text-gray-500 mt-0.5">PNG yoki SVG, 1MB gacha. Login va yon menyuda chiqadi.</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <label className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    Rasm tanlash
+                    <input type="file" accept="image/*" onChange={onLogoFile} className="hidden" />
+                  </label>
+                  {logo && <Button size="sm" variant="outline" onClick={removeLogo}>Standart</Button>}
+                </div>
+              </div>
+            </div>
+            <Button onClick={saveLogo} loading={logoSaving}><Save className="w-4 h-4"/> Logoni saqlash</Button>
           </CardContent>
         </Card>
       )}

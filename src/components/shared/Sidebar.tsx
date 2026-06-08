@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -36,8 +36,13 @@ const navItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [logo, setLogo] = useState("");
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  useEffect(() => {
+    fetch("/api/branding").then(r=>r.json()).then(d=>{ if (d.logo) setLogo(d.logo); }).catch(()=>{});
+  }, []);
 
   const user = session?.user as any;
 
@@ -51,13 +56,12 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex-shrink-0 w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logo || "/icon.svg"} alt="Robocode Lids" className="flex-shrink-0 w-8 h-8 rounded-lg object-contain" />
           {!collapsed && (
             <div className="min-w-0">
-              <p className="font-bold text-gray-900 dark:text-white text-sm truncate">IT O'quv Markaz</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">CRM Tizimi</p>
+              <p className="font-bold text-gray-900 dark:text-white text-sm truncate">Robocode Lids</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Lidlar tizimi</p>
             </div>
           )}
         </div>

@@ -1,0 +1,16 @@
+{
+  "name": "Robocode Lids",
+  "short_name": "Robocode Lids",
+  "description": "Robocode Lids - lidlar boshqaruv tizimi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
