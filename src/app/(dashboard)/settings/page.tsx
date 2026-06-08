@@ -27,6 +27,9 @@ export default function SettingsPage() {
   const [chatIds, setChatIds] = useState<Record<string, string>>({});
   const [contacts, setContacts] = useState<any[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
+  const [botUsername, setBotUsername] = useState("");
+  const [webhookActive, setWebhookActive] = useState(false);
+  const [activating, setActivating] = useState(false);
 
   const loadSlots = () => fetch("/api/timeslots").then(r=>r.json()).then(setSlots);
   const loadTags = () => fetch("/api/tags").then(r=>r.json()).then(setTags);
@@ -39,10 +42,30 @@ export default function SettingsPage() {
     setChatIds(cids);
   };
 
+  const loadBotInfo = async () => {
+    const res = await fetch("/api/telegram/setup");
+    if (res.ok) { const d = await res.json(); setBotUsername(d.username || ""); setWebhookActive(!!d.active); }
+  };
+
   useEffect(() => {
-    loadSlots(); loadTags(); loadTgSettings();
+    loadSlots(); loadTags(); loadTgSettings(); loadBotInfo();
     fetch("/api/users").then(r=>r.json()).then(setUsers);
   }, []);
+
+  const activateBot = async () => {
+    setActivating(true);
+    const res = await fetch("/api/telegram/setup", { method: "POST" });
+    const d = await res.json();
+    setActivating(false);
+    if (res.ok) { toast.success("Bot faollashtirildi! @" + d.username); setBotUsername(d.username || ""); setWebhookActive(true); }
+    else toast.error(d.error || "Xatolik");
+  };
+
+  const copyLink = (userId: string) => {
+    if (!botUsername) { toast.error("Avval botni faollashtiring"); return; }
+    const link = `https://t.me/${botUsername}?start=${userId}`;
+    navigator.clipboard.writeText(link).then(() => toast.success("Havola nusxalandi"), () => toast.error("Nusxalab bo'lmadi"));
+  };
 
   const saveSetting = async (key: string, value: string) => {
     const res = await fetch("/api/settings", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ key, value }) });
@@ -245,50 +268,85 @@ export default function SettingsPage() {
                 </div>
                 <Button onClick={saveToken} loading={saving}><Save className="w-4 h-4"/> Saqlash</Button>
               </div>
+              <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Bot holati: {webhookActive
+                      ? <span className="text-green-600">✅ Faol {botUsername && `(@${botUsername})`}</span>
+                      : <span className="text-gray-400">o&apos;chiq</span>}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">Tokenni saqlagandan keyin botni faollashtiring — shunda bot buyruqlarga javob beradi.</p>
+                </div>
+                <Button size="sm" onClick={activateBot} loading={activating}>Botni faollashtirish</Button>
+              </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Qanday ulanadi:</p>
                 <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-decimal list-inside">
                   <li>@BotFather dan bot yarating va tokenini bu yerga saqlang</li>
-                  <li>Har bir hodim botingizni ochib <b>Start</b> bossin</li>
-                  <li>Pastdagi <b>&quot;Botga yozganlar&quot;</b> tugmasini bosing — chat ID lar chiqadi</li>
-                  <li>Har bir hodimga mos chat ID ni qo&apos;ying va saqlang, so&apos;ng <b>Test</b> qiling</li>
+                  <li><b>Botni faollashtirish</b> tugmasini bosing</li>
+                  <li>Pastda har bir hodim uchun <b>ulanish havolasi</b> chiqadi — uni hodimga yuboring</li>
+                  <li>Hodim havolani ochib <b>Start</b> bossa — avtomatik ulanadi</li>
                 </ol>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Hodimlar uchun chat ID</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Hodimlarni ulash</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Button size="sm" variant="outline" onClick={fetchContacts} loading={loadingContacts}>Botga yozganlarni ko&apos;rsatish</Button>
-                {contacts.length > 0 && (
-                  <div className="mt-3 space-y-1.5">
-                    {contacts.map((c:any)=>(
-                      <div key={c.chatId} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
-                        <span className="text-gray-700 dark:text-gray-300">{c.name} {c.username && <span className="text-gray-400">{c.username}</span>}</span>
-                        <code className="text-xs text-indigo-600 dark:text-indigo-400 font-mono select-all">{c.chatId}</code>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+              <p className="text-xs text-gray-500">
+                Har bir hodimga o&apos;z havolasini yuboring. Hodim havolani ochib <b>Start</b> bossa — avtomatik ulanadi.
+                {webhookActive && <span className="text-green-600"> Ulangan hodimda yashil ✅ ko&apos;rinadi.</span>}
+              </p>
+              <div className="space-y-3">
                 {users.map((u:any)=>(
-                  <div key={u.id} className="flex items-end gap-2">
-                    <div className="flex-1">
-                      <label className="block text-xs text-gray-500 mb-1">{u.fullName} <span className="text-gray-400">@{u.username}</span></label>
-                      <input value={chatIds[u.id] || ""} onChange={e=>setChatIds(c=>({...c,[u.id]:e.target.value}))}
-                        placeholder="Chat ID (masalan: 123456789)"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                  <div key={u.id} className="flex items-center gap-2 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {chatIds[u.id] ? "✅ " : ""}{u.fullName} <span className="text-gray-400 font-normal">@{u.username}</span>
+                      </p>
+                      {botUsername && (
+                        <code className="text-xs text-indigo-600 dark:text-indigo-400 font-mono truncate block">
+                          t.me/{botUsername}?start={u.id}
+                        </code>
+                      )}
                     </div>
-                    <Button size="sm" variant="outline" onClick={()=>saveChatId(u.id)}>Saqlash</Button>
-                    <Button size="sm" onClick={()=>testChat(chatIds[u.id] || "")}>Test</Button>
+                    <Button size="sm" variant="outline" onClick={()=>copyLink(u.id)} disabled={!botUsername}>Havolani nusxalash</Button>
+                    {chatIds[u.id] && <Button size="sm" onClick={()=>testChat(chatIds[u.id])}>Test</Button>}
                   </div>
                 ))}
                 {users.length === 0 && <p className="text-sm text-gray-400">Hodimlar yo&apos;q</p>}
               </div>
+
+              <details className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                <summary className="text-xs text-gray-400 cursor-pointer">Qo&apos;lda chat ID kiritish (ixtiyoriy)</summary>
+                <div className="mt-2">
+                  <Button size="sm" variant="outline" onClick={fetchContacts} loading={loadingContacts}>Botga yozganlarni ko&apos;rsatish</Button>
+                  {contacts.length > 0 && (
+                    <div className="mt-3 space-y-1.5">
+                      {contacts.map((c:any)=>(
+                        <div key={c.chatId} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
+                          <span className="text-gray-700 dark:text-gray-300">{c.name} {c.username && <span className="text-gray-400">{c.username}</span>}</span>
+                          <code className="text-xs text-indigo-600 dark:text-indigo-400 font-mono select-all">{c.chatId}</code>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="space-y-2 mt-3">
+                    {users.map((u:any)=>(
+                      <div key={u.id} className="flex items-end gap-2">
+                        <div className="flex-1">
+                          <label className="block text-xs text-gray-500 mb-1">{u.fullName}</label>
+                          <input value={chatIds[u.id] || ""} onChange={e=>setChatIds(c=>({...c,[u.id]:e.target.value}))}
+                            placeholder="Chat ID"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                        </div>
+                        <Button size="sm" variant="outline" onClick={()=>saveChatId(u.id)}>Saqlash</Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </details>
             </CardContent>
           </Card>
         </div>
