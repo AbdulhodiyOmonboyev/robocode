@@ -20,7 +20,7 @@ export default function SettingsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [newSlot, setNewSlot] = useState({ startTime: "", endTime: "" });
   const [newTag, setNewTag] = useState({ name: "", color: "#6366f1" });
-  const [centerName, setCenterName] = useState("Robocode Lids");
+  const [centerName, setCenterName] = useState("Robocode CRM");
   const [tgToken, setTgToken] = useState("");
   const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState<any[]>([]);

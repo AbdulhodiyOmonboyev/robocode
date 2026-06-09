@@ -59,10 +59,10 @@ export default function Sidebar() {
       <div className="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logo || "/icon.svg"} alt="Robocode Lids" className="flex-shrink-0 w-8 h-8 rounded-lg object-contain" />
+          <img src={logo || "/icon.svg"} alt="Robocode CRM" className="flex-shrink-0 w-8 h-8 rounded-lg object-contain" />
           {!collapsed && (
             <div className="min-w-0">
-              <p className="font-bold text-gray-900 dark:text-white text-sm truncate">Robocode Lids</p>
+              <p className="font-bold text-gray-900 dark:text-white text-sm truncate">Robocode CRM</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Lidlar tizimi</p>
             </div>
           )}

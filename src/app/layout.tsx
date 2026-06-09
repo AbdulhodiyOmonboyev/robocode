@@ -7,8 +7,8 @@ import { SessionProvider } from "next-auth/react";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Robocode Lids",
-  description: "Robocode Lids - lidlar boshqaruv tizimi",
+  title: "Robocode CRM",
+  description: "Robocode CRM - lidlar boshqaruv tizimi",
   manifest: "/manifest.json",
 };
 

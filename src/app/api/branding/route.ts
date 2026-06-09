@@ -13,9 +13,9 @@ export async function GET() {
     for (const s of settings) map[s.key] = s.value;
     return NextResponse.json({
       logo: map["brand_logo"] || "",
-      name: map["center_name"] || "Robocode Lids",
+      name: map["center_name"] || "Robocode CRM",
     });
   } catch {
-    return NextResponse.json({ logo: "", name: "Robocode Lids" });
+    return NextResponse.json({ logo: "", name: "Robocode CRM" });
   }
 }

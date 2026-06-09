@@ -1,7 +1,7 @@
 {
-  "name": "Robocode Lids",
-  "short_name": "Robocode Lids",
-  "description": "Robocode Lids - lidlar boshqaruv tizimi",
+  "name": "Robocode CRM",
+  "short_name": "Robocode CRM",
+  "description": "Robocode CRM - lidlar boshqaruv tizimi",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

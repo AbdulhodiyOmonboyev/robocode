@@ -61,8 +61,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logo || "/icon.svg"} alt="Robocode Lids" className="inline-block w-16 h-16 rounded-2xl mb-4 shadow-lg object-contain" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Robocode Lids</h1>
+          <img src={logo || "/icon.svg"} alt="Robocode CRM" className="inline-block w-16 h-16 rounded-2xl mb-4 shadow-lg object-contain" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Robocode CRM</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Tizimga kirish</p>
         </div>
 

@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
         await send(token, chatId, `Salom, ${already.fullName}! 👋\nQuyidagi tugmalardan foydalaning:`);
         return NextResponse.json({ ok: true });
       }
-      await send(token, chatId, "👋 Salom! Bu — Robocode Lids boti.\nUlanish uchun adminingizdan shaxsiy havola oling.", { remove_keyboard: true });
+      await send(token, chatId, "👋 Salom! Bu — Robocode CRM boti.\nUlanish uchun adminingizdan shaxsiy havola oling.", { remove_keyboard: true });
       return NextResponse.json({ ok: true });
     }
 
