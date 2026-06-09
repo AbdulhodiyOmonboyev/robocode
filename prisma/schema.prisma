@@ -73,6 +73,7 @@ model User {
   reminders    Reminder[]
   activities   Activity[]
   groupsTeaching Group[]  @relation("GroupTeacher")
+  paymentsCreated Payment[] @relation("PaymentCreatedBy")
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -148,6 +149,7 @@ model Lead {
   reminders  Reminder[]
   activities Activity[]
   tags       Tag[]
+  payments   Payment[]
 
   trialDate       DateTime?
   enrolledAt      DateTime?
@@ -238,8 +240,31 @@ model Group {
   startDate DateTime?
   isActive  Boolean   @default(true)
   leads     Lead[]
+  payments  Payment[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  groupId     String?
+  group       Group?   @relation(fields: [groupId], references: [id])
+  amount      Decimal  @db.Decimal(12, 2)
+  currency    String   @default("UZS")
+  method      String   @default("cash")
+  type        String   @default("tuition")
+  forMonth    String?
+  note        String?
+  paidAt      DateTime @default(now())
+  createdById String
+  createdBy   User     @relation("PaymentCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([leadId])
+  @@index([paidAt])
+  @@index([forMonth])
 }
 
 model Stage {

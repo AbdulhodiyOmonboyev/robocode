@@ -18,6 +18,7 @@ import {
   GraduationCap,
   UserCog,
   Pin,
+  Wallet,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/leads", label: "Lidlar", icon: Users },
   { href: "/leads/kanban", label: "Kanban", icon: Pin },
   { href: "/groups", label: "Guruhlar", icon: GraduationCap },
+  { href: "/payments", label: "To'lovlar", icon: Wallet },
   { href: "/reminders", label: "Eslatmalar", icon: Bell },
   { href: "/schedule", label: "Jadval", icon: Calendar },
   { href: "/courses", label: "Kurslar", icon: BookOpen },

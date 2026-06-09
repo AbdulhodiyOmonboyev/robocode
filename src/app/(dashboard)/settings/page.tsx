@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, ToggleLeft, ToggleRight, Save } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -110,7 +110,7 @@ export default function SettingsPage() {
     toast.success("Saqlandi");
   };
 
-  const onLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onLogoFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) { toast.error("Rasm fayli tanlang"); return; }
