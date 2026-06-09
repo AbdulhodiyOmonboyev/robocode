@@ -10,6 +10,8 @@ const updateSchema = z.object({
   email: z.string().email().optional().or(z.literal("")).nullable(),
   age: z.coerce.number().int().optional().nullable(),
   address: z.string().optional().nullable(),
+  parentName: z.string().optional().nullable(),
+  parentPhone: z.string().optional().nullable(),
   courseId: z.string().optional().nullable(),
   timeSlotId: z.string().optional().nullable(),
   timePreference: z.enum(["MORNING","AFTERNOON","EVENING","FLEXIBLE"]).optional(),
@@ -43,6 +45,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       assignedTo: { select: { id: true, fullName: true, username: true } },
       createdBy: { select: { id: true, fullName: true } },
       tags: true,
+      payments: { orderBy: { paidAt: "desc" }, take: 50, include: { createdBy: { select: { fullName: true } } } },
+      attendances: { select: { status: true } },
       reminders: { orderBy: { remindAt: "asc" }, include: { user: { select: { fullName: true } } } },
       activities: {
         orderBy: { createdAt: "desc" },

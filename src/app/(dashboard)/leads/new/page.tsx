@@ -20,6 +20,8 @@ const schema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   age: z.coerce.number().int().min(5).max(99).optional().or(z.literal("")),
   address: z.string().optional(),
+  parentName: z.string().optional(),
+  parentPhone: z.string().optional(),
   courseId: z.string().optional(),
   timeSlotId: z.string().optional(),
   timePreference: z.enum(["MORNING","AFTERNOON","EVENING","FLEXIBLE"]),
@@ -181,6 +183,8 @@ export default function NewLeadPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Yoshi" type="number" {...register("age")} placeholder="18"/>
               <Input label="Manzil" {...register("address")} placeholder="Toshkent, Yunusobod"/>
+              <Input label="Ota-ona ismi" {...register("parentName")} placeholder="Ota yoki ona ismi"/>
+              <Input label="Ota-ona telefoni" {...register("parentPhone")} placeholder="+998 90 ..."/>
             </div>
           </CardContent>
         </Card>

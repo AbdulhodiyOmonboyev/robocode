@@ -19,6 +19,7 @@ import {
   UserCog,
   Pin,
   Wallet,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/leads", label: "Lidlar", icon: Users },
   { href: "/leads/kanban", label: "Kanban", icon: Pin },
   { href: "/groups", label: "Guruhlar", icon: GraduationCap },
+  { href: "/attendance", label: "Davomat", icon: ClipboardCheck },
   { href: "/payments", label: "To'lovlar", icon: Wallet },
   { href: "/reminders", label: "Eslatmalar", icon: Bell },
   { href: "/schedule", label: "Jadval", icon: Calendar },

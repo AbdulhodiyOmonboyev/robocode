@@ -16,7 +16,9 @@ import { formatDate, formatDateTime, formatRelativeTime, formatPhone, phoneToTel
 interface Lead {
   id: string; fullName: string; phone: string; phoneSecondary: string | null;
   email: string | null; age: number | null; address: string | null;
+  parentName: string | null; parentPhone: string | null;
   status: string; source: string; sourceDetails: string | null; notes: string | null;
+  payments?: any[]; attendances?: { status: string }[];
   timePreference: string; preferredDays: string | null; lessonTime: string | null; isPinned: boolean;
   trialDate: string | null; enrolledAt: string | null; lastContactedAt: string | null;
   createdAt: string; updatedAt: string;
@@ -206,6 +208,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     ["Email", "email", lead.email || "—"],
                     ["Yoshi", "age", lead.age ? `${lead.age} yosh` : "—"],
                     ["Manzil", "address", lead.address || "—"],
+                    ["Ota-ona ismi", "parentName", lead.parentName || "—"],
+                    ["Ota-ona tel", "parentPhone", lead.parentPhone || "—"],
                     ["Manba", null, LEAD_SOURCE_LABELS[lead.source as keyof typeof LEAD_SOURCE_LABELS]],
                     ["Manba detali", "sourceDetails", lead.sourceDetails || "—"],
                     ["Dars kunlari", "preferredDays", lead.preferredDays || "—"],
@@ -432,6 +436,42 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 <span className="text-gray-500">Qo'shilgan</span>
                 <span className="text-gray-600 dark:text-gray-400">{formatDate(lead.createdAt)}</span>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Payments & Attendance */}
+          <Card>
+            <CardHeader><CardTitle>To'lovlar va davomat</CardTitle></CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {(() => {
+                const total = (lead.payments || []).reduce((a: number, p: any) => a + Number(p.amount || 0), 0);
+                const att = lead.attendances || [];
+                const present = att.filter((a) => a.status === "present").length;
+                const absent = att.filter((a) => a.status === "absent").length;
+                const late = att.filter((a) => a.status === "late").length;
+                return (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Jami to'lov</span>
+                      <span className="font-semibold text-green-600">{total.toLocaleString("ru-RU")} so'm</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Davomat</span>
+                      <span className="text-gray-700 dark:text-gray-300">✅ {present} · ⏰ {late} · ❌ {absent}</span>
+                    </div>
+                  </>
+                );
+              })()}
+              {(lead.payments || []).length > 0 && (
+                <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-1.5">
+                  {(lead.payments || []).slice(0, 5).map((p: any) => (
+                    <div key={p.id} className="flex items-center justify-between text-xs">
+                      <span className="text-gray-500">{new Date(p.paidAt).toLocaleDateString("ru-RU")}{p.forMonth ? ` · ${p.forMonth}` : ""}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{Number(p.amount).toLocaleString("ru-RU")}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

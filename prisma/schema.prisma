@@ -74,6 +74,7 @@ model User {
   activities   Activity[]
   groupsTeaching Group[]  @relation("GroupTeacher")
   paymentsCreated Payment[] @relation("PaymentCreatedBy")
+  attendanceMarked Attendance[] @relation("AttendanceBy")
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -117,6 +118,8 @@ model Lead {
   email          String?
   age            Int?
   address        String?
+  parentName     String?
+  parentPhone    String?
 
   courseId String?
   course   Course?   @relation(fields: [courseId], references: [id])
@@ -150,6 +153,7 @@ model Lead {
   activities Activity[]
   tags       Tag[]
   payments   Payment[]
+  attendances Attendance[]
 
   trialDate       DateTime?
   enrolledAt      DateTime?
@@ -241,8 +245,27 @@ model Group {
   isActive  Boolean   @default(true)
   leads     Lead[]
   payments  Payment[]
+  attendances Attendance[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  groupId     String
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  status      String   @default("present")
+  note        String?
+  createdById String
+  createdBy   User     @relation("AttendanceBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([groupId, leadId, date])
+  @@index([groupId, date])
 }
 
 model Payment {

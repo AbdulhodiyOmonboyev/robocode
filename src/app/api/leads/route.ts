@@ -11,6 +11,8 @@ const createSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   age: z.coerce.number().int().min(5).max(99).optional().nullable(),
   address: z.string().optional(),
+  parentName: z.string().optional(),
+  parentPhone: z.string().optional(),
   courseId: z.string().optional().nullable(),
   timeSlotId: z.string().optional().nullable(),
   timePreference: z.enum(["MORNING","AFTERNOON","EVENING","FLEXIBLE"]).default("FLEXIBLE"),
