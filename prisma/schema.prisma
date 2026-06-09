@@ -120,6 +120,7 @@ model Lead {
   address        String?
   parentName     String?
   parentPhone    String?
+  telegramChatId String?
 
   courseId String?
   course   Course?   @relation(fields: [courseId], references: [id])

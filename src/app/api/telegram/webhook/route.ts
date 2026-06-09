@@ -154,7 +154,16 @@ export async function POST(req: NextRequest) {
     // /start [code] -> link account
     if (text.startsWith("/start")) {
       const code = text.split(/\s+/)[1];
-      if (code) {
+      if (code && code.startsWith("s_")) {
+        const leadId = code.slice(2);
+        const lead = await db.lead.findUnique({ where: { id: leadId } });
+        if (lead) {
+          await db.lead.update({ where: { id: leadId }, data: { telegramChatId: String(chatId) } });
+          await send(token, chatId, `✅ Salom, ${lead.fullName}!\nSiz o'quv markaz botiga ulandingiz. Endi bu yerda dars va to'lov eslatmalarini olasiz.`, { remove_keyboard: true });
+          return NextResponse.json({ ok: true });
+        }
+      }
+      if (code && !code.startsWith("s_")) {
         const u = await db.user.findUnique({ where: { id: code } });
         if (u && u.isActive) {
           await db.setting.upsert({

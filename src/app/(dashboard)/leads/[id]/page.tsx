@@ -16,7 +16,7 @@ import { formatDate, formatDateTime, formatRelativeTime, formatPhone, phoneToTel
 interface Lead {
   id: string; fullName: string; phone: string; phoneSecondary: string | null;
   email: string | null; age: number | null; address: string | null;
-  parentName: string | null; parentPhone: string | null;
+  parentName: string | null; parentPhone: string | null; telegramChatId: string | null;
   status: string; source: string; sourceDetails: string | null; notes: string | null;
   payments?: any[]; attendances?: { status: string }[];
   timePreference: string; preferredDays: string | null; lessonTime: string | null; isPinned: boolean;
@@ -51,6 +51,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const [users, setUsers] = useState<any[]>([]);
   const [timeSlots, setTimeSlots] = useState<any[]>([]);
   const [stages, setStages] = useState<any[]>([]);
+  const [botUsername, setBotUsername] = useState("");
 
   const load = async () => {
     const res = await fetch(`/api/leads/${id}`);
@@ -65,7 +66,19 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     fetch("/api/users").then(r=>r.json()).then(setUsers);
     fetch("/api/timeslots").then(r=>r.json()).then(setTimeSlots);
     fetch("/api/stages").then(r=>r.json()).then(setStages);
+    fetch("/api/settings?prefix=telegram_bot_username").then(r=>r.json()).then(m=>setBotUsername(m.telegram_bot_username||"")).catch(()=>{});
   }, []);
+
+  const notifyStudent = async () => {
+    const text = prompt("O'quvchiga yuboriladigan xabar:");
+    if (!text) return;
+    const res = await fetch(`/api/leads/${id}/notify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+    if (res.ok) toast.success("Xabar yuborildi"); else toast.error((await res.json().catch(()=>({}))).error || "Yuborilmadi");
+  };
+  const copyStudentLink = () => {
+    if (!botUsername) { toast.error("Avval Sozlamalar → Botni faollashtiring"); return; }
+    navigator.clipboard.writeText(`https://t.me/${botUsername}?start=s_${id}`).then(() => toast.success("Havola nusxalandi"), () => toast.error("Nusxalab bo'lmadi"));
+  };
 
   const save = async () => {
     setSaving(true);
@@ -471,6 +484,24 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                   ))}
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Telegram (student) */}
+          <Card>
+            <CardHeader><CardTitle>Telegram (o'quvchi)</CardTitle></CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {lead.telegramChatId ? (
+                <>
+                  <p className="text-green-600 font-medium">✅ Botga ulangan</p>
+                  <Button size="sm" variant="outline" onClick={notifyStudent}>Xabar yuborish</Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-500">O'quvchi botga ulanmagan. Havolani yuboring — &quot;Start&quot; bossa ulanadi va eslatma oladi.</p>
+                  <Button size="sm" variant="outline" onClick={copyStudentLink} disabled={!botUsername}>Ulanish havolasini nusxalash</Button>
+                </>
               )}
             </CardContent>
           </Card>

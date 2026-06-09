@@ -74,10 +74,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: data.description || "setWebhook xatosi" }, { status: 400 });
     }
     const me = await (await fetch(`https://api.telegram.org/bot${token}/getMe`)).json();
+    const uname = me?.result?.username || "";
+    if (uname) {
+      await db.setting.upsert({
+        where: { key: "telegram_bot_username" },
+        update: { value: uname },
+        create: { key: "telegram_bot_username", value: uname },
+      });
+    }
     return NextResponse.json({
       success: true,
       webhookUrl: url,
-      username: me?.result?.username || null,
+      username: uname || null,
     });
   } catch (e: any) {
     return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });
