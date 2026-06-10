@@ -162,7 +162,7 @@ export default function LeadsPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"/>
               <input value={filters.search} onChange={e=>setFilter("search",e.target.value)}
-                placeholder="Ism, telefon yoki email..." type="text"
+                placeholder="Ism yoki telefon..." type="text"
                 className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
             </div>
             <select value={filters.stageId} onChange={e=>setFilter("stageId",e.target.value)}

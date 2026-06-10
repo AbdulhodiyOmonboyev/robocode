@@ -218,7 +218,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     ["To'liq ism", "fullName", lead.fullName],
                     ["Telefon", "phone", formatPhone(lead.phone)],
                     ["Qo'shimcha tel", "phoneSecondary", lead.phoneSecondary || "—"],
-                    ["Email", "email", lead.email || "—"],
                     ["Yoshi", "age", lead.age ? `${lead.age} yosh` : "—"],
                     ["Manzil", "address", lead.address || "—"],
                     ["Ota-ona ismi", "parentName", lead.parentName || "—"],
@@ -227,7 +226,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     ["Manba detali", "sourceDetails", lead.sourceDetails || "—"],
                     ["Dars kunlari", "preferredDays", lead.preferredDays || "—"],
                     ["Dars vaqti", "lessonTime", lead.lessonTime || "—"],
-                    ["Sinov darsi", null, lead.trialDate ? formatDateTime(lead.trialDate) : "—"],
                     ["Yozilgan sana", null, lead.enrolledAt ? formatDate(lead.enrolledAt) : "—"],
                   ].map(([label, field, value]) => (
                     <div key={label as string}>

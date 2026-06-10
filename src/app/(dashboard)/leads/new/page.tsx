@@ -178,7 +178,6 @@ export default function NewLeadPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Qo'shimcha raqam" {...register("phoneSecondary")} placeholder="+998 91 ..."/>
-              <Input label="Email" type="email" {...register("email")} placeholder="email@example.com"/>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Yoshi" type="number" {...register("age")} placeholder="18"/>
@@ -243,8 +242,6 @@ export default function NewLeadPage() {
                 )}
               </div>
             </div>
-
-            <Input label="Sinov darsi sanasi (ixtiyoriy)" type="datetime-local" {...register("trialDate")}/>
           </CardContent>
         </Card>
 

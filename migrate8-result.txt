@@ -1,0 +1,1 @@
+OK: User.salary/subject + Group.room qo'shildi
