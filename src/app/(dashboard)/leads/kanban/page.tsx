@@ -29,6 +29,7 @@ export default function KanbanPage() {
   const [nameDraft, setNameDraft] = useState("");
   const [colorOpen, setColorOpen] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState<Stage | null>(null);
 
   useEffect(() => {
     try { const s = localStorage.getItem("kanbanCollapsed"); if (s) setCollapsed(new Set(JSON.parse(s))); } catch {}
@@ -112,7 +113,6 @@ export default function KanbanPage() {
   };
 
   const deleteStage = async (id: string) => {
-    if (!confirm("Bu ustunni o'chirasizmi? Ichidagi lidlar birinchi ustunga ko'chiriladi.")) return;
     const res = await fetch(`/api/stages/${id}`, { method: "DELETE" });
     if (res.ok) { toast.success("Ustun o'chirildi"); load(); }
     else toast.error("O'chirib bo'lmadi");
@@ -216,7 +216,7 @@ export default function KanbanPage() {
                           <button onClick={()=>moveStage(index,-1)} disabled={index===0} className="p-1 rounded text-gray-400 hover:text-gray-700 disabled:opacity-30"><ChevronLeft className="w-3.5 h-3.5"/></button>
                           <button onClick={()=>moveStage(index,1)} disabled={index===stages.length-1} className="p-1 rounded text-gray-400 hover:text-gray-700 disabled:opacity-30"><ChevronRight className="w-3.5 h-3.5"/></button>
                         </div>
-                        <button onClick={()=>deleteStage(stage.id)} className="p-1 rounded text-gray-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5"/></button>
+                        <button onClick={()=>setConfirmDelete(stage)} className="p-1 rounded text-gray-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5"/></button>
                       </div>
                     </div>
                   )}
@@ -277,6 +277,27 @@ export default function KanbanPage() {
           )}
         </div>
       </DragDropContext>
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={()=>setConfirmDelete(null)}>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e=>e.stopPropagation()}>
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
+              <Trash2 className="w-6 h-6 text-red-600"/>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Ustunni o&apos;chirish</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              <b>{confirmDelete.name}</b> ustunini o&apos;chirasizmi? Ichidagi lidlar birinchi ustunga ko&apos;chiriladi.
+            </p>
+            <div className="flex gap-2 mt-5">
+              <Button variant="outline" className="flex-1" onClick={()=>setConfirmDelete(null)}>Bekor</Button>
+              <button onClick={()=>{ const id = confirmDelete.id; setConfirmDelete(null); deleteStage(id); }}
+                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition">
+                O&apos;chirish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
