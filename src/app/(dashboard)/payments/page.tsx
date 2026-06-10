@@ -6,6 +6,7 @@ import { Plus, Trash2, X, Search, Wallet, CalendarDays, Receipt } from "lucide-r
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useConfirm } from "@/components/ui/confirm";
 
 interface Payment {
   id: string;
@@ -69,8 +70,10 @@ export default function PaymentsPage() {
     if (view === "debtors") loadDebtors();
   }, [view, loadDebtors]);
 
+  const { confirm, dialog } = useConfirm();
+
   const del = async (id: string) => {
-    if (!confirm("Bu to'lovni o'chirishni tasdiqlaysizmi?")) return;
+    if (!(await confirm({ title: "To'lovni o'chirish", message: "Bu to'lovni o'chirishni tasdiqlaysizmi?" }))) return;
     const res = await fetch(`/api/payments/${id}`, { method: "DELETE" });
     if (res.ok) { toast.success("O'chirildi"); load(); }
     else toast.error("O'chirib bo'lmadi (faqat admin)");
@@ -78,6 +81,7 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
+      {dialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">To'lovlar</h1>

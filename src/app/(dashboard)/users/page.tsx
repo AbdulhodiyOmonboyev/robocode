@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useConfirm } from "@/components/ui/confirm";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/permissions";
 import { formatDate } from "@/lib/utils";
 import UserFormModal from "@/components/forms/UserFormModal";
@@ -62,8 +63,10 @@ export default function UsersPage() {
     }
   };
 
+  const { confirm, dialog } = useConfirm();
+
   const handleDelete = async (user: User) => {
-    if (!confirm(`${user.fullName} ni o'chirishni tasdiqlaysizmi?`)) return;
+    if (!(await confirm({ title: "Hodimni o'chirish", message: `${user.fullName} ni o'chirishni tasdiqlaysizmi?` }))) return;
     const res = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
     if (res.ok) {
       toast.success("Hodim o'chirildi");
@@ -76,6 +79,7 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
+      {dialog}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Hodimlar</h1>

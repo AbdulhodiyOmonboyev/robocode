@@ -7,6 +7,7 @@ import { Plus, Filter, Download, Phone, MessageCircle, Edit, Trash2, LayoutGrid,
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useConfirm } from "@/components/ui/confirm";
 import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
 import { formatDate, formatPhone, phoneToTel, phoneToTelegram, phoneToWhatsapp } from "@/lib/utils";
 
@@ -106,8 +107,10 @@ export default function LeadsPage() {
   const toggleAll = () =>
     setSelected(selected.size === leads.length ? new Set() : new Set(leads.map(l=>l.id)));
 
+  const { confirm, dialog } = useConfirm();
+
   const handleDelete = async (id: string) => {
-    if (!confirm("Bu lidni o'chirishni tasdiqlaysizmi?")) return;
+    if (!(await confirm({ title: "Lidni o'chirish", message: "Bu lidni o'chirishni tasdiqlaysizmi?" }))) return;
     const res = await fetch(`/api/leads/${id}`, { method: "DELETE" });
     if (res.ok) { toast.success("Lid o'chirildi"); loadLeads(); }
     else toast.error("O'chirib bo'lmadi");
@@ -137,6 +140,7 @@ export default function LeadsPage() {
 
   return (
     <div className="space-y-4">
+      {dialog}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>

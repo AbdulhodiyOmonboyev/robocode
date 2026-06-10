@@ -6,6 +6,7 @@ import { Plus, Trash2, ToggleLeft, ToggleRight, Save } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useConfirm } from "@/components/ui/confirm";
 
 type Tab = "general" | "timeslots" | "tags" | "notifications";
 
@@ -16,6 +17,7 @@ const TAG_COLORS = ["#6366f1","#10b981","#f59e0b","#f43f5e","#06b6d4","#8b5cf6",
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("general");
+  const { confirm, dialog } = useConfirm();
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [newSlot, setNewSlot] = useState({ startTime: "", endTime: "" });
@@ -153,7 +155,7 @@ export default function SettingsPage() {
   };
 
   const deleteSlot = async (id: string) => {
-    if (!confirm("Bu slotni o'chirishni tasdiqlaysizmi?")) return;
+    if (!(await confirm({ title: "Slotni o'chirish", message: "Bu vaqt slotini o'chirishni tasdiqlaysizmi?" }))) return;
     await fetch(`/api/timeslots/${id}`, { method: "DELETE" });
     loadSlots();
   };
@@ -182,6 +184,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      {dialog}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sozlamalar</h1>
         <p className="text-sm text-gray-500 mt-0.5">Tizim sozlamalari</p>

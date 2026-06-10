@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Users, Clock, Calendar, BookOpen, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm";
 import { WEEKDAYS } from "@/lib/constants";
 import { formatPhone } from "@/lib/utils";
 
@@ -46,8 +47,10 @@ export default function GroupsPage() {
     setCreating(false);
   };
 
+  const { confirm, dialog } = useConfirm();
+
   const remove = async (id: string) => {
-    if (!confirm("Bu guruhni o'chirasizmi? A'zolar guruhdan chiqariladi (lidlar o'chmaydi).")) return;
+    if (!(await confirm({ title: "Guruhni o'chirish", message: "Bu guruhni o'chirasizmi? A'zolar guruhdan chiqariladi (lidlar o'chmaydi)." }))) return;
     const res = await fetch("/api/groups/"+id, { method:"DELETE" });
     if (res.ok) { toast.success("Guruh o'chirildi"); load(); }
     else toast.error("O'chirib bo'lmadi");
@@ -66,6 +69,7 @@ export default function GroupsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
+      {dialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Guruhlar</h1>

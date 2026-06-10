@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useConfirm } from "@/components/ui/confirm";
 import { formatCurrency } from "@/lib/utils";
 
 const COLORS = ["#6366f1","#10b981","#f59e0b","#f43f5e","#06b6d4","#8b5cf6","#ec4899","#14b8a6"];
@@ -84,8 +85,10 @@ export default function CoursesPage() {
     load();
   };
 
+  const { confirm, dialog } = useConfirm();
+
   const deleteCourse = async (c: Course) => {
-    if (!confirm(`"${c.name}" kursini o'chirishni tasdiqlaysizmi?`)) return;
+    if (!(await confirm({ title: "Kursni o'chirish", message: `"${c.name}" kursini o'chirishni tasdiqlaysizmi?` }))) return;
     const res = await fetch(`/api/courses/${c.id}`, { method: "DELETE" });
     if (res.ok) { toast.success("Kurs o'chirildi"); load(); }
     else toast.error("O'chirib bo'lmadi — bog'liq lidlar mavjud bo'lishi mumkin");
@@ -93,6 +96,7 @@ export default function CoursesPage() {
 
   return (
     <div className="space-y-6">
+      {dialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Kurslar</h1>

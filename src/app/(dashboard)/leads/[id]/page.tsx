@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm";
 import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_SOURCE_LABELS, TIME_PREFERENCE_LABELS } from "@/lib/constants";
 import { formatDate, formatDateTime, formatRelativeTime, formatPhone, phoneToTel, phoneToTelegram, phoneToWhatsapp, formatCurrency } from "@/lib/utils";
 
@@ -125,8 +126,10 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     else toast.error("Xatolik");
   };
 
+  const { confirm, dialog } = useConfirm();
+
   const deleteLead = async () => {
-    if (!confirm("Bu lidni o'chirishni tasdiqlaysizmi?")) return;
+    if (!(await confirm({ title: "Lidni o'chirish", message: "Bu lidni o'chirishni tasdiqlaysizmi?" }))) return;
     const res = await fetch(`/api/leads/${id}`, { method: "DELETE" });
     if (res.ok) { toast.success("Lid o'chirildi"); router.push("/leads"); }
     else toast.error("O'chirib bo'lmadi");
@@ -140,6 +143,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="max-w-6xl mx-auto space-y-4">
+      {dialog}
       {/* Top bar */}
       <div className="flex items-center gap-4 flex-wrap">
         <Link href="/leads" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition">
