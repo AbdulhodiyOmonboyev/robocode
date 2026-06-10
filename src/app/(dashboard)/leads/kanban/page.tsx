@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Plus, Phone, MessageCircle, Download, Settings2, Trash2, ChevronLeft, ChevronRight, Check, X } from "lucide-react";
+import { Plus, Phone, MessageCircle, Download, Settings2, Trash2, ChevronLeft, ChevronRight, Check, X, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,15 @@ export default function KanbanPage() {
   const [editingName, setEditingName] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState("");
   const [colorOpen, setColorOpen] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try { const s = localStorage.getItem("kanbanCollapsed"); if (s) setCollapsed(new Set(JSON.parse(s))); } catch {}
+  }, []);
+  const persist = (n: Set<string>) => { try { localStorage.setItem("kanbanCollapsed", JSON.stringify([...n])); } catch {} };
+  const toggleCollapse = (id: string) => setCollapsed(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); persist(n); return n; });
+  const collapseEmpty = () => { const n = new Set(collapsed); stages.forEach(s => { if ((board[s.id] || []).length === 0) n.add(s.id); }); setCollapsed(n); persist(n); };
+  const expandAll = () => { setCollapsed(new Set()); persist(new Set()); };
 
   const load = async () => {
     setLoading(true);
@@ -138,6 +147,9 @@ export default function KanbanPage() {
           <p className="text-sm text-gray-500 mt-0.5">Lidlarni drag &amp; drop bilan boshqaring</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={collapsed.size > 0 ? expandAll : collapseEmpty}>
+            {collapsed.size > 0 ? <><ChevronsRight className="w-4 h-4"/> Hammasini ochish</> : <><ChevronsLeft className="w-4 h-4"/> Bo&apos;shlarni yig&apos;ish</>}
+          </Button>
           <Button variant={manage ? "primary" : "outline"} size="sm" onClick={()=>setManage(m=>!m)}>
             <Settings2 className="w-4 h-4"/> {manage ? "Tayyor" : "Ustunlar"}
           </Button>
@@ -153,14 +165,28 @@ export default function KanbanPage() {
         <div className="flex gap-3 overflow-x-auto pb-4 items-start">
           {stages.map((stage, index) => {
             const items = board[stage.id] || [];
+            if (collapsed.has(stage.id) && !manage) {
+              return (
+                <button key={stage.id} onClick={()=>toggleCollapse(stage.id)} title="Ochish"
+                  className="flex-shrink-0 w-11 self-stretch min-h-[260px] bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-t-4 border border-gray-200 dark:border-gray-700 flex flex-col items-center gap-2 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                  style={{ borderTopColor: stage.color }}>
+                  <ChevronsRight className="w-4 h-4 text-gray-400"/>
+                  <span className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full font-medium">{items.length}</span>
+                  <span className="mt-1 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide" style={{ writingMode: "vertical-rl" }}>{stage.name}</span>
+                </button>
+              );
+            }
             return (
               <div key={stage.id} className="flex-shrink-0 w-64 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-t-4 border border-gray-200 dark:border-gray-700 flex flex-col" style={{ borderTopColor: stage.color }}>
                 {/* Column header */}
                 <div className="px-3 py-3 border-b border-gray-200 dark:border-gray-700">
                   {!manage ? (
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-1">
                       <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide truncate">{stage.name}</h3>
-                      <span className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full font-medium">{items.length}</span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <span className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full font-medium">{items.length}</span>
+                        <button onClick={()=>toggleCollapse(stage.id)} className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" title="Yig'ish"><ChevronsLeft className="w-3.5 h-3.5"/></button>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-2">
