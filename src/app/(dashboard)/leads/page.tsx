@@ -165,11 +165,6 @@ export default function LeadsPage() {
                 placeholder="Ism yoki telefon..." type="text"
                 className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
             </div>
-            <select value={filters.stageId} onChange={e=>setFilter("stageId",e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="">Barcha bosqichlar</option>
-              {stages.map((s:any)=><option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
           </div>
           {showFilters && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 border-t border-gray-100 dark:border-gray-800">
