@@ -148,11 +148,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{lead.fullName}</h1>
-            {lead.stage && (
-              <span className="text-xs px-2 py-0.5 rounded-lg font-medium text-white" style={{ backgroundColor: lead.stage.color }}>
-                {lead.stage.name}
-              </span>
-            )}
             {lead.isPinned && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg">📌 Pinlangan</span>}
           </div>
           <p className="text-sm text-gray-500 mt-0.5">
