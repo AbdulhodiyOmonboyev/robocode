@@ -10,6 +10,7 @@ const createSchema = z.object({
   days: z.string().optional().nullable(),
   timeFrom: z.string().optional().nullable(),
   timeTo: z.string().optional().nullable(),
+  room: z.string().optional().nullable(),
   startDate: z.string().optional().nullable(),
 });
 
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
       days: d.days || null,
       timeFrom: d.timeFrom || null,
       timeTo: d.timeTo || null,
+      room: d.room || null,
       startDate: d.startDate ? new Date(d.startDate) : null,
     },
   });

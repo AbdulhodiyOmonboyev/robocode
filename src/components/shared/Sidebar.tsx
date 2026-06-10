@@ -20,6 +20,9 @@ import {
   Pin,
   Wallet,
   ClipboardCheck,
+  TrendingUp,
+  Presentation,
+  CalendarRange,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -29,11 +32,14 @@ const navItems = [
   { href: "/leads/kanban", label: "Kanban", icon: Pin },
   { href: "/groups", label: "Guruhlar", icon: GraduationCap },
   { href: "/attendance", label: "Davomat", icon: ClipboardCheck },
+  { href: "/timetable", label: "Dars jadvali", icon: CalendarRange },
   { href: "/payments", label: "To'lovlar", icon: Wallet },
   { href: "/reminders", label: "Eslatmalar", icon: Bell },
   { href: "/schedule", label: "Jadval", icon: Calendar },
   { href: "/courses", label: "Kurslar", icon: BookOpen },
+  { href: "/teachers", label: "O'qituvchilar", icon: Presentation },
   { href: "/reports", label: "Hisobotlar", icon: BarChart3 },
+  { href: "/analytics", label: "Analitika", icon: TrendingUp },
   { href: "/users", label: "Hodimlar", icon: UserCog },
   { href: "/settings", label: "Sozlamalar", icon: Settings },
 ];

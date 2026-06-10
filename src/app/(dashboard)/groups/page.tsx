@@ -19,7 +19,7 @@ export default function GroupsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [days, setDays] = useState<string[]>([]);
-  const [form, setForm] = useState({ name:"", courseId:"", teacherId:"", timeFrom:"", timeTo:"", startDate:"" });
+  const [form, setForm] = useState({ name:"", courseId:"", teacherId:"", timeFrom:"", timeTo:"", room:"", startDate:"" });
   const [expanded, setExpanded] = useState<string | null>(null);
   const [members, setMembers] = useState<Record<string, any[]>>({});
 
@@ -41,7 +41,7 @@ export default function GroupsPage() {
     const res = await fetch("/api/groups", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({
       ...form, days: days.join(","), courseId: form.courseId||null, teacherId: form.teacherId||null, startDate: form.startDate||null,
     })});
-    if (res.ok) { toast.success("Guruh yaratildi"); setShowCreate(false); setForm({name:"",courseId:"",teacherId:"",timeFrom:"",timeTo:"",startDate:""}); setDays([]); load(); }
+    if (res.ok) { toast.success("Guruh yaratildi"); setShowCreate(false); setForm({name:"",courseId:"",teacherId:"",timeFrom:"",timeTo:"",room:"",startDate:""}); setDays([]); load(); }
     else toast.error("Yaratilmadi");
     setCreating(false);
   };
@@ -102,6 +102,7 @@ export default function GroupsPage() {
               <div><label className="block text-xs text-gray-500 mb-1.5">Soat (dan)</label><input type="time" value={form.timeFrom} onChange={e=>setForm(f=>({...f,timeFrom:e.target.value}))} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/></div>
               <div><label className="block text-xs text-gray-500 mb-1.5">Soat (gacha)</label><input type="time" value={form.timeTo} onChange={e=>setForm(f=>({...f,timeTo:e.target.value}))} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/></div>
               <div><label className="block text-xs text-gray-500 mb-1.5">Boshlanish</label><input type="date" value={form.startDate} onChange={e=>setForm(f=>({...f,startDate:e.target.value}))} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/></div>
+              <div><label className="block text-xs text-gray-500 mb-1.5">Xona</label><input value={form.room} onChange={e=>setForm(f=>({...f,room:e.target.value}))} placeholder="masalan: 1-xona" className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/></div>
             </div>
             <div className="flex justify-end gap-2">
               <Button size="sm" variant="outline" onClick={()=>setShowCreate(false)}>Bekor</Button>
