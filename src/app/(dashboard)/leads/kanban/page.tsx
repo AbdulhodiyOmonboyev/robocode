@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Plus, Phone, MessageCircle, Download, Settings2, Trash2, ChevronLeft, ChevronRight, Check, X, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Plus, Phone, MessageCircle, Download, Settings2, Trash2, ChevronLeft, ChevronRight, Check, X, ChevronUp, ChevronDown } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -148,7 +148,7 @@ export default function KanbanPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={collapsed.size > 0 ? expandAll : collapseEmpty}>
-            {collapsed.size > 0 ? <><ChevronsRight className="w-4 h-4"/> Hammasini ochish</> : <><ChevronsLeft className="w-4 h-4"/> Bo&apos;shlarni yig&apos;ish</>}
+            {collapsed.size > 0 ? <><ChevronDown className="w-4 h-4"/> Hammasini ochish</> : <><ChevronUp className="w-4 h-4"/> Bo&apos;shlarni yig&apos;ish</>}
           </Button>
           <Button variant={manage ? "primary" : "outline"} size="sm" onClick={()=>setManage(m=>!m)}>
             <Settings2 className="w-4 h-4"/> {manage ? "Tayyor" : "Ustunlar"}
@@ -168,11 +168,13 @@ export default function KanbanPage() {
             if (collapsed.has(stage.id) && !manage) {
               return (
                 <button key={stage.id} onClick={()=>toggleCollapse(stage.id)} title="Ochish"
-                  className="flex-shrink-0 w-11 self-stretch min-h-[260px] bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-t-4 border border-gray-200 dark:border-gray-700 flex flex-col items-center gap-2 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                  className="flex-shrink-0 w-64 self-start bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-t-4 border border-gray-200 dark:border-gray-700 px-3 py-3 flex items-center justify-between gap-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                   style={{ borderTopColor: stage.color }}>
-                  <ChevronsRight className="w-4 h-4 text-gray-400"/>
-                  <span className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full font-medium">{items.length}</span>
-                  <span className="mt-1 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide" style={{ writingMode: "vertical-rl" }}>{stage.name}</span>
+                  <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide truncate">{stage.name}</h3>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <span className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full font-medium">{items.length}</span>
+                    <ChevronDown className="w-4 h-4 text-gray-400"/>
+                  </div>
                 </button>
               );
             }
@@ -185,7 +187,7 @@ export default function KanbanPage() {
                       <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide truncate">{stage.name}</h3>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <span className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full font-medium">{items.length}</span>
-                        <button onClick={()=>toggleCollapse(stage.id)} className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" title="Yig'ish"><ChevronsLeft className="w-3.5 h-3.5"/></button>
+                        <button onClick={()=>toggleCollapse(stage.id)} className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" title="Yig'ish"><ChevronUp className="w-3.5 h-3.5"/></button>
                       </div>
                     </div>
                   ) : (
@@ -232,11 +234,13 @@ export default function KanbanPage() {
                               <Link href={`/leads/${lead.id}`} onClick={e => { if (snap.isDragging) e.preventDefault(); }}>
                                 <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1 hover:text-indigo-600 transition">{lead.fullName}</p>
                               </Link>
-                              {lead.course && (
-                                <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-lg mb-2" style={{ backgroundColor: (lead.course.color||"#6366f1")+"15", color: lead.course.color||"#6366f1" }}>
+                              {lead.course ? (
+                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg mb-2 font-medium" style={{ backgroundColor: (lead.course.color||"#6366f1")+"1a", color: lead.course.color||"#6366f1" }}>
                                   <span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:lead.course.color||"#6366f1"}}/>
                                   {lead.course.name}
                                 </span>
+                              ) : (
+                                <span className="inline-block text-xs px-2 py-0.5 rounded-lg mb-2 bg-gray-100 dark:bg-gray-800 text-gray-400">Kurs belgilanmagan</span>
                               )}
                               <div className="flex items-center justify-between mt-2">
                                 <span className="text-xs text-gray-500 font-mono">{formatPhone(lead.phone)}</span>
