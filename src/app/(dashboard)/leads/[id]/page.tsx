@@ -175,27 +175,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {/* Stage pipeline */}
-      <Card>
-        <CardContent className="py-4">
-          <div className="flex items-center gap-0 overflow-x-auto">
-            {stages.map((s:any, i:number) => (
-              <div key={s.id} className="flex items-center flex-shrink-0">
-                <button onClick={()=>changeStage(s.id)}
-                  style={ s.id === lead.stageId ? { backgroundColor: s.color } : undefined }
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition whitespace-nowrap ${
-                    s.id === lead.stageId ? "text-white" :
-                    i < currentStageIdx ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                    "bg-gray-100 text-gray-500 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                  }`}>
-                  {i < currentStageIdx ? "✓ " : ""}{s.name}
-                </button>
-                {i < stages.length - 1 && <div className="w-6 h-0.5 bg-gray-200 dark:bg-gray-700 flex-shrink-0"/>}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left: main content */}
