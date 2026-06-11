@@ -23,6 +23,9 @@ import {
   TrendingUp,
   Presentation,
   CalendarRange,
+  TrendingDown,
+  PlusCircle,
+  Banknote,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -34,6 +37,9 @@ const navItems = [
   { href: "/attendance", label: "Davomat", icon: ClipboardCheck },
   { href: "/timetable", label: "Dars jadvali", icon: CalendarRange },
   { href: "/payments", label: "To'lovlar", icon: Wallet },
+  { href: "/expenses", label: "Xarajatlar", icon: TrendingDown },
+  { href: "/incomes", label: "Qo'shimcha daromad", icon: PlusCircle },
+  { href: "/payroll", label: "Ish haqi", icon: Banknote },
   { href: "/reminders", label: "Eslatmalar", icon: Bell },
   { href: "/schedule", label: "Jadval", icon: Calendar },
   { href: "/courses", label: "Kurslar", icon: BookOpen },

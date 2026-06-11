@@ -1,0 +1,1 @@
+OK: Expense + Income + SalaryRecord yaratildi
