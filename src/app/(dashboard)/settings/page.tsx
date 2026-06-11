@@ -34,6 +34,20 @@ export default function SettingsPage() {
   const [activating, setActivating] = useState(false);
   const [logo, setLogo] = useState("");
   const [logoSaving, setLogoSaving] = useState(false);
+  const [paymentTypes, setPaymentTypes] = useState<any[]>([]);
+  const [newPaymentType, setNewPaymentType] = useState("");
+
+  const loadPaymentTypes = () => fetch("/api/payment-types").then(r=>r.json()).then(d=>setPaymentTypes(Array.isArray(d)?d:[]));
+  const addPaymentType = async () => {
+    if (!newPaymentType.trim()) { toast.error("Nom kiriting"); return; }
+    const res = await fetch("/api/payment-types", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newPaymentType.trim() }) });
+    if (res.ok) { setNewPaymentType(""); toast.success("Qo'shildi"); loadPaymentTypes(); } else toast.error("Xatolik");
+  };
+  const removePaymentType = async (id: string) => {
+    if (!(await confirm({ title: "To'lov turini o'chirish", message: "Bu to'lov turini o'chirasizmi?" }))) return;
+    const res = await fetch(`/api/payment-types/${id}`, { method: "DELETE" });
+    if (res.ok) loadPaymentTypes(); else toast.error("Xatolik");
+  };
 
   const loadSlots = () => fetch("/api/timeslots").then(r=>r.json()).then(setSlots);
   const loadTags = () => fetch("/api/tags").then(r=>r.json()).then(setTags);
@@ -53,7 +67,7 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    loadSlots(); loadTags(); loadTgSettings(); loadBotInfo();
+    loadSlots(); loadTags(); loadTgSettings(); loadBotInfo(); loadPaymentTypes();
     fetch("/api/users").then(r=>r.json()).then(setUsers);
   }, []);
 
@@ -241,6 +255,29 @@ export default function SettingsPage() {
               </div>
             </div>
             <Button onClick={saveLogo} loading={logoSaving}><Save className="w-4 h-4"/> Logoni saqlash</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Payment types */}
+      {tab === "general" && (
+        <Card>
+          <CardHeader><CardTitle>To'lov turlari</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-gray-500">Naqd / Karta / O'tkazma — asosiy turlar doim bor. Bu yerda qo'shimcha turlarni qo'shing (masalan: Click, Payme, Uzcard).</p>
+            <div className="flex flex-wrap gap-2">
+              {paymentTypes.map((t:any)=>(
+                <div key={t.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
+                  {t.name}
+                  <button onClick={()=>removePaymentType(t.id)} className="ml-1 opacity-70 hover:opacity-100"><X className="w-3 h-3"/></button>
+                </div>
+              ))}
+              {paymentTypes.length===0 && <p className="text-sm text-gray-400">Qo'shimcha tur yo'q</p>}
+            </div>
+            <div className="flex items-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+              <Input label="Yangi to'lov turi" value={newPaymentType} onChange={e=>setNewPaymentType(e.target.value)} placeholder="Click / Payme..." className="flex-1"/>
+              <Button onClick={addPaymentType}><Plus className="w-4 h-4"/> Qo'shish</Button>
+            </div>
           </CardContent>
         </Card>
       )}

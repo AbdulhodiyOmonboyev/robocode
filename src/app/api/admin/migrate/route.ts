@@ -49,6 +49,16 @@ const statements: string[] = [
   `DO $$ BEGIN ALTER TABLE "SalaryRecord" ADD CONSTRAINT "SalaryRecord_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
   `DO $$ BEGIN ALTER TABLE "SalaryRecord" ADD CONSTRAINT "SalaryRecord_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
   `CREATE INDEX IF NOT EXISTS "SalaryRecord_month_idx" ON "SalaryRecord"("month")`,
+
+  // ---- Part 2: Payment discount + PaymentType ----
+  `ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "discount" DECIMAL(12,2)`,
+  `CREATE TABLE IF NOT EXISTS "PaymentType" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "PaymentType_pkey" PRIMARY KEY ("id")
+  )`,
 ];
 
 export async function POST() {

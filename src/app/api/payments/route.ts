@@ -6,6 +6,7 @@ import { z } from "zod";
 const createSchema = z.object({
   leadId: z.string().min(1, "O'quvchi tanlang"),
   amount: z.coerce.number().positive("Summa noto'g'ri"),
+  discount: z.coerce.number().min(0).optional().nullable(),
   method: z.string().optional(),
   type: z.string().optional(),
   forMonth: z.string().optional().nullable(),
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
     data: {
       leadId: d.leadId,
       amount: d.amount,
+      discount: d.discount ?? null,
       method: d.method || "cash",
       type: d.type || "tuition",
       forMonth: d.forMonth || null,

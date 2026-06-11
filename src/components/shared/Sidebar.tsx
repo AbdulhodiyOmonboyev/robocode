@@ -26,6 +26,7 @@ import {
   TrendingDown,
   PlusCircle,
   Banknote,
+  ArrowLeftRight,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -40,6 +41,7 @@ const navItems = [
   { href: "/expenses", label: "Xarajatlar", icon: TrendingDown },
   { href: "/incomes", label: "Qo'shimcha daromad", icon: PlusCircle },
   { href: "/payroll", label: "Ish haqi", icon: Banknote },
+  { href: "/cashflow", label: "Pul oqimi", icon: ArrowLeftRight },
   { href: "/reminders", label: "Eslatmalar", icon: Bell },
   { href: "/schedule", label: "Jadval", icon: Calendar },
   { href: "/courses", label: "Kurslar", icon: BookOpen },

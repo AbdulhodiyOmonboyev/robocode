@@ -156,7 +156,10 @@ export default function PaymentsPage() {
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{METHODS[p.method] || p.method}</td>
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{p.createdBy?.fullName || "—"}</td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => del(p.id)} className="text-gray-400 hover:text-red-600 transition"><Trash2 className="w-4 h-4" /></button>
+                  <div className="flex items-center justify-end gap-2">
+                    <a href={`/receipt/${p.id}`} target="_blank" rel="noreferrer" className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">Chek</a>
+                    <button onClick={() => del(p.id)} className="text-gray-400 hover:text-red-600 transition"><Trash2 className="w-4 h-4" /></button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -214,8 +217,12 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; o
   const [forMonth, setForMonth] = useState(ym(new Date()));
   const [method, setMethod] = useState("cash");
   const [type, setType] = useState("tuition");
+  const [discount, setDiscount] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [types, setTypes] = useState<any[]>([]);
+
+  useEffect(() => { fetch("/api/payment-types").then(r => r.json()).then(d => setTypes(Array.isArray(d) ? d.filter((t: any) => t.isActive) : [])).catch(() => {}); }, []);
 
   useEffect(() => {
     if (lead || leadQ.length < 1) { setLeadResults([]); return; }
@@ -233,7 +240,7 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; o
     setSaving(true);
     const res = await fetch("/api/payments", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ leadId: lead.id, amount, method, type, forMonth, note, groupId: lead.group?.id || null }),
+      body: JSON.stringify({ leadId: lead.id, amount, discount: discount || null, method, type, forMonth, note, groupId: lead.group?.id || null }),
     });
     setSaving(false);
     if (res.ok) { toast.success("To'lov qo'shildi"); onSaved(); }
@@ -275,6 +282,7 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; o
         </div>
 
         <Input label="Summa (so'm)" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="500000" />
+        <Input label="Chegirma (ixtiyoriy)" type="number" value={discount} onChange={e => setDiscount(e.target.value)} placeholder="0" />
 
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -287,6 +295,7 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; o
             <select value={method} onChange={e => setMethod(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
               <option value="cash">Naqd</option><option value="card">Karta</option><option value="transfer">O'tkazma</option>
+              {types.map((t: any) => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
           </div>
         </div>
