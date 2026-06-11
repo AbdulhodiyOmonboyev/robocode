@@ -20,6 +20,7 @@ interface Lead {
   parentName: string | null; parentPhone: string | null; telegramChatId: string | null;
   status: string; source: string; sourceDetails: string | null; notes: string | null;
   payments?: any[]; attendances?: { status: string }[];
+  coins?: number; scores?: any[];
   timePreference: string; preferredDays: string | null; lessonTime: string | null; isPinned: boolean;
   trialDate: string | null; enrolledAt: string | null; lastContactedAt: string | null;
   createdAt: string; updatedAt: string;
@@ -79,6 +80,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const copyStudentLink = () => {
     if (!botUsername) { toast.error("Avval Sozlamalar → Botni faollashtiring"); return; }
     navigator.clipboard.writeText(`https://t.me/${botUsername}?start=s_${id}`).then(() => toast.success("Havola nusxalandi"), () => toast.error("Nusxalab bo'lmadi"));
+  };
+  const giveCoins = async (sign: number) => {
+    const v = prompt(sign > 0 ? "Necha tanga berish?" : "Necha tanga olish?");
+    if (!v || Number(v) <= 0) return;
+    const reason = prompt("Sabab:") || (sign > 0 ? "Mukofot" : "Jarima");
+    const res = await fetch(`/api/leads/${id}/coins`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount: sign * Number(v), reason }) });
+    if (res.ok) { toast.success("Tanga yangilandi"); load(); } else toast.error("Xatolik");
   };
 
   const save = async () => {
@@ -478,6 +486,32 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-gray-500">O'quvchi botga ulanmagan. Havolani yuboring — &quot;Start&quot; bossa ulanadi va eslatma oladi.</p>
                   <Button size="sm" variant="outline" onClick={copyStudentLink} disabled={!botUsername}>Ulanish havolasini nusxalash</Button>
                 </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Coins & scores */}
+          <Card>
+            <CardHeader><CardTitle>Tanga va ballar</CardTitle></CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500">Tanga balansi</span>
+                <span className="font-bold text-amber-600">🏆 {lead.coins ?? 0}</span>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={()=>giveCoins(1)}>+ Tanga berish</Button>
+                <Button size="sm" variant="outline" onClick={()=>giveCoins(-1)}>− Tanga olish</Button>
+              </div>
+              {(lead.scores || []).length > 0 && (
+                <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-1.5">
+                  <p className="text-xs font-medium text-gray-500">Imtihon ballari:</p>
+                  {(lead.scores || []).slice(0, 8).map((s: any) => (
+                    <div key={s.id} className="flex items-center justify-between text-xs">
+                      <span className="text-gray-600 dark:text-gray-300 truncate">{s.exam?.title || "—"}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{s.score}{s.exam?.maxScore ? `/${s.exam.maxScore}` : ""}</span>
+                    </div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>

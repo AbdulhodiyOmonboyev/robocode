@@ -82,6 +82,8 @@ model User {
   incomesCreated  Income[]  @relation("IncomeCreatedBy")
   salaryRecords   SalaryRecord[] @relation("SalaryUser")
   salaryRecordsCreated SalaryRecord[] @relation("SalaryCreatedBy")
+  examsCreated    Exam[]    @relation("ExamCreatedBy")
+  coinTxCreated   CoinTx[]  @relation("CoinCreatedBy")
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -101,6 +103,7 @@ model Course {
 
   leads  Lead[]
   groups Group[]
+  exams  Exam[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -128,6 +131,7 @@ model Lead {
   parentName     String?
   parentPhone    String?
   telegramChatId String?
+  coins          Int      @default(0)
 
   courseId String?
   course   Course?   @relation(fields: [courseId], references: [id])
@@ -162,6 +166,8 @@ model Lead {
   tags       Tag[]
   payments   Payment[]
   attendances Attendance[]
+  scores     Score[]
+  coinTxs    CoinTx[]
 
   trialDate       DateTime?
   enrolledAt      DateTime?
@@ -246,6 +252,52 @@ model PaymentType {
   createdAt DateTime @default(now())
 }
 
+model Exam {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   @default("exam")
+  courseId    String?
+  course      Course?  @relation(fields: [courseId], references: [id])
+  groupId     String?
+  group       Group?   @relation(fields: [groupId], references: [id])
+  date        DateTime @db.Date
+  maxScore    Int      @default(100)
+  createdById String
+  createdBy   User     @relation("ExamCreatedBy", fields: [createdById], references: [id])
+  scores      Score[]
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+}
+
+model Score {
+  id        String   @id @default(cuid())
+  examId    String
+  exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  score     Int
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([examId, leadId])
+  @@index([leadId])
+}
+
+model CoinTx {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  amount      Int
+  reason      String
+  createdById String
+  createdBy   User     @relation("CoinCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([leadId])
+}
+
 model Group {
   id        String    @id @default(cuid())
   name      String
@@ -262,6 +314,7 @@ model Group {
   leads     Lead[]
   payments  Payment[]
   attendances Attendance[]
+  exams     Exam[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }

@@ -27,6 +27,8 @@ import {
   PlusCircle,
   Banknote,
   ArrowLeftRight,
+  ClipboardList,
+  Trophy,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -36,6 +38,8 @@ const navItems = [
   { href: "/leads/kanban", label: "Kanban", icon: Pin },
   { href: "/groups", label: "Guruhlar", icon: GraduationCap },
   { href: "/attendance", label: "Davomat", icon: ClipboardCheck },
+  { href: "/exams", label: "Imtihonlar", icon: ClipboardList },
+  { href: "/leaderboard", label: "Reyting", icon: Trophy },
   { href: "/timetable", label: "Dars jadvali", icon: CalendarRange },
   { href: "/payments", label: "To'lovlar", icon: Wallet },
   { href: "/expenses", label: "Xarajatlar", icon: TrendingDown },

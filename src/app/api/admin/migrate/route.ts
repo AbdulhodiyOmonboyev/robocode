@@ -59,6 +59,53 @@ const statements: string[] = [
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "PaymentType_pkey" PRIMARY KEY ("id")
   )`,
+
+  // ---- Part 3: Exams, Scores, Coins ----
+  `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "coins" INTEGER NOT NULL DEFAULT 0`,
+  `CREATE TABLE IF NOT EXISTS "Exam" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "type" TEXT NOT NULL DEFAULT 'exam',
+    "courseId" TEXT,
+    "groupId" TEXT,
+    "date" DATE NOT NULL,
+    "maxScore" INTEGER NOT NULL DEFAULT 100,
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Exam_pkey" PRIMARY KEY ("id")
+  )`,
+  `DO $$ BEGIN ALTER TABLE "Exam" ADD CONSTRAINT "Exam_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "Exam" ADD CONSTRAINT "Exam_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "Exam" ADD CONSTRAINT "Exam_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "Exam_date_idx" ON "Exam"("date")`,
+
+  `CREATE TABLE IF NOT EXISTS "Score" (
+    "id" TEXT NOT NULL,
+    "examId" TEXT NOT NULL,
+    "leadId" TEXT NOT NULL,
+    "score" INTEGER NOT NULL,
+    "note" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Score_pkey" PRIMARY KEY ("id")
+  )`,
+  `DO $$ BEGIN ALTER TABLE "Score" ADD CONSTRAINT "Score_examId_fkey" FOREIGN KEY ("examId") REFERENCES "Exam"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "Score" ADD CONSTRAINT "Score_leadId_fkey" FOREIGN KEY ("leadId") REFERENCES "Lead"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Score_examId_leadId_key" ON "Score"("examId","leadId")`,
+  `CREATE INDEX IF NOT EXISTS "Score_leadId_idx" ON "Score"("leadId")`,
+
+  `CREATE TABLE IF NOT EXISTS "CoinTx" (
+    "id" TEXT NOT NULL,
+    "leadId" TEXT NOT NULL,
+    "amount" INTEGER NOT NULL,
+    "reason" TEXT NOT NULL,
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "CoinTx_pkey" PRIMARY KEY ("id")
+  )`,
+  `DO $$ BEGIN ALTER TABLE "CoinTx" ADD CONSTRAINT "CoinTx_leadId_fkey" FOREIGN KEY ("leadId") REFERENCES "Lead"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "CoinTx" ADD CONSTRAINT "CoinTx_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "CoinTx_leadId_idx" ON "CoinTx"("leadId")`,
 ];
 
 export async function POST() {

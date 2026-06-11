@@ -47,6 +47,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       tags: true,
       payments: { orderBy: { paidAt: "desc" }, take: 50, include: { createdBy: { select: { fullName: true } } } },
       attendances: { select: { status: true } },
+      scores: { orderBy: { createdAt: "desc" }, take: 50, include: { exam: { select: { title: true, maxScore: true } } } },
       reminders: { orderBy: { remindAt: "asc" }, include: { user: { select: { fullName: true } } } },
       activities: {
         orderBy: { createdAt: "desc" },
