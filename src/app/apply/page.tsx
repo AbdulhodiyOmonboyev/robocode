@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 export default function ApplyPage() {
   const [cfg, setCfg] = useState<{ courses: any[]; name: string; logo: string }>({ courses: [], name: "Robocode CRM", logo: "" });
-  const [form, setForm] = useState({ fullName: "", phone: "", courseId: "", preferredDays: "", lessonTime: "", note: "", website: "" });
+  const [form, setForm] = useState({ fullName: "", phone: "", courseId: "", preferredDays: "", lessonTime: "", note: "", referrerName: "", referrerPhone: "", website: "" });
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -47,7 +47,7 @@ export default function ApplyPage() {
               </div>
               <h2 className="text-xl font-bold text-gray-900">Rahmat!</h2>
               <p className="text-gray-500 mt-2">Arizangiz qabul qilindi. Tez orada siz bilan bog'lanamiz.</p>
-              <button onClick={() => { setDone(false); setForm({ fullName: "", phone: "", courseId: "", preferredDays: "", lessonTime: "", note: "", website: "" }); }}
+              <button onClick={() => { setDone(false); setForm({ fullName: "", phone: "", courseId: "", preferredDays: "", lessonTime: "", note: "", referrerName: "", referrerPhone: "", website: "" }); }}
                 className="mt-6 text-violet-600 font-medium hover:underline">Yana ariza qoldirish</button>
             </div>
           ) : (
@@ -80,6 +80,11 @@ export default function ApplyPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Izoh (ixtiyoriy)</label>
                 <textarea className={inp} rows={3} value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} placeholder="Qo'shimcha ma'lumot..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Sizni kim tavsiya qildi? (ixtiyoriy)</label>
+                <input className={inp + " mb-2"} value={form.referrerName} onChange={(e) => setForm((f) => ({ ...f, referrerName: e.target.value }))} placeholder="Tavsiya qilgan kishi ismi" />
+                <input className={inp} value={form.referrerPhone} onChange={(e) => setForm((f) => ({ ...f, referrerPhone: e.target.value }))} placeholder="Uning telefoni" />
               </div>
 
               {error && <p className="text-sm text-red-600">{error}</p>}

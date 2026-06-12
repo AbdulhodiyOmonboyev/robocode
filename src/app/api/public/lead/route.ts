@@ -26,6 +26,8 @@ const schema = z.object({
   preferredDays: z.string().optional().nullable(),
   lessonTime: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
+  referrerName: z.string().optional().nullable(),
+  referrerPhone: z.string().optional().nullable(),
   website: z.string().optional(), // honeypot
 });
 
@@ -54,7 +56,9 @@ export async function POST(req: NextRequest) {
       preferredDays: d.preferredDays || null,
       lessonTime: d.lessonTime || null,
       notes: d.note || null,
-      source: "WEBSITE",
+      referrerName: d.referrerName || null,
+      referrerPhone: d.referrerPhone || null,
+      source: d.referrerName || d.referrerPhone ? "REFERRAL" : "WEBSITE",
       stageId: firstStage?.id || null,
       createdById: admin.id,
     },

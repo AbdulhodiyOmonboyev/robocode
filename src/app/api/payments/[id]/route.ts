@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -28,5 +29,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   }
   const { id } = await params;
   await db.payment.delete({ where: { id } });
+  const u = session.user as any;
+  await logAudit(u.id, u.name || u.fullName, "payment_deleted", "Payment", id);
   return NextResponse.json({ success: true });
 }

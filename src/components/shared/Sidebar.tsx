@@ -29,6 +29,8 @@ import {
   ArrowLeftRight,
   ClipboardList,
   Trophy,
+  ScrollText,
+  FileBarChart,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -52,6 +54,8 @@ const navItems = [
   { href: "/teachers", label: "O'qituvchilar", icon: Presentation },
   { href: "/reports", label: "Hisobotlar", icon: BarChart3 },
   { href: "/analytics", label: "Analitika", icon: TrendingUp },
+  { href: "/teacher-report", label: "O'qituvchi hisoboti", icon: FileBarChart },
+  { href: "/logs", label: "Jurnallar", icon: ScrollText },
   { href: "/users", label: "Hodimlar", icon: UserCog },
   { href: "/settings", label: "Sozlamalar", icon: Settings },
 ];

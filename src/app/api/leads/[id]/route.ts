@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { logAudit } from "@/lib/audit";
 
 const updateSchema = z.object({
   fullName: z.string().min(2).optional(),
@@ -28,6 +29,9 @@ const updateSchema = z.object({
   enrolledAt: z.string().optional().nullable(),
   lastContactedAt: z.string().optional().nullable(),
   isPinned: z.boolean().optional(),
+  frozenAt: z.string().optional().nullable(),
+  frozenUntil: z.string().optional().nullable(),
+  isArchived: z.boolean().optional(),
 });
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -74,11 +78,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const current = await db.lead.findUnique({ where: { id }, select: { status: true, stageId: true, assignedToId: true } });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const { trialDate, enrolledAt, lastContactedAt, ...rest } = parsed.data;
+  const { trialDate, enrolledAt, lastContactedAt, frozenAt, frozenUntil, ...rest } = parsed.data;
   const updateData: any = { ...rest };
   if (trialDate !== undefined) updateData.trialDate = trialDate ? new Date(trialDate) : null;
   if (enrolledAt !== undefined) updateData.enrolledAt = enrolledAt ? new Date(enrolledAt) : null;
   if (lastContactedAt !== undefined) updateData.lastContactedAt = lastContactedAt ? new Date(lastContactedAt) : null;
+  if (frozenAt !== undefined) updateData.frozenAt = frozenAt ? new Date(frozenAt) : null;
+  if (frozenUntil !== undefined) updateData.frozenUntil = frozenUntil ? new Date(frozenUntil) : null;
 
   // Auto-set enrolledAt when status changes to ENROLLED
   if (parsed.data.status === "ENROLLED" && current.status !== "ENROLLED") {
@@ -111,5 +117,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const { id } = await params;
   await db.lead.delete({ where: { id } });
+  await logAudit(user.id, user.name || user.fullName, "lead_deleted", "Lead", id);
   return NextResponse.json({ success: true });
 }

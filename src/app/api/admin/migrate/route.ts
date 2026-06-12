@@ -106,6 +106,33 @@ const statements: string[] = [
   `DO $$ BEGIN ALTER TABLE "CoinTx" ADD CONSTRAINT "CoinTx_leadId_fkey" FOREIGN KEY ("leadId") REFERENCES "Lead"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
   `DO $$ BEGIN ALTER TABLE "CoinTx" ADD CONSTRAINT "CoinTx_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
   `CREATE INDEX IF NOT EXISTS "CoinTx_leadId_idx" ON "CoinTx"("leadId")`,
+
+  // ---- Part 4: frozen, referral, archive, holidays, audit ----
+  `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "frozenAt" TIMESTAMP(3)`,
+  `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "frozenUntil" TIMESTAMP(3)`,
+  `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "referrerName" TEXT`,
+  `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "referrerPhone" TEXT`,
+  `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "isArchived" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "Group" ADD COLUMN IF NOT EXISTS "isArchived" BOOLEAN NOT NULL DEFAULT false`,
+  `CREATE TABLE IF NOT EXISTS "Holiday" (
+    "id" TEXT NOT NULL,
+    "date" DATE NOT NULL,
+    "name" TEXT NOT NULL,
+    CONSTRAINT "Holiday_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Holiday_date_key" ON "Holiday"("date")`,
+  `CREATE TABLE IF NOT EXISTS "AuditLog" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "userName" TEXT,
+    "action" TEXT NOT NULL,
+    "entity" TEXT NOT NULL,
+    "entityId" TEXT,
+    "details" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE INDEX IF NOT EXISTS "AuditLog_createdAt_idx" ON "AuditLog"("createdAt")`,
 ];
 
 export async function POST() {

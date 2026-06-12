@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { logAudit } from "@/lib/audit";
 
 const createSchema = z.object({
   leadId: z.string().min(1, "O'quvchi tanlang"),
@@ -92,6 +93,7 @@ export async function POST(req: NextRequest) {
   await db.activity.create({
     data: { leadId: d.leadId, userId: user.id, action: "payment", details: { amount: d.amount, forMonth: d.forMonth } },
   });
+  await logAudit(user.id, user.name || user.fullName, "payment_created", "Payment", payment.id, { amount: d.amount });
 
   return NextResponse.json(payment, { status: 201 });
 }

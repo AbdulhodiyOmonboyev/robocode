@@ -21,6 +21,7 @@ interface Lead {
   status: string; source: string; sourceDetails: string | null; notes: string | null;
   payments?: any[]; attendances?: { status: string }[];
   coins?: number; scores?: any[];
+  frozenAt?: string | null; isArchived?: boolean;
   timePreference: string; preferredDays: string | null; lessonTime: string | null; isPinned: boolean;
   trialDate: string | null; enrolledAt: string | null; lastContactedAt: string | null;
   createdAt: string; updatedAt: string;
@@ -80,6 +81,18 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const copyStudentLink = () => {
     if (!botUsername) { toast.error("Avval Sozlamalar → Botni faollashtiring"); return; }
     navigator.clipboard.writeText(`https://t.me/${botUsername}?start=s_${id}`).then(() => toast.success("Havola nusxalandi"), () => toast.error("Nusxalab bo'lmadi"));
+  };
+  const toggleFreeze = async () => {
+    const frozen = !!lead?.frozenAt;
+    await fetch(`/api/leads/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ frozenAt: frozen ? null : new Date().toISOString() }) });
+    toast.success(frozen ? "Faollashtirildi" : "Muzlatildi"); load();
+  };
+  const toggleArchive = async () => {
+    const arch = !!lead?.isArchived;
+    if (!arch && !(await confirm({ title: "Arxivlash", message: "Bu lidni arxivlaysizmi? Ro'yxatdan yashiriladi." }))) return;
+    await fetch(`/api/leads/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isArchived: !arch }) });
+    toast.success(arch ? "Arxivdan chiqarildi" : "Arxivlandi");
+    if (!arch) router.push("/leads"); else load();
   };
   const giveCoins = async (sign: number) => {
     const v = prompt(sign > 0 ? "Necha tanga berish?" : "Necha tanga olish?");
@@ -161,6 +174,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{lead.fullName}</h1>
             {lead.isPinned && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg">📌 Pinlangan</span>}
+            {lead.frozenAt && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg">❄️ Muzlatilgan</span>}
+            {lead.isArchived && <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-lg">🗄 Arxiv</span>}
           </div>
           <p className="text-sm text-gray-500 mt-0.5">
             Qo'shilgan: {formatDate(lead.createdAt)} · {lead.createdBy.fullName}
@@ -178,6 +193,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           ) : (
             <Button size="sm" variant="outline" onClick={()=>setEditing(true)}><Edit className="w-4 h-4"/> Tahrirlash</Button>
           )}
+          <Button size="sm" variant="outline" onClick={toggleFreeze}>{lead.frozenAt ? "Faollashtirish" : "Muzlatish"}</Button>
+          <Button size="sm" variant="outline" onClick={toggleArchive}>{lead.isArchived ? "Arxivdan" : "Arxivlash"}</Button>
           <Button size="sm" variant="danger" onClick={deleteLead}><Trash2 className="w-4 h-4"/></Button>
         </div>
       </div>

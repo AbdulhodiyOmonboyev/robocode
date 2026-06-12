@@ -51,6 +51,10 @@ export async function GET(req: NextRequest) {
 
   const where: Prisma.LeadWhereInput = {};
 
+  // archived / frozen filters
+  where.isArchived = searchParams.get("archived") === "1";
+  if (searchParams.get("frozen") === "1") where.frozenAt = { not: null };
+
   // OPERATOR can only see own leads
   if (user.role === "OPERATOR") {
     where.assignedToId = user.id;

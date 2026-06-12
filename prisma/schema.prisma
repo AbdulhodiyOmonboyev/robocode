@@ -132,6 +132,11 @@ model Lead {
   parentPhone    String?
   telegramChatId String?
   coins          Int      @default(0)
+  frozenAt       DateTime?
+  frozenUntil    DateTime?
+  referrerName   String?
+  referrerPhone  String?
+  isArchived     Boolean  @default(false)
 
   courseId String?
   course   Course?   @relation(fields: [courseId], references: [id])
@@ -298,6 +303,25 @@ model CoinTx {
   @@index([leadId])
 }
 
+model Holiday {
+  id    String   @id @default(cuid())
+  date  DateTime @db.Date @unique
+  name  String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  userName  String?
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model Group {
   id        String    @id @default(cuid())
   name      String
@@ -311,6 +335,7 @@ model Group {
   room      String?
   startDate DateTime?
   isActive  Boolean   @default(true)
+  isArchived Boolean  @default(false)
   leads     Lead[]
   payments  Payment[]
   attendances Attendance[]

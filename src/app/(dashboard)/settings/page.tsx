@@ -49,6 +49,20 @@ export default function SettingsPage() {
     if (res.ok) loadPaymentTypes(); else toast.error("Xatolik");
   };
 
+  const [holidays, setHolidays] = useState<any[]>([]);
+  const [newHoliday, setNewHoliday] = useState({ date: "", name: "" });
+  const loadHolidays = () => fetch("/api/holidays").then(r=>r.json()).then(d=>setHolidays(Array.isArray(d)?d:[]));
+  const addHoliday = async () => {
+    if (!newHoliday.date || !newHoliday.name.trim()) { toast.error("Sana va nom kiriting"); return; }
+    const res = await fetch("/api/holidays", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newHoliday) });
+    if (res.ok) { setNewHoliday({ date: "", name: "" }); toast.success("Qo'shildi"); loadHolidays(); } else { const d = await res.json().catch(()=>({})); toast.error(d.error || "Xatolik"); }
+  };
+  const removeHoliday = async (id: string) => {
+    if (!(await confirm({ title: "Bayram kunini o'chirish", message: "Bu kunni o'chirasizmi?" }))) return;
+    const res = await fetch(`/api/holidays/${id}`, { method: "DELETE" });
+    if (res.ok) loadHolidays(); else toast.error("Xatolik");
+  };
+
   const loadSlots = () => fetch("/api/timeslots").then(r=>r.json()).then(setSlots);
   const loadTags = () => fetch("/api/tags").then(r=>r.json()).then(setTags);
   const loadTgSettings = async () => {
@@ -67,7 +81,7 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    loadSlots(); loadTags(); loadTgSettings(); loadBotInfo(); loadPaymentTypes();
+    loadSlots(); loadTags(); loadTgSettings(); loadBotInfo(); loadPaymentTypes(); loadHolidays();
     fetch("/api/users").then(r=>r.json()).then(setUsers);
   }, []);
 
@@ -277,6 +291,33 @@ export default function SettingsPage() {
             <div className="flex items-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
               <Input label="Yangi to'lov turi" value={newPaymentType} onChange={e=>setNewPaymentType(e.target.value)} placeholder="Click / Payme..." className="flex-1"/>
               <Button onClick={addPaymentType}><Plus className="w-4 h-4"/> Qo'shish</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Holidays */}
+      {tab === "general" && (
+        <Card>
+          <CardHeader><CardTitle>Bayram kunlari</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-gray-500">Dars bo'lmaydigan kunlar (bayramlar, ta'til).</p>
+            <div className="space-y-1.5">
+              {holidays.map((h:any)=>(
+                <div key={h.id} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
+                  <span className="text-gray-700 dark:text-gray-300"><b>{new Date(h.date).toLocaleDateString("ru-RU")}</b> — {h.name}</span>
+                  <button onClick={()=>removeHoliday(h.id)} className="text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
+                </div>
+              ))}
+              {holidays.length===0 && <p className="text-sm text-gray-400">Bayram kuni yo'q</p>}
+            </div>
+            <div className="flex items-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Sana</label>
+                <input type="date" value={newHoliday.date} onChange={e=>setNewHoliday(h=>({...h,date:e.target.value}))} className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/>
+              </div>
+              <Input label="Nomi" value={newHoliday.name} onChange={e=>setNewHoliday(h=>({...h,name:e.target.value}))} placeholder="Navro'z" className="flex-1"/>
+              <Button onClick={addHoliday}><Plus className="w-4 h-4"/></Button>
             </div>
           </CardContent>
         </Card>
