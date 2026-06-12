@@ -47,7 +47,7 @@ export default function LeadsPage() {
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
     status: "", stageId: "", courseId: "", source: "", assignedToId: "",
-    dateFrom: "", dateTo: "", timePreference: "", page: 1,
+    dateFrom: "", dateTo: "", timePreference: "", archived: "", frozen: "", page: 1,
   });
 
   const loadLeads = useCallback(async () => {
@@ -169,6 +169,10 @@ export default function LeadsPage() {
                 placeholder="Ism yoki telefon..." type="text"
                 className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
             </div>
+            <button onClick={()=>setFilter("frozen", filters.frozen ? "" : "1")}
+              className={`px-3 py-2 text-sm rounded-xl border transition ${filters.frozen ? "bg-blue-600 text-white border-transparent" : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>❄️ Muzlatilgan</button>
+            <button onClick={()=>setFilter("archived", filters.archived ? "" : "1")}
+              className={`px-3 py-2 text-sm rounded-xl border transition ${filters.archived ? "bg-gray-700 text-white border-transparent" : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>🗄 Arxiv</button>
           </div>
           {showFilters && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 border-t border-gray-100 dark:border-gray-800">

@@ -24,6 +24,8 @@ export default function SettingsPage() {
   const [newTag, setNewTag] = useState({ name: "", color: "#6366f1" });
   const [centerName, setCenterName] = useState("Robocode CRM");
   const [tgToken, setTgToken] = useState("");
+  const [eskiz, setEskiz] = useState({ email: "", password: "", from: "" });
+  const [smsTest, setSmsTest] = useState("");
   const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [chatIds, setChatIds] = useState<Record<string, string>>({});
@@ -63,11 +65,28 @@ export default function SettingsPage() {
     if (res.ok) loadHolidays(); else toast.error("Xatolik");
   };
 
+  const saveEskiz = async () => {
+    setSaving(true);
+    await saveSetting("eskiz_email", eskiz.email.trim());
+    if (eskiz.password.trim()) await saveSetting("eskiz_password", eskiz.password.trim());
+    await saveSetting("eskiz_from", eskiz.from.trim() || "4546");
+    await saveSetting("eskiz_token", ""); // reset cached token so it re-logins
+    setSaving(false);
+    toast.success("Eskiz sozlamalari saqlandi");
+  };
+  const testSms = async () => {
+    if (!smsTest) { toast.error("Telefon raqam kiriting"); return; }
+    const res = await fetch("/api/sms/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: smsTest, text: "Test SMS — Robocode CRM" }) });
+    const d = await res.json().catch(() => ({}));
+    res.ok ? toast.success("SMS yuborildi!") : toast.error(d.error || "Yuborilmadi");
+  };
+
   const loadSlots = () => fetch("/api/timeslots").then(r=>r.json()).then(setSlots);
   const loadTags = () => fetch("/api/tags").then(r=>r.json()).then(setTags);
   const loadTgSettings = async () => {
     const s = await fetch("/api/settings").then(r=>r.json());
     setTgToken(s["telegram_bot_token"] || "");
+    setEskiz({ email: s["eskiz_email"] || "", password: "", from: s["eskiz_from"] || "" });
     if (s["center_name"]) setCenterName(s["center_name"]);
     if (s["brand_logo"]) setLogo(s["brand_logo"]);
     const cids: Record<string,string> = {};
@@ -481,6 +500,25 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </details>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>SMS (Eskiz.uz)</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-xs text-gray-500">SMS yuborish uchun eskiz.uz dan ro'yxatdan o'ting va email/parolingizni kiriting. Sender nomi tasdiqlanmaguncha test uchun <b>4546</b> ishlaydi.</p>
+              <Input label="Eskiz email" value={eskiz.email} onChange={e=>setEskiz(s=>({...s,email:e.target.value}))} placeholder="email@example.com"/>
+              <Input label="Eskiz parol" type="password" value={eskiz.password} onChange={e=>setEskiz(s=>({...s,password:e.target.value}))} placeholder="••••••• (o'zgartirmasangiz bo'sh qoldiring)"/>
+              <Input label="Sender (from)" value={eskiz.from} onChange={e=>setEskiz(s=>({...s,from:e.target.value}))} placeholder="4546"/>
+              <Button onClick={saveEskiz} loading={saving}><Save className="w-4 h-4"/> Saqlash</Button>
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
+                <label className="block text-xs text-gray-500 mb-1">Test SMS yuborish</label>
+                <div className="flex items-end gap-2">
+                  <input value={smsTest} onChange={e=>setSmsTest(e.target.value)} placeholder="+998 90 123 45 67"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/>
+                  <Button size="sm" variant="outline" onClick={testSms}>Test</Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
