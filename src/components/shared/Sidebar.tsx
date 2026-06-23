@@ -10,7 +10,6 @@ import {
   Users,
   BookOpen,
   Bell,
-  Calendar,
   BarChart3,
   Settings,
   LogOut,
@@ -52,16 +51,18 @@ const navEntries: NavEntry[] = [
       { href: "/leads/kanban", label: "Kanban", icon: Pin },
     ],
   },
+  { type: "item", href: "/groups", label: "Guruhlar", icon: GraduationCap },
+  { type: "item", href: "/teachers", label: "O'qituvchilar", icon: Presentation },
   {
     type: "group",
-    label: "O'quv",
-    icon: GraduationCap,
+    label: "O'quv jarayoni",
+    icon: BookOpen,
     children: [
-      { href: "/groups", label: "Guruhlar", icon: GraduationCap },
       { href: "/attendance", label: "Davomat", icon: ClipboardCheck },
+      { href: "/timetable", label: "Dars jadvali", icon: CalendarRange },
       { href: "/exams", label: "Imtihonlar", icon: ClipboardList },
       { href: "/leaderboard", label: "Reyting", icon: Trophy },
-      { href: "/timetable", label: "Dars jadvali", icon: CalendarRange },
+      { href: "/courses", label: "Kurslar", icon: BookOpen },
     ],
   },
   {
@@ -70,21 +71,10 @@ const navEntries: NavEntry[] = [
     icon: Wallet,
     children: [
       { href: "/payments", label: "To'lovlar", icon: Wallet },
-      { href: "/expenses", label: "Xarajatlar", icon: TrendingDown },
       { href: "/incomes", label: "Qo'shimcha daromad", icon: PlusCircle },
       { href: "/payroll", label: "Ish haqi", icon: Banknote },
+      { href: "/expenses", label: "Xarajatlar", icon: TrendingDown },
       { href: "/cashflow", label: "Pul oqimi", icon: ArrowLeftRight },
-    ],
-  },
-  {
-    type: "group",
-    label: "Boshqaruv",
-    icon: Settings,
-    children: [
-      { href: "/reminders", label: "Eslatmalar", icon: Bell },
-      { href: "/schedule", label: "Jadval", icon: Calendar },
-      { href: "/courses", label: "Kurslar", icon: BookOpen },
-      { href: "/teachers", label: "O'qituvchilar", icon: Presentation },
     ],
   },
   {
@@ -95,25 +85,26 @@ const navEntries: NavEntry[] = [
       { href: "/reports", label: "Hisobotlar", icon: BarChart3 },
       { href: "/analytics", label: "Analitika", icon: TrendingUp },
       { href: "/teacher-report", label: "O'qituvchi hisoboti", icon: FileBarChart },
-      { href: "/logs", label: "Jurnallar", icon: ScrollText },
     ],
   },
+  { type: "item", href: "/reminders", label: "Eslatmalar", icon: Bell },
   {
     type: "group",
-    label: "Tizim",
-    icon: UserCog,
+    label: "Sozlamalar",
+    icon: Settings,
     children: [
-      { href: "/users", label: "Hodimlar", icon: UserCog },
       { href: "/settings", label: "Sozlamalar", icon: Settings },
+      { href: "/users", label: "Hodimlar", icon: UserCog },
+      { href: "/logs", label: "Jurnallar", icon: ScrollText },
     ],
   },
 ];
 
-const isActivePath = (href: string, pathname: string) =>
+const isActivePath = (href: string, pathname: string): boolean =>
   pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
-const hasActiveChild = (children: NavItem[], pathname: string) =>
-  children.some(c => isActivePath(c.href, pathname));
+const hasActiveChild = (children: NavItem[], pathname: string): boolean =>
+  children.some((c) => isActivePath(c.href, pathname));
 
 const initOpenGroups = (pathname: string): Record<string, boolean> => {
   const result: Record<string, boolean> = {};
@@ -127,6 +118,14 @@ const initOpenGroups = (pathname: string): Record<string, boolean> => {
   return result;
 };
 
+interface SessionUser {
+  fullName?: string;
+  name?: string;
+  role?: string;
+}
+
+const ICON = "w-[18px] h-[18px] flex-shrink-0";
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -137,27 +136,50 @@ export default function Sidebar() {
   );
 
   useEffect(() => {
-    fetch("/api/branding").then(r => r.json()).then(d => { if (d.logo) setLogo(d.logo); }).catch(() => {});
+    fetch("/api/branding")
+      .then((r) => r.json())
+      .then((d: { logo?: string }) => { if (d.logo) setLogo(d.logo); })
+      .catch(() => {});
   }, []);
 
-  const user = session?.user as any;
+  const user = session?.user as SessionUser | undefined;
 
   const toggle = (key: string) =>
-    setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
+    setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
 
-  const linkCls = (href: string) =>
+  const chevronStyle = (open: boolean): React.CSSProperties => ({
+    transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+    transition: "transform 200ms ease",
+  });
+
+  const topLinkCls = (href: string) =>
     cn(
-      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all",
+      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors duration-150",
       isActivePath(href, pathname)
-        ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+        ? "bg-[#5E2CA5] text-white shadow-sm"
+        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
     );
 
-  const renderNavItem = (item: NavItem) => {
+  const childLinkCls = (href: string) => {
+    const active = isActivePath(href, pathname);
+    return cn(
+      "flex items-center gap-3 pl-2.5 pr-3 py-2 rounded-lg text-[13px] font-medium transition-colors duration-150 border-l-2",
+      active
+        ? "border-[#5E2CA5] text-[#5E2CA5] dark:text-purple-400 bg-purple-50 dark:bg-[#5E2CA5]/10"
+        : "border-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-800 dark:hover:text-gray-200"
+    );
+  };
+
+  const renderNavItem = (item: NavItem, inGroup = false) => {
     const Icon = item.icon;
     return (
-      <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} className={linkCls(item.href)}>
-        <Icon className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} />
+      <Link
+        key={item.href}
+        href={item.href}
+        title={collapsed ? item.label : undefined}
+        className={inGroup ? childLinkCls(item.href) : topLinkCls(item.href)}
+      >
+        <Icon className={ICON} />
         {!collapsed && <span>{item.label}</span>}
       </Link>
     );
@@ -167,44 +189,56 @@ export default function Sidebar() {
     if (entry.type === "group") {
       const open = openGroups[entry.label] ?? true;
       const Icon = entry.icon;
+
       if (collapsed) {
         return (
-          <div key={entry.label} className="space-y-0.5 mb-1">
-            {entry.children.map(renderNavItem)}
+          <div key={entry.label} className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5">
+            <div className="flex justify-center mb-1" title={entry.label}>
+              <Icon className="w-3 h-3 text-gray-300 dark:text-gray-600" />
+            </div>
+            <div className="space-y-0.5">
+              {entry.children.map((item) => renderNavItem(item))}
+            </div>
           </div>
         );
       }
+
       const activeInGroup = !open && hasActiveChild(entry.children, pathname);
       return (
-        <div key={entry.label} className="mt-3">
+        <div key={entry.label}>
           <button
             onClick={() => toggle(entry.label)}
             className={cn(
-              "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors",
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors duration-150",
               activeInGroup
-                ? "text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
-                : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                ? "bg-[#5E2CA5] text-white shadow-sm"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
             )}
           >
-            <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+            <Icon className={ICON} />
             <span className="flex-1 text-left">{entry.label}</span>
-            <ChevronDown className={cn("w-3 h-3 flex-shrink-0 transition-transform duration-200", !open && "-rotate-90")} />
+            <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" style={chevronStyle(open)} />
           </button>
           {open && (
-            <div className="space-y-0.5 mt-0.5">
-              {entry.children.map(renderNavItem)}
+            <div className="mt-1 space-y-0.5 ml-1">
+              {entry.children.map((item) => renderNavItem(item, true))}
             </div>
           )}
         </div>
       );
     }
 
-    // type: "item"
     const Icon = entry.icon;
+
     if (!entry.children) {
       return (
-        <Link key={entry.href} href={entry.href} title={collapsed ? entry.label : undefined} className={linkCls(entry.href)}>
-          <Icon className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} />
+        <Link
+          key={entry.href}
+          href={entry.href}
+          title={collapsed ? entry.label : undefined}
+          className={topLinkCls(entry.href)}
+        >
+          <Icon className={ICON} />
           {!collapsed && <span>{entry.label}</span>}
         </Link>
       );
@@ -213,23 +247,27 @@ export default function Sidebar() {
     const open = openGroups[entry.label] ?? true;
     return (
       <div key={entry.href}>
-        <div className={cn("flex items-center", !collapsed && "gap-1")}>
-          <Link href={entry.href} title={collapsed ? entry.label : undefined} className={cn(linkCls(entry.href), "flex-1")}>
-            <Icon className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} />
+        <div className={cn("flex items-center", !collapsed && "gap-0.5")}>
+          <Link
+            href={entry.href}
+            title={collapsed ? entry.label : undefined}
+            className={cn(topLinkCls(entry.href), "flex-1")}
+          >
+            <Icon className={ICON} />
             {!collapsed && <span>{entry.label}</span>}
           </Link>
           {!collapsed && (
             <button
               onClick={() => toggle(entry.label)}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
             >
-              <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", !open && "-rotate-90")} />
+              <ChevronDown className="w-3.5 h-3.5" style={chevronStyle(open)} />
             </button>
           )}
         </div>
         {open && !collapsed && (
-          <div className="space-y-0.5 mt-0.5 pl-3 border-l border-gray-200 dark:border-gray-700 ml-4">
-            {entry.children.map(renderNavItem)}
+          <div className="mt-1 space-y-0.5 ml-1 pl-3 border-l-2 border-gray-100 dark:border-white/5">
+            {entry.children.map((item) => renderNavItem(item, true))}
           </div>
         )}
       </div>
@@ -239,74 +277,82 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "relative flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+        "relative flex flex-col h-full bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-white/5 transition-all duration-300",
+        collapsed ? "w-[68px]" : "w-64"
       )}
+      style={{ fontFamily: "'Inter', sans-serif" }}
     >
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-3 min-w-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logo || "/icon.svg"} alt="Robocode CRM" className="flex-shrink-0 w-8 h-8 rounded-lg object-contain" />
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className="font-bold text-gray-900 dark:text-white text-sm truncate">Robocode CRM</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Lidlar tizimi</p>
-            </div>
-          )}
-        </div>
+      <div className={cn(
+        "flex items-center h-16 border-b border-gray-100 dark:border-white/5",
+        collapsed ? "justify-center px-0" : "px-4 gap-3"
+      )}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logo || "/icon.svg"}
+          alt="Logo"
+          className="w-8 h-8 rounded-xl object-contain flex-shrink-0"
+        />
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900 dark:text-white text-sm leading-tight truncate">
+              Robocode CRM
+            </p>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">Lidlar tizimi</p>
+          </div>
+        )}
       </div>
 
       {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 z-10 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+        className="absolute -right-3 top-[72px] z-10 w-6 h-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-full flex items-center justify-center shadow-sm hover:shadow-md hover:border-[#5E2CA5]/40 transition-all duration-150"
       >
         {collapsed ? (
-          <ChevronRight className="w-3 h-3 text-gray-500" />
+          <ChevronRight className="w-3 h-3 text-gray-400" />
         ) : (
-          <ChevronLeft className="w-3 h-3 text-gray-500" />
+          <ChevronLeft className="w-3 h-3 text-gray-400" />
         )}
       </button>
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 py-4 overflow-y-auto">
+      <nav className="flex-1 px-2.5 py-4 overflow-y-auto space-y-0.5 scrollbar-none">
         {navEntries.map(renderNavEntry)}
       </nav>
 
-      {/* User profile + logout */}
-      <div className="border-t border-gray-200 dark:border-gray-800 p-3">
-        <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-          <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
-            <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
-              {user ? getInitials(user.fullName || user.name || "U") : "U"}
+      {/* User profile */}
+      <div className="border-t border-gray-100 dark:border-white/5 p-3">
+        <div className={cn("flex items-center gap-2.5", collapsed && "justify-center")}>
+          <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 flex items-center justify-center">
+            <span className="text-xs font-semibold text-[#5E2CA5] dark:text-purple-400">
+              {user ? getInitials(user.fullName ?? user.name ?? "U") : "U"}
             </span>
           </div>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {user?.fullName || user?.name}
+              <p className="text-[13px] font-medium text-gray-900 dark:text-white truncate leading-tight">
+                {user?.fullName ?? user?.name}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.role}</p>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{user?.role}</p>
             </div>
           )}
           {!collapsed && (
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 transition"
+              className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors duration-150"
               title="Chiqish"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-[15px] h-[15px]" />
             </button>
           )}
         </div>
         {collapsed && (
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="mt-2 w-full flex justify-center p-1 text-gray-400 hover:text-red-500 transition"
+            className="mt-2 w-full flex justify-center p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors duration-150"
             title="Chiqish"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-[15px] h-[15px]" />
           </button>
         )}
       </div>

@@ -2,21 +2,49 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Save, Users2, Wallet } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Plus, Save, Users2, Wallet, Star, Phone, X, BookOpen, GraduationCap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn, formatPhone, getInitials } from "@/lib/utils";
 
 interface Teacher {
   id: string; fullName: string; username: string; role: string;
-  subject: string; salary: number; groupsCount: number; studentsCount: number; groups: string[];
+  subject: string; salary: number; phone?: string;
+  groupsCount: number; studentsCount: number; groups: string[];
 }
 
+const BRAND = "#5E2CA5";
+
 function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+
+const AVATAR_COLORS = [BRAND, "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#f97316", "#ef4444"];
+const SUBJECT_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6", "#06b6d4", "#f97316"];
+
+function nameColor(name: string, palette: string[]): string {
+  return palette[(name.charCodeAt(0) + (name.charCodeAt(1) || 0)) % palette.length];
+}
+
+function starsFromCount(n: number): number {
+  if (n === 0) return 0;
+  if (n <= 10) return 1;
+  if (n <= 20) return 2;
+  if (n <= 30) return 3;
+  if (n <= 40) return 4;
+  return 5;
+}
+
+const fieldCls =
+  "w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition";
+const labelCls = "block text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1.5";
 
 export default function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [edits, setEdits] = useState<Record<string, { salary: string; subject: string }>>({});
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newForm, setNewForm] = useState({ fullName: "", username: "", password: "" });
 
   const load = async () => {
     setLoading(true);
@@ -41,68 +69,272 @@ export default function TeachersPage() {
     else toast.error("Saqlab bo'lmadi (faqat admin)");
   };
 
+  const createTeacher = async () => {
+    if (!newForm.fullName.trim()) { toast.error("Ism kiriting"); return; }
+    if (!newForm.username.trim()) { toast.error("Username kiriting"); return; }
+    if (!newForm.password.trim()) { toast.error("Parol kiriting"); return; }
+    setCreating(true);
+    const res = await fetch("/api/users", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...newForm, role: "teacher" }),
+    });
+    if (res.ok) {
+      toast.success("O'qituvchi qo'shildi");
+      setShowCreate(false);
+      setNewForm({ fullName: "", username: "", password: "" });
+      load();
+    } else toast.error("Qo'shib bo'lmadi (ruxsat kerak)");
+    setCreating(false);
+  };
+
   const totalSalary = teachers.reduce((a, t) => a + (Number(edits[t.id]?.salary ?? t.salary) || 0), 0);
   const teaching = teachers.filter((t) => t.groupsCount > 0).length;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">O'qituvchilar</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Yuklama va maosh</p>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">O&apos;qituvchilar</h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
+            {loading ? "Yuklanmoqda..." : `${teachers.length} ta o'qituvchi`}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Yangi o&apos;qituvchi
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <Card><CardContent className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center"><Users2 className="w-5 h-5 text-indigo-600" /></div>
-          <div><p className="text-xs text-gray-500">Dars beruvchilar</p><p className="text-xl font-bold text-gray-900 dark:text-white">{teaching}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center"><Wallet className="w-5 h-5 text-green-600" /></div>
-          <div><p className="text-xs text-gray-500">Jami maosh</p><p className="text-lg font-bold text-gray-900 dark:text-white">{money(totalSalary)}</p></div>
-        </CardContent></Card>
+      {/* KPI cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5 flex items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-[#5E2CA5]/10 flex items-center justify-center flex-shrink-0">
+            <Users2 className="w-5 h-5 text-[#5E2CA5]" />
+          </div>
+          <div>
+            <p className="text-[12px] text-gray-400 mb-0.5">Dars beruvchilar</p>
+            <p className="text-[22px] font-bold text-gray-900 dark:text-white leading-tight">{teaching}</p>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5 flex items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+            <Wallet className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-[12px] text-gray-400 mb-0.5">Jami maosh</p>
+            <p className="text-[20px] font-bold text-gray-900 dark:text-white leading-tight">{money(totalSalary)}</p>
+          </div>
+        </div>
       </div>
 
-      <Card><CardContent className="p-0 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 text-xs uppercase">
-            <tr>
-              <th className="text-left font-medium px-4 py-3">Ism</th>
-              <th className="text-left font-medium px-4 py-3">Fan</th>
-              <th className="text-right font-medium px-4 py-3">Guruh</th>
-              <th className="text-right font-medium px-4 py-3">O'quvchi</th>
-              <th className="text-left font-medium px-4 py-3">Maosh</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {loading ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
-            ) : teachers.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Hodim yo'q</td></tr>
-            ) : teachers.map((t) => (
-              <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <td className="px-4 py-3">
-                  <p className="font-medium text-gray-900 dark:text-white">{t.fullName}</p>
-                  <p className="text-xs text-gray-400">@{t.username}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <input value={edits[t.id]?.subject ?? t.subject} onChange={(e) => setEdit(t.id, "subject", e.target.value, t)}
-                    placeholder="—" className="w-28 px-2 py-1 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500" />
-                </td>
-                <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-300">{t.groupsCount}</td>
-                <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-300">{t.studentsCount}</td>
-                <td className="px-4 py-3">
-                  <input type="number" value={edits[t.id]?.salary ?? (t.salary || "")} onChange={(e) => setEdit(t.id, "salary", e.target.value, t)}
-                    placeholder="0" className="w-32 px-2 py-1 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500" />
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Button size="sm" variant="outline" onClick={() => save(t)}><Save className="w-3.5 h-3.5" /></Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardContent></Card>
+      {/* Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl h-64 animate-pulse" />
+          ))}
+        </div>
+      ) : teachers.length === 0 ? (
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm py-20 text-center">
+          <GraduationCap className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 font-medium">Hodim yo&apos;q</p>
+          <p className="text-[13px] text-gray-400 mt-1">Sozlamalar → Hodimlar bo&apos;limida qo&apos;shing</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {teachers.map((t) => {
+            const avatarColor = nameColor(t.fullName, AVATAR_COLORS);
+            const subColor = t.subject ? nameColor(t.subject, SUBJECT_COLORS) : "#94a3b8";
+            const stars = starsFromCount(t.studentsCount);
+            const currentSubject = edits[t.id]?.subject ?? t.subject;
+            const currentSalary = edits[t.id]?.salary ?? String(t.salary || "");
+            const isDirty = edits[t.id] !== undefined;
+
+            return (
+              <div
+                key={t.id}
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden"
+              >
+                {/* Top section */}
+                <div className="p-5 pb-4">
+                  <div className="flex items-start gap-3">
+                    {/* Avatar */}
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-[15px] font-bold flex-shrink-0"
+                      style={{ backgroundColor: avatarColor }}
+                    >
+                      {getInitials(t.fullName)}
+                    </div>
+
+                    {/* Name + subject */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[14px] font-bold text-gray-900 dark:text-white leading-snug truncate">
+                        {t.fullName}
+                      </h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: subColor }}
+                        />
+                        <span className="text-[12px] text-gray-500 dark:text-gray-400 truncate">
+                          {currentSubject || "Fan belgilanmagan"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-400 mt-0.5 font-mono">@{t.username}</p>
+                    </div>
+
+                    {/* Star rating */}
+                    <div className="flex items-center gap-0.5 flex-shrink-0 pt-0.5">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star
+                          key={s}
+                          className="w-3.5 h-3.5"
+                          fill={s <= stars ? "#f59e0b" : "none"}
+                          stroke={s <= stars ? "#f59e0b" : "#d1d5db"}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="mx-5 border-t border-gray-100 dark:border-white/5" />
+
+                {/* Stats */}
+                <div className="px-5 py-3.5 grid grid-cols-2 gap-3">
+                  <div className="text-center">
+                    <p className="text-[20px] font-bold text-gray-900 dark:text-white">{t.groupsCount}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5 flex items-center justify-center gap-1">
+                      <BookOpen className="w-3 h-3" /> Guruhlar
+                    </p>
+                  </div>
+                  <div className="text-center border-l border-gray-100 dark:border-white/5">
+                    <p className="text-[20px] font-bold text-gray-900 dark:text-white">{t.studentsCount}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5 flex items-center justify-center gap-1">
+                      <Users2 className="w-3 h-3" /> O&apos;quvchilar
+                    </p>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="mx-5 border-t border-gray-100 dark:border-white/5" />
+
+                {/* Edit fields */}
+                <div className="px-5 py-3.5 space-y-2.5">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className={labelCls}>Fan</label>
+                      <input
+                        value={currentSubject}
+                        onChange={e => setEdit(t.id, "subject", e.target.value, t)}
+                        placeholder="—"
+                        className="w-full px-2.5 py-1.5 text-[12px] border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Maosh (so&apos;m)</label>
+                      <input
+                        type="number"
+                        value={currentSalary}
+                        onChange={e => setEdit(t.id, "salary", e.target.value, t)}
+                        placeholder="0"
+                        className="w-full px-2.5 py-1.5 text-[12px] border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 transition"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Phone row + Save button */}
+                  <div className="flex items-center justify-between gap-2">
+                    {t.phone ? (
+                      <a
+                        href={`tel:${t.phone}`}
+                        className="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400 hover:text-[#5E2CA5] transition-colors"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        {formatPhone(t.phone)}
+                      </a>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-[12px] text-gray-300 dark:text-gray-600">
+                        <Phone className="w-3.5 h-3.5" />
+                        Telefon yo&apos;q
+                      </span>
+                    )}
+                    <button
+                      onClick={() => save(t)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors",
+                        isDirty
+                          ? "bg-[#5E2CA5] text-white hover:bg-[#4a2280]"
+                          : "bg-gray-100 dark:bg-white/8 text-gray-400 hover:bg-gray-200 dark:hover:bg-white/15"
+                      )}
+                    >
+                      <Save className="w-3.5 h-3.5" /> Saqlash
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Create teacher modal */}
+      {showCreate && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={() => setShowCreate(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Yangi o&apos;qituvchi</h2>
+              <button onClick={() => setShowCreate(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <label className={labelCls}>To&apos;liq ism *</label>
+              <input
+                value={newForm.fullName}
+                onChange={e => setNewForm(f => ({ ...f, fullName: e.target.value }))}
+                placeholder="Ism Familiya"
+                className={fieldCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Username *</label>
+              <input
+                value={newForm.username}
+                onChange={e => setNewForm(f => ({ ...f, username: e.target.value }))}
+                placeholder="teacher1"
+                className={fieldCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Parol *</label>
+              <input
+                type="password"
+                value={newForm.password}
+                onChange={e => setNewForm(f => ({ ...f, password: e.target.value }))}
+                placeholder="••••••••"
+                className={fieldCls}
+              />
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <Button onClick={createTeacher} loading={creating} className="flex-1">Qo&apos;shish</Button>
+              <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

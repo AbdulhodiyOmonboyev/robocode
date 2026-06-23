@@ -3,14 +3,21 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Plus, Trash2, Users, Clock, Calendar, BookOpen, ChevronDown } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Plus, Trash2, Users, Clock, Calendar, GraduationCap,
+  ChevronDown, MapPin, X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm";
 import { WEEKDAYS } from "@/lib/constants";
-import { formatPhone } from "@/lib/utils";
+import { cn, formatPhone, getInitials } from "@/lib/utils";
 
-const dayLabel = (v: string) => WEEKDAYS.find(d=>d.value===v)?.label || v;
+const BRAND = "#5E2CA5";
+const dayLabel = (v: string) => WEEKDAYS.find(d => d.value === v)?.label || v;
+
+const fieldCls =
+  "w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition";
+const labelCls = "block text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1.5";
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState<any[]>([]);
@@ -20,30 +27,37 @@ export default function GroupsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [days, setDays] = useState<string[]>([]);
-  const [form, setForm] = useState({ name:"", courseId:"", teacherId:"", timeFrom:"", timeTo:"", room:"", startDate:"" });
+  const [form, setForm] = useState({ name: "", courseId: "", teacherId: "", timeFrom: "", timeTo: "", room: "", startDate: "" });
   const [expanded, setExpanded] = useState<string | null>(null);
   const [members, setMembers] = useState<Record<string, any[]>>({});
 
   const load = async () => {
     setLoading(true);
-    const g = await fetch("/api/groups").then(r=>r.json());
+    const g = await fetch("/api/groups").then(r => r.json());
     setGroups(Array.isArray(g) ? g : []);
     setLoading(false);
   };
+
   useEffect(() => {
     load();
-    fetch("/api/courses").then(r=>r.json()).then(setCourses);
-    fetch("/api/users").then(r=>r.json()).then(setUsers);
+    fetch("/api/courses").then(r => r.json()).then(setCourses);
+    fetch("/api/users").then(r => r.json()).then(setUsers);
   }, []);
 
   const create = async () => {
     if (form.name.trim().length < 1) { toast.error("Guruh nomini kiriting"); return; }
     setCreating(true);
-    const res = await fetch("/api/groups", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({
-      ...form, days: days.join(","), courseId: form.courseId||null, teacherId: form.teacherId||null, startDate: form.startDate||null,
-    })});
-    if (res.ok) { toast.success("Guruh yaratildi"); setShowCreate(false); setForm({name:"",courseId:"",teacherId:"",timeFrom:"",timeTo:"",room:"",startDate:""}); setDays([]); load(); }
-    else toast.error("Yaratilmadi");
+    const res = await fetch("/api/groups", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, days: days.join(","), courseId: form.courseId || null, teacherId: form.teacherId || null, startDate: form.startDate || null }),
+    });
+    if (res.ok) {
+      toast.success("Guruh yaratildi");
+      setShowCreate(false);
+      setForm({ name: "", courseId: "", teacherId: "", timeFrom: "", timeTo: "", room: "", startDate: "" });
+      setDays([]);
+      load();
+    } else toast.error("Yaratilmadi");
     setCreating(false);
   };
 
@@ -51,7 +65,7 @@ export default function GroupsPage() {
 
   const remove = async (id: string) => {
     if (!(await confirm({ title: "Guruhni o'chirish", message: "Bu guruhni o'chirasizmi? A'zolar guruhdan chiqariladi (lidlar o'chmaydi)." }))) return;
-    const res = await fetch("/api/groups/"+id, { method:"DELETE" });
+    const res = await fetch("/api/groups/" + id, { method: "DELETE" });
     if (res.ok) { toast.success("Guruh o'chirildi"); load(); }
     else toast.error("O'chirib bo'lmadi");
   };
@@ -60,115 +74,289 @@ export default function GroupsPage() {
     if (expanded === id) { setExpanded(null); return; }
     setExpanded(id);
     if (!members[id]) {
-      const det = await fetch("/api/groups/"+id).then(r=>r.json());
+      const det = await fetch("/api/groups/" + id).then(r => r.json());
       setMembers(m => ({ ...m, [id]: det.leads || [] }));
     }
   };
 
-  const toggleDay = (v: string) => setDays(arr => arr.includes(v) ? arr.filter(x=>x!==v) : [...arr, v]);
+  const toggleDay = (v: string) => setDays(arr => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4">
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
       {dialog}
-      <div className="flex items-center justify-between">
+
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Guruhlar</h1>
-          <p className="text-sm text-gray-500 mt-0.5">O&apos;quv guruhlari va a&apos;zolari</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Guruhlar</h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
+            {loading ? "Yuklanmoqda..." : `${groups.length} ta guruh`}
+          </p>
         </div>
-        <Button size="sm" onClick={()=>setShowCreate(s=>!s)}><Plus className="w-4 h-4"/> Yangi guruh</Button>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Yangi guruh
+        </button>
       </div>
 
-      {showCreate && (
-        <Card>
-          <CardContent className="space-y-3 py-4">
-            <input placeholder="Guruh nomi" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <select value={form.courseId} onChange={e=>setForm(f=>({...f,courseId:e.target.value}))} className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Kurs (ixtiyoriy)</option>
-                {courses.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <select value={form.teacherId} onChange={e=>setForm(f=>({...f,teacherId:e.target.value}))} className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">O&apos;qituvchi (ixtiyoriy)</option>
-                {users.map((u:any)=><option key={u.id} value={u.id}>{u.fullName}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Qaysi kunlar</label>
-              <div className="flex gap-2 flex-wrap">
-                {WEEKDAYS.map(d=>(
-                  <button key={d.value} type="button" onClick={()=>toggleDay(d.value)}
-                    className={`px-3 py-1 text-sm font-medium rounded-lg transition ${days.includes(d.value)?"bg-indigo-600 text-white":"border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"}`}>{d.label}</button>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div><label className="block text-xs text-gray-500 mb-1.5">Soat (dan)</label><input type="time" value={form.timeFrom} onChange={e=>setForm(f=>({...f,timeFrom:e.target.value}))} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/></div>
-              <div><label className="block text-xs text-gray-500 mb-1.5">Soat (gacha)</label><input type="time" value={form.timeTo} onChange={e=>setForm(f=>({...f,timeTo:e.target.value}))} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/></div>
-              <div><label className="block text-xs text-gray-500 mb-1.5">Boshlanish</label><input type="date" value={form.startDate} onChange={e=>setForm(f=>({...f,startDate:e.target.value}))} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/></div>
-              <div><label className="block text-xs text-gray-500 mb-1.5">Xona</label><input value={form.room} onChange={e=>setForm(f=>({...f,room:e.target.value}))} placeholder="masalan: 1-xona" className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/></div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button size="sm" variant="outline" onClick={()=>setShowCreate(false)}>Bekor</Button>
-              <Button size="sm" loading={creating} onClick={create}>Yaratish</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Loading */}
       {loading ? (
-        <div className="py-16 text-center text-gray-400 animate-pulse">Yuklanmoqda...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl h-52 animate-pulse" />
+          ))}
+        </div>
       ) : groups.length === 0 ? (
-        <div className="py-16 text-center">
-          <div className="text-5xl mb-3">👥</div>
-          <p className="text-gray-500 font-medium">Hali guruh yo&apos;q</p>
-          <p className="text-sm text-gray-400 mt-1">Lidlar ro&apos;yxatida bir nechta lidni belgilab &quot;Guruhga qo&apos;shish&quot; orqali guruh ochishingiz mumkin.</p>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm py-20 text-center">
+          <div className="text-5xl mb-4">👥</div>
+          <p className="text-gray-600 dark:text-gray-300 font-medium">Hali guruh yo&apos;q</p>
+          <p className="text-[13px] text-gray-400 mt-1.5 max-w-xs mx-auto">Lidlar ro&apos;yxatida bir nechta lidni belgilab &quot;Guruhga qo&apos;shish&quot; orqali guruh ochishingiz mumkin.</p>
+          <button onClick={() => setShowCreate(true)} className="mt-5 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] text-white mx-auto hover:bg-[#4a2280] transition-colors">
+            <Plus className="w-4 h-4" /> Guruh yaratish
+          </button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {groups.map((g:any)=>(
-            <Card key={g.id}>
-              <CardContent className="py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{g.name}</h3>
-                      {g.course && <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg" style={{backgroundColor:(g.course.color||"#6366f1")+"20",color:g.course.color||"#6366f1"}}><BookOpen className="w-3 h-3"/>{g.course.name}</span>}
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"><Users className="w-3 h-3"/>{g._count?.leads ?? 0} a&apos;zo</span>
+        /* Grid */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {groups.map((g: any) => {
+            const accent = g.course?.color || BRAND;
+            const initials = g.name.slice(0, 2).toUpperCase();
+            const daysList: string[] = g.days ? g.days.split(",").filter(Boolean) : [];
+            const isOpen = expanded === g.id;
+
+            return (
+              <div
+                key={g.id}
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden"
+              >
+                {/* Card body */}
+                <div className="p-5 flex-1 space-y-4">
+
+                  {/* Top row: icon + name + status + delete */}
+                  <div className="flex items-start gap-3">
+                    {/* Colored icon */}
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: accent + "18" }}
+                    >
+                      <GraduationCap className="w-5 h-5" style={{ color: accent }} />
                     </div>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 flex-wrap">
-                      {g.days && <span className="inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5"/>{g.days.split(",").map(dayLabel).join(", ")}</span>}
-                      {(g.timeFrom || g.timeTo) && <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5"/>{g.timeFrom||"?"}–{g.timeTo||"?"}</span>}
-                      {g.teacher && <span>O&apos;qituvchi: {g.teacher.fullName}</span>}
-                      {g.startDate && <span>Boshlanish: {new Date(g.startDate).toLocaleDateString()}</span>}
+
+                    {/* Name + course */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[14px] font-bold text-gray-900 dark:text-white leading-snug truncate">
+                        {g.name}
+                      </h3>
+                      <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-0.5 truncate">
+                        {g.course?.name || "Kurs belgilanmagan"}
+                      </p>
+                    </div>
+
+                    {/* Status badge + delete */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+                        Faol
+                      </span>
+                      <button
+                        onClick={() => remove(g.id)}
+                        className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={()=>toggleExpand(g.id)} className="p-1.5 text-gray-400 hover:text-indigo-600 rounded-lg transition flex items-center gap-1 text-xs">
-                      A&apos;zolar <ChevronDown className={`w-4 h-4 transition ${expanded===g.id?"rotate-180":""}`}/>
-                    </button>
-                    <button onClick={()=>remove(g.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg transition"><Trash2 className="w-4 h-4"/></button>
-                  </div>
+
+                  {/* Teacher row */}
+                  {g.teacher ? (
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                        style={{ backgroundColor: BRAND }}
+                      >
+                        {getInitials(g.teacher.fullName)}
+                      </div>
+                      <span className="text-[12px] text-gray-600 dark:text-gray-300 truncate">{g.teacher.fullName}</span>
+                    </div>
+                  ) : (
+                    <p className="text-[12px] text-gray-300 dark:text-gray-600 italic">O&apos;qituvchi belgilanmagan</p>
+                  )}
+
+                  {/* Schedule */}
+                  {(daysList.length > 0 || g.timeFrom) && (
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-gray-500 dark:text-gray-400">
+                      {daysList.length > 0 && (
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          {daysList.map(dayLabel).join(", ")}
+                        </span>
+                      )}
+                      {(g.timeFrom || g.timeTo) && (
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          {g.timeFrom || "?"}–{g.timeTo || "?"}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {expanded === g.id && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 space-y-1.5">
+                {/* Bottom chips + expand button */}
+                <div className="px-5 py-3 border-t border-gray-50 dark:border-white/5 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Student count chip */}
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#5E2CA5]/8 text-[#5E2CA5]"
+                      style={{ backgroundColor: "#5E2CA512" }}>
+                      <Users className="w-3 h-3" />
+                      {g._count?.leads ?? 0} a&apos;zo
+                    </span>
+                    {/* Room chip */}
+                    {g.room && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-gray-100 dark:bg-white/8 text-gray-500 dark:text-gray-400"
+                        style={{ backgroundColor: undefined }}>
+                        <MapPin className="w-3 h-3" />
+                        {g.room}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => toggleExpand(g.id)}
+                    className="flex items-center gap-1 text-[12px] text-gray-400 hover:text-[#5E2CA5] transition-colors"
+                  >
+                    A&apos;zolar
+                    <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200", isOpen && "rotate-180")} />
+                  </button>
+                </div>
+
+                {/* Expanded members list */}
+                {isOpen && (
+                  <div className="border-t border-gray-50 dark:border-white/5 px-5 py-3 space-y-1.5 bg-gray-50/50 dark:bg-white/5">
                     {(members[g.id] || []).length === 0 ? (
-                      <p className="text-sm text-gray-400">A&apos;zolar yo&apos;q</p>
-                    ) : (members[g.id] || []).map((m:any)=>(
-                      <div key={m.id} className="flex items-center justify-between text-sm">
-                        <Link href={`/leads/${m.id}`} className="font-medium text-gray-800 dark:text-gray-200 hover:text-indigo-600">{m.fullName}</Link>
-                        <div className="flex items-center gap-3">
-                          {m.stage && <span className="text-xs px-2 py-0.5 rounded-lg text-white" style={{backgroundColor:m.stage.color}}>{m.stage.name}</span>}
-                          <span className="text-xs text-gray-500 font-mono">{formatPhone(m.phone)}</span>
+                      <p className="text-[12px] text-gray-400 py-2">A&apos;zolar yo&apos;q</p>
+                    ) : (members[g.id] || []).map((m: any) => (
+                      <div key={m.id} className="flex items-center justify-between gap-2 py-0.5">
+                        <Link
+                          href={`/leads/${m.id}`}
+                          className="text-[13px] font-medium text-gray-800 dark:text-gray-200 hover:text-[#5E2CA5] transition-colors truncate"
+                        >
+                          {m.fullName}
+                        </Link>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {m.stage && (
+                            <span
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white"
+                              style={{ backgroundColor: m.stage.color }}
+                            >
+                              {m.stage.name}
+                            </span>
+                          )}
+                          <span className="text-[11px] text-gray-400 font-mono">{formatPhone(m.phone)}</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Create group modal */}
+      {showCreate && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={() => setShowCreate(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Yangi guruh</h2>
+              <button onClick={() => setShowCreate(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Guruh nomi */}
+            <div>
+              <label className={labelCls}>Guruh nomi *</label>
+              <input
+                placeholder="Masalan: Beginners-1"
+                value={form.name}
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                className={fieldCls}
+              />
+            </div>
+
+            {/* Kurs + O'qituvchi */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>Kurs</label>
+                <select value={form.courseId} onChange={e => setForm(f => ({ ...f, courseId: e.target.value }))} className={fieldCls}>
+                  <option value="">Ixtiyoriy</option>
+                  {courses.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>O&apos;qituvchi</label>
+                <select value={form.teacherId} onChange={e => setForm(f => ({ ...f, teacherId: e.target.value }))} className={fieldCls}>
+                  <option value="">Ixtiyoriy</option>
+                  {users.map((u: any) => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Kunlar */}
+            <div>
+              <label className={labelCls}>Dars kunlari</label>
+              <div className="flex gap-2 flex-wrap">
+                {WEEKDAYS.map(d => (
+                  <button
+                    key={d.value}
+                    type="button"
+                    onClick={() => toggleDay(d.value)}
+                    className={cn(
+                      "px-3 py-1.5 text-[12px] font-medium rounded-lg transition-colors",
+                      days.includes(d.value)
+                        ? "bg-[#5E2CA5] text-white"
+                        : "border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5"
+                    )}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Vaqt + Boshlanish + Xona */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>Soat (dan)</label>
+                <input type="time" value={form.timeFrom} onChange={e => setForm(f => ({ ...f, timeFrom: e.target.value }))} className={fieldCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Soat (gacha)</label>
+                <input type="time" value={form.timeTo} onChange={e => setForm(f => ({ ...f, timeTo: e.target.value }))} className={fieldCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Boshlanish sanasi</label>
+                <input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} className={fieldCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Xona</label>
+                <input value={form.room} onChange={e => setForm(f => ({ ...f, room: e.target.value }))} placeholder="1-xona" className={fieldCls} />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-1">
+              <Button onClick={create} loading={creating} className="flex-1">Yaratish</Button>
+              <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

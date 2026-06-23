@@ -3,10 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Plus, Phone, MessageCircle, Download, Settings2, Trash2, ChevronLeft, ChevronRight, Check, X, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  Plus, Phone, MessageCircle, Download, Settings2, Trash2,
+  ChevronLeft, ChevronRight, ChevronUp, ChevronDown,
+} from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Stage { id: string; name: string; color: string; order: number; isWon: boolean; isLost: boolean; }
 interface Lead {
@@ -16,6 +20,7 @@ interface Lead {
 }
 type Board = Record<string, Lead[]>;
 
+const BRAND = "#5E2CA5";
 const SWATCHES = ["#3b82f6","#6366f1","#8b5cf6","#a855f7","#ec4899","#f43f5e","#ef4444","#f97316","#f59e0b","#eab308","#10b981","#06b6d4","#14b8a6","#6b7280"];
 
 export default function KanbanPage() {
@@ -34,6 +39,7 @@ export default function KanbanPage() {
   useEffect(() => {
     try { const s = localStorage.getItem("kanbanCollapsed"); if (s) setCollapsed(new Set(JSON.parse(s))); } catch {}
   }, []);
+
   const persist = (n: Set<string>) => { try { localStorage.setItem("kanbanCollapsed", JSON.stringify([...n])); } catch {} };
   const toggleCollapse = (id: string) => setCollapsed(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); persist(n); return n; });
   const collapseEmpty = () => { const n = new Set(collapsed); stages.forEach(s => { if ((board[s.id] || []).length === 0) n.add(s.id); }); setCollapsed(n); persist(n); };
@@ -70,7 +76,6 @@ export default function KanbanPage() {
     moved.stageId = dstCol;
     dstItems.splice(destination.index, 0, moved);
     setBoard(b => ({ ...b, [srcCol]: srcItems, [dstCol]: dstItems }));
-
     const res = await fetch(`/api/leads/${draggableId}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ stageId: dstCol }),
@@ -131,132 +136,258 @@ export default function KanbanPage() {
 
   if (loading) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {[1,2,3,4,5].map(s => (
-          <div key={s} className="flex-shrink-0 w-64 h-96 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 animate-pulse"/>
-        ))}
+      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {[1, 2, 3, 4, 5].map(s => (
+            <div key={s} className="flex-shrink-0 w-72 h-[480px] bg-gray-100 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Kanban</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Lidlarni drag &amp; drop bilan boshqaring</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Kanban</h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Lidlarni drag &amp; drop bilan boshqaring</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={collapsed.size > 0 ? expandAll : collapseEmpty}>
-            {collapsed.size > 0 ? <><ChevronDown className="w-4 h-4"/> Hammasini ochish</> : <><ChevronUp className="w-4 h-4"/> Bo&apos;shlarni yig&apos;ish</>}
-          </Button>
-          <Button variant={manage ? "primary" : "outline"} size="sm" onClick={()=>setManage(m=>!m)}>
-            <Settings2 className="w-4 h-4"/> {manage ? "Tayyor" : "Ustunlar"}
-          </Button>
-          <a href="/api/reports/export" download>
-            <Button variant="outline" size="sm"><Download className="w-4 h-4"/> Excel</Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={collapsed.size > 0 ? expandAll : collapseEmpty}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+          >
+            {collapsed.size > 0
+              ? <><ChevronDown className="w-3.5 h-3.5" /> Hammasini ochish</>
+              : <><ChevronUp className="w-3.5 h-3.5" /> Bo&apos;shlarni yig&apos;ish</>
+            }
+          </button>
+          <button
+            onClick={() => setManage(m => !m)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium border transition-colors",
+              manage
+                ? "bg-[#5E2CA5]/10 text-[#5E2CA5] border-[#5E2CA5]/20"
+                : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5"
+            )}
+          >
+            <Settings2 className="w-3.5 h-3.5" /> {manage ? "Tayyor" : "Ustunlar"}
+          </button>
+          <a href="/api/reports/export" download className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+            <Download className="w-3.5 h-3.5" /> Excel
           </a>
-          <Link href="/leads"><Button variant="outline" size="sm">Jadval</Button></Link>
-          <Link href="/leads/new"><Button size="sm"><Plus className="w-4 h-4"/> Yangi lid</Button></Link>
+          <Link href="/leads" className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+            Jadval
+          </Link>
+          <Link href="/leads/new" className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors">
+            <Plus className="w-4 h-4" /> Yangi lid
+          </Link>
         </div>
       </div>
 
+      {/* Board */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex gap-3 overflow-x-auto pb-4 items-start">
+        <div className="flex gap-4 overflow-x-auto pb-6 items-start">
+
           {stages.map((stage, index) => {
             const items = board[stage.id] || [];
+
+            /* ── Collapsed column ── */
             if (collapsed.has(stage.id) && !manage) {
               return (
-                <button key={stage.id} onClick={()=>toggleCollapse(stage.id)} title="Ochish"
-                  className="flex-shrink-0 w-64 self-start bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-t-4 border border-gray-200 dark:border-gray-700 px-3 py-3 flex items-center justify-between gap-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                  style={{ borderTopColor: stage.color }}>
-                  <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide truncate">{stage.name}</h3>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <span className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full font-medium">{items.length}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-400"/>
-                  </div>
+                <button
+                  key={stage.id}
+                  onClick={() => toggleCollapse(stage.id)}
+                  title="Ochish"
+                  className="flex-shrink-0 w-14 self-start bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-3 flex flex-col items-center gap-3 hover:bg-gray-200/60 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: stage.color }} />
+                  <span
+                    className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 writing-mode-vertical"
+                    style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+                  >
+                    {stage.name}
+                  </span>
+                  <span className="bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[11px] font-semibold px-1.5 py-0.5 rounded-full border border-gray-200 dark:border-white/10">
+                    {items.length}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                 </button>
               );
             }
+
+            /* ── Full column ── */
             return (
-              <div key={stage.id} className="flex-shrink-0 w-64 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-t-4 border border-gray-200 dark:border-gray-700 flex flex-col" style={{ borderTopColor: stage.color }}>
+              <div key={stage.id} className="flex-shrink-0 w-72 bg-gray-100 dark:bg-gray-800/60 rounded-2xl flex flex-col">
+
                 {/* Column header */}
-                <div className="px-3 py-3 border-b border-gray-200 dark:border-gray-700">
+                <div className="px-3.5 pt-3.5 pb-2.5">
                   {!manage ? (
-                    <div className="flex items-center justify-between gap-1">
-                      <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide truncate">{stage.name}</h3>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <span className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full font-medium">{items.length}</span>
-                        <button onClick={()=>toggleCollapse(stage.id)} className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" title="Yig'ish"><ChevronUp className="w-3.5 h-3.5"/></button>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: stage.color }} />
+                      <h3 className="flex-1 text-[13px] font-semibold text-gray-700 dark:text-gray-200 truncate">{stage.name}</h3>
+                      <span className="bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[11px] font-semibold px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/10 shadow-sm flex-shrink-0">
+                        {items.length}
+                      </span>
+                      <button
+                        onClick={() => toggleCollapse(stage.id)}
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                        title="Yig'ish"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   ) : (
+                    /* Manage mode header */
                     <div className="space-y-2">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         {editingName === stage.id ? (
-                          <input autoFocus value={nameDraft} onChange={e=>setNameDraft(e.target.value)}
-                            onKeyDown={e=>{ if(e.key==="Enter") renameStage(stage.id); if(e.key==="Escape") setEditingName(null); }}
-                            onBlur={()=>renameStage(stage.id)}
-                            className="flex-1 min-w-0 px-2 py-1 text-xs border border-indigo-300 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none"/>
+                          <input
+                            autoFocus value={nameDraft}
+                            onChange={e => setNameDraft(e.target.value)}
+                            onKeyDown={e => { if (e.key === "Enter") renameStage(stage.id); if (e.key === "Escape") setEditingName(null); }}
+                            onBlur={() => renameStage(stage.id)}
+                            className="flex-1 min-w-0 px-2 py-1 text-[13px] border border-[#5E2CA5]/40 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#5E2CA5]/30"
+                          />
                         ) : (
-                          <button onClick={()=>{ setEditingName(stage.id); setNameDraft(stage.name); }}
-                            className="flex-1 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase truncate hover:text-indigo-600">{stage.name}</button>
+                          <button
+                            onClick={() => { setEditingName(stage.id); setNameDraft(stage.name); }}
+                            className="flex-1 text-left text-[13px] font-semibold text-gray-700 dark:text-gray-200 truncate hover:text-[#5E2CA5] transition-colors"
+                          >
+                            {stage.name}
+                          </button>
                         )}
-                        <button onClick={()=>setColorOpen(colorOpen===stage.id?null:stage.id)} className="w-5 h-5 rounded-full border border-white dark:border-gray-700 shadow flex-shrink-0" style={{ backgroundColor: stage.color }} title="Rang"/>
+                        <button
+                          onClick={() => setColorOpen(colorOpen === stage.id ? null : stage.id)}
+                          className="w-5 h-5 rounded-full border-2 border-white dark:border-gray-700 shadow-sm flex-shrink-0 hover:scale-110 transition-transform"
+                          style={{ backgroundColor: stage.color }}
+                          title="Rang"
+                        />
                       </div>
                       {colorOpen === stage.id && (
-                        <div className="flex flex-wrap gap-1 p-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div className="flex flex-wrap gap-1.5 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-sm">
                           {SWATCHES.map(c => (
-                            <button key={c} onClick={()=>recolor(stage.id, c)} className="w-5 h-5 rounded-full border border-gray-200" style={{ backgroundColor: c }}/>
+                            <button
+                              key={c}
+                              onClick={() => recolor(stage.id, c)}
+                              className="w-5 h-5 rounded-full border-2 border-transparent hover:border-white hover:scale-110 transition-transform"
+                              style={{ backgroundColor: c }}
+                            />
                           ))}
                         </div>
                       )}
                       <div className="flex items-center justify-between">
-                        <div className="flex gap-1">
-                          <button onClick={()=>moveStage(index,-1)} disabled={index===0} className="p-1 rounded text-gray-400 hover:text-gray-700 disabled:opacity-30"><ChevronLeft className="w-3.5 h-3.5"/></button>
-                          <button onClick={()=>moveStage(index,1)} disabled={index===stages.length-1} className="p-1 rounded text-gray-400 hover:text-gray-700 disabled:opacity-30"><ChevronRight className="w-3.5 h-3.5"/></button>
+                        <div className="flex gap-0.5">
+                          <button onClick={() => moveStage(index, -1)} disabled={index === 0} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-30 transition-colors">
+                            <ChevronLeft className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => moveStage(index, 1)} disabled={index === stages.length - 1} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-30 transition-colors">
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                        <button onClick={()=>setConfirmDelete(stage)} className="p-1 rounded text-gray-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5"/></button>
+                        <button onClick={() => setConfirmDelete(stage)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
 
+                {/* Droppable area */}
                 <Droppable droppableId={stage.id}>
                   {(provided, snapshot) => (
-                    <div ref={provided.innerRef} {...provided.droppableProps}
-                      className={`flex-1 p-2 space-y-2 min-h-[200px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50 dark:bg-indigo-900/10" : ""}`}>
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={cn(
+                        "flex-1 px-2.5 pb-2.5 space-y-2 min-h-[200px] rounded-b-2xl transition-colors duration-150",
+                        snapshot.isDraggingOver ? "bg-[#5E2CA5]/5 dark:bg-[#5E2CA5]/10" : ""
+                      )}
+                    >
                       {items.map((lead, idx) => (
                         <Draggable key={lead.id} draggableId={lead.id} index={idx}>
                           {(prov, snap) => (
-                            <div ref={prov.innerRef} {...prov.draggableProps} {...prov.dragHandleProps}
-                              className={`bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-3 shadow-sm transition-shadow ${snap.isDragging ? "shadow-xl rotate-1" : "hover:shadow-md"}`}>
-                              <Link href={`/leads/${lead.id}`} onClick={e => { if (snap.isDragging) e.preventDefault(); }}>
-                                <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1 hover:text-indigo-600 transition">{lead.fullName}</p>
+                            <div
+                              ref={prov.innerRef}
+                              {...prov.draggableProps}
+                              {...prov.dragHandleProps}
+                              className={cn(
+                                "bg-white dark:bg-gray-900 rounded-xl p-3.5 transition-all duration-150 select-none",
+                                snap.isDragging
+                                  ? "shadow-2xl rotate-1 scale-[1.02] opacity-95"
+                                  : "shadow-sm hover:shadow-md"
+                              )}
+                            >
+                              {/* Name */}
+                              <Link
+                                href={`/leads/${lead.id}`}
+                                onClick={e => { if (snap.isDragging) e.preventDefault(); }}
+                              >
+                                <p className="text-[13px] font-semibold text-gray-900 dark:text-white hover:text-[#5E2CA5] dark:hover:text-purple-400 transition-colors leading-snug mb-1.5">
+                                  {lead.fullName}
+                                </p>
                               </Link>
+
+                              {/* Course tag */}
                               {lead.course ? (
-                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg mb-2 font-medium" style={{ backgroundColor: (lead.course.color||"#6366f1")+"1a", color: lead.course.color||"#6366f1" }}>
-                                  <span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:lead.course.color||"#6366f1"}}/>
+                                <span
+                                  className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full mb-2.5"
+                                  style={{
+                                    backgroundColor: (lead.course.color || BRAND) + "18",
+                                    color: lead.course.color || BRAND,
+                                  }}
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: lead.course.color || BRAND }} />
                                   {lead.course.name}
                                 </span>
                               ) : (
-                                <span className="inline-block text-xs px-2 py-0.5 rounded-lg mb-2 bg-gray-100 dark:bg-gray-800 text-gray-400">Kurs belgilanmagan</span>
+                                <span className="inline-block text-[11px] px-2 py-0.5 rounded-full mb-2.5 bg-gray-100 dark:bg-gray-800 text-gray-400">
+                                  Kurs yo&apos;q
+                                </span>
                               )}
-                              <div className="flex items-center justify-between mt-2">
-                                <span className="text-xs text-gray-500 font-mono">{formatPhone(lead.phone)}</span>
-                                <div className="flex gap-1">
-                                  <a href={phoneToTel(lead.phone)} onClick={e=>e.stopPropagation()} className="p-1 text-gray-400 hover:text-green-600 rounded transition"><Phone className="w-3 h-3"/></a>
-                                  <a href={phoneToTelegram(lead.phone)} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} className="p-1 text-gray-400 hover:text-blue-500 rounded transition"><MessageCircle className="w-3 h-3"/></a>
+
+                              {/* Phone + contact buttons */}
+                              <div className="flex items-center justify-between">
+                                <span className="text-[12px] text-gray-400 font-mono">{formatPhone(lead.phone)}</span>
+                                <div className="flex items-center gap-0.5">
+                                  <a
+                                    href={phoneToTel(lead.phone)}
+                                    onClick={e => e.stopPropagation()}
+                                    className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors"
+                                    title="Qo'ng'iroq"
+                                  >
+                                    <Phone className="w-3 h-3" />
+                                  </a>
+                                  <a
+                                    href={phoneToTelegram(lead.phone)}
+                                    target="_blank" rel="noreferrer"
+                                    onClick={e => e.stopPropagation()}
+                                    className="p-1.5 text-gray-400 hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-lg transition-colors"
+                                    title="Telegram"
+                                  >
+                                    <MessageCircle className="w-3 h-3" />
+                                  </a>
                                 </div>
                               </div>
-                              {lead.assignedTo && <p className="text-xs text-gray-400 mt-1">{lead.assignedTo.fullName}</p>}
+
+                              {/* Assigned to */}
+                              {lead.assignedTo && (
+                                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 truncate">
+                                  {lead.assignedTo.fullName}
+                                </p>
+                              )}
                             </div>
                           )}
                         </Draggable>
                       ))}
                       {provided.placeholder}
                       {items.length === 0 && !snapshot.isDraggingOver && (
-                        <div className="h-16 flex items-center justify-center text-xs text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">Bo&apos;sh</div>
+                        <div className="h-16 flex items-center justify-center text-[12px] text-gray-400 dark:text-gray-600 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+                          Bo&apos;sh
+                        </div>
                       )}
                     </div>
                   )}
@@ -265,33 +396,51 @@ export default function KanbanPage() {
             );
           })}
 
-          {/* Add column */}
+          {/* Add column (manage mode) */}
           {manage && (
-            <div className="flex-shrink-0 w-64 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-3">
-              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Yangi ustun</p>
-              <input value={newColName} onChange={e=>setNewColName(e.target.value)} onKeyDown={e=>{ if(e.key==="Enter") addStage(); }}
+            <div className="flex-shrink-0 w-72 bg-gray-100/60 dark:bg-gray-800/30 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-4">
+              <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
+                Yangi ustun
+              </p>
+              <input
+                value={newColName}
+                onChange={e => setNewColName(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") addStage(); }}
                 placeholder="Ustun nomi"
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 mb-2"/>
-              <Button size="sm" className="w-full" loading={addingCol} onClick={addStage}><Plus className="w-4 h-4"/> Qo&apos;shish</Button>
+                className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition mb-2.5"
+              />
+              <Button size="sm" className="w-full" loading={addingCol} onClick={addStage}>
+                <Plus className="w-4 h-4" /> Qo&apos;shish
+              </Button>
             </div>
           )}
+
         </div>
       </DragDropContext>
 
+      {/* Delete confirm modal */}
       {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={()=>setConfirmDelete(null)}>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e=>e.stopPropagation()}>
-            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-              <Trash2 className="w-6 h-6 text-red-600"/>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={() => setConfirmDelete(null)}
+        >
+          <div
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
+              <Trash2 className="w-5 h-5 text-red-600" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Ustunni o&apos;chirish</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              <b>{confirmDelete.name}</b> ustunini o&apos;chirasizmi? Ichidagi lidlar birinchi ustunga ko&apos;chiriladi.
+            <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">Ustunni o&apos;chirish</h3>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1.5">
+              <span className="font-semibold text-gray-700 dark:text-gray-200">{confirmDelete.name}</span> ustunini o&apos;chirasizmi? Ichidagi lidlar birinchi ustunga ko&apos;chiriladi.
             </p>
             <div className="flex gap-2 mt-5">
-              <Button variant="outline" className="flex-1" onClick={()=>setConfirmDelete(null)}>Bekor</Button>
-              <button onClick={()=>{ const id = confirmDelete.id; setConfirmDelete(null); deleteStage(id); }}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition">
+              <Button variant="outline" className="flex-1" onClick={() => setConfirmDelete(null)}>Bekor</Button>
+              <button
+                onClick={() => { const id = confirmDelete.id; setConfirmDelete(null); deleteStage(id); }}
+                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-[13px] font-semibold rounded-xl transition-colors"
+              >
                 O&apos;chirish
               </button>
             </div>
