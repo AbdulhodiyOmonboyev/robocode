@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
-  Plus, Save, Users2, Wallet, Star, Phone, X, BookOpen, GraduationCap,
+  Plus, Save, Users2, Wallet, Star, Phone, BookOpen, GraduationCap,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn, formatPhone, getInitials } from "@/lib/utils";
 
 interface Teacher {
@@ -94,7 +94,7 @@ export default function TeachersPage() {
     <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">O&apos;qituvchilar</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
@@ -284,21 +284,17 @@ export default function TeachersPage() {
 
       {/* Create teacher modal */}
       {showCreate && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-          onClick={() => setShowCreate(false)}
+        <Modal
+          title="Yangi o'qituvchi"
+          maxWidth="max-w-sm"
+          onClose={() => setShowCreate(false)}
+          footer={
+            <>
+              <ModalPrimaryButton onClick={createTeacher} loading={creating}>Qo&apos;shish</ModalPrimaryButton>
+              <ModalSecondaryButton onClick={() => setShowCreate(false)}>Bekor qilish</ModalSecondaryButton>
+            </>
+          }
         >
-          <div
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Yangi o&apos;qituvchi</h2>
-              <button onClick={() => setShowCreate(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
             <div>
               <label className={labelCls}>To&apos;liq ism *</label>
               <input
@@ -328,12 +324,7 @@ export default function TeachersPage() {
               />
             </div>
 
-            <div className="flex gap-2 pt-1">
-              <Button onClick={createTeacher} loading={creating} className="flex-1">Qo&apos;shish</Button>
-              <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

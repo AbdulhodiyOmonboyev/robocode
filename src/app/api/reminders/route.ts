@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { startOfDay, endOfDay, addDays } from "date-fns";
+import { Prisma, type ReminderStatus } from "@/generated/prisma/client";
 
 const createSchema = z.object({
   leadId: z.string(),
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = session.user as any;
+  const user = session.user;
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") || "";
   const limit = parseInt(searchParams.get("limit") || "50");
@@ -28,8 +29,8 @@ export async function GET(req: NextRequest) {
   const todayEnd = endOfDay(now);
   const weekEnd = endOfDay(addDays(now, 7));
 
-  const where: any = { userId: user.id };
-  if (status) where.status = status;
+  const where: Prisma.ReminderWhereInput = { userId: user.id };
+  if (status) where.status = status as ReminderStatus;
 
   const reminders = await db.reminder.findMany({
     where,
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = session.user as any;
+  const user = session.user;
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

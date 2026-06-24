@@ -55,7 +55,7 @@ export default function NewLeadPage() {
   const [newCourseName, setNewCourseName] = useState("");
   const [creatingCourse, setCreatingCourse] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema) as any,
     defaultValues: { timePreference: "FLEXIBLE", status: "NEW", source: "OTHER" },
@@ -171,7 +171,7 @@ export default function NewLeadPage() {
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"/>
                   <input {...register("phone")} type="tel" placeholder="+998 90 123 45 67"
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                 </div>
                 {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
               </div>
@@ -196,7 +196,7 @@ export default function NewLeadPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kurs</label>
               <div className="flex gap-2">
-                <select {...register("courseId")} className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select {...register("courseId")} className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                   <option value="">Tanlanmagan</option>
                   {courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -209,7 +209,7 @@ export default function NewLeadPage() {
                 <div className="mt-2 flex gap-2">
                   <input value={newCourseName} onChange={e=>setNewCourseName(e.target.value)}
                     placeholder="Kurs nomi (masalan: IT Foundation)"
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                   <Button type="button" size="sm" loading={creatingCourse} onClick={createCourse}>Yaratish</Button>
                 </div>
               )}
@@ -233,10 +233,10 @@ export default function NewLeadPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dars vaqti (soat dan – gacha)</label>
               <div className="flex items-center gap-3">
                 <input type="time" value={timeFrom} onChange={e=>setTimeFrom(e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                  className="px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                 <span className="text-gray-400 font-medium">—</span>
                 <input type="time" value={timeTo} onChange={e=>setTimeTo(e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                  className="px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                 {(timeFrom || timeTo) && (
                   <span className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">{timeFrom || "—"}–{timeTo || "—"}</span>
                 )}
@@ -249,7 +249,7 @@ export default function NewLeadPage() {
         <Card>
           <CardHeader><CardTitle>Izoh</CardTitle></CardHeader>
           <CardContent>
-            <textarea {...register("notes")} rows={6} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Mijoz haqida izoh, suhbat tafsilotlari... (masalan: 'Onasi bilan keldi, narx haqida o'ylab ko'rmoqchi')"/>
+            <textarea {...register("notes")} rows={6} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Mijoz haqida izoh, suhbat tafsilotlari... (masalan: 'Onasi bilan keldi, narx haqida o'ylab ko'rmoqchi')"/>
             <p className="mt-1 text-xs text-gray-400">Keyinchalik lid sahifasida har bir suhbatni alohida izoh qilib yozib borishingiz mumkin.</p>
           </CardContent>
         </Card>

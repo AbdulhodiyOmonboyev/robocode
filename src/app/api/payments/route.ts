@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
+import type { Prisma } from "@/generated/prisma/client";
 
 const createSchema = z.object({
   leadId: z.string().min(1, "O'quvchi tanlang"),
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
   const month = searchParams.get("month"); // YYYY-MM
   const q = searchParams.get("q");
 
-  const where: any = {};
+  const where: Prisma.PaymentWhereInput = {};
   if (leadId) where.leadId = leadId;
   if (groupId) where.groupId = groupId;
   if (month) where.forMonth = month;
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const user = session.user as any;
+  const user = session.user;
 
   const body = await req.json();
   const parsed = createSchema.safeParse(body);

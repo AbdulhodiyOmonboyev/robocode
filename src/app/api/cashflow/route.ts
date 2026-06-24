@@ -13,7 +13,7 @@ function monthKey(d: Date) {
 export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!["SUPER_ADMIN", "ADMIN"].includes((session.user as any).role)) {
+  if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

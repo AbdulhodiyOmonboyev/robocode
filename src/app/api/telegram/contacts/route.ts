@@ -11,7 +11,7 @@ async function getToken() {
 export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!["SUPER_ADMIN", "ADMIN"].includes((session.user as any).role)) {
+  if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -23,7 +23,7 @@ export async function GET() {
     const data = await r.json();
     if (!data.ok) return NextResponse.json({ error: data.description || "Telegram xatosi" }, { status: 400 });
 
-    const seen: Record<string, any> = {};
+    const seen: Record<string, { chatId: string; name: string; username: string }> = {};
     for (const u of data.result || []) {
       const chat = u.message?.chat || u.edited_message?.chat;
       if (chat && chat.id) {
@@ -35,7 +35,7 @@ export async function GET() {
       }
     }
     return NextResponse.json({ contacts: Object.values(seen) });
-  } catch (e: any) {
-    return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }

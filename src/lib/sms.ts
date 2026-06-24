@@ -30,7 +30,7 @@ async function login(): Promise<string | null> {
 }
 
 function normalizePhone(phone: string) {
-  let p = phone.replace(/\D/g, "");
+  const p = phone.replace(/\D/g, "");
   if (p.startsWith("998")) return p;
   if (p.length === 9) return "998" + p;
   if (p.startsWith("0")) return "998" + p.slice(1);
@@ -63,7 +63,7 @@ export async function sendSms(phone: string, text: string): Promise<{ ok: boolea
     const j = await r.json().catch(() => ({}));
     if (r.ok || j?.status === "waiting" || j?.id) return { ok: true };
     return { ok: false, error: j?.message || `Eskiz xatosi (${r.status})` };
-  } catch (e: any) {
-    return { ok: false, error: String(e?.message || e) };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }

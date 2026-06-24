@@ -56,40 +56,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+    <div
+      className="min-h-screen bg-[#F5F2FB] dark:bg-gray-950 flex items-center justify-center p-4"
+      style={{ fontFamily: "'Inter', sans-serif" }}
+    >
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logo || "/icon.svg"} alt="Robocode CRM" className="inline-block w-16 h-16 rounded-2xl mb-4 shadow-lg object-contain" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Robocode CRM</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Tizimga kirish</p>
-        </div>
-
         {/* Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8">
+          {/* Logo */}
+          <div className="text-center mb-7">
+            <div className="inline-flex w-16 h-16 rounded-full bg-[#5E2CA5] items-center justify-center mb-4 overflow-hidden">
+              {logo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logo} alt="" className="w-full h-full object-contain" />
+              ) : (
+                <span className="text-white text-2xl font-bold">R</span>
+              )}
+            </div>
+            <h1 className="text-[19px] font-bold text-gray-900 dark:text-white">Robocode CRM</h1>
+            <p className="text-[13px] text-gray-400 dark:text-gray-500 mt-1">Tizimga kirish</p>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl p-3 text-sm text-center">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 rounded-xl p-3 text-[13px] text-center">
                 {error}
               </div>
             )}
 
             {/* Username */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Username
+              <label className="block text-[12px] font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                Login
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+                  <User className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   {...register("username")}
                   type="text"
                   autoComplete="username"
                   placeholder="admin"
-                  className="block w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  className="block w-full pl-10 pr-4 py-2.5 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
                 />
               </div>
               {errors.username && (
@@ -99,26 +108,26 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-500 dark:text-gray-400 mb-1.5">
                 Parol
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   {...register("password")}
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="block w-full pl-10 pr-12 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  className="block w-full pl-10 pr-12 py-2.5 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {errors.password && (
@@ -132,9 +141,9 @@ export default function LoginPage() {
                 {...register("remember")}
                 id="remember"
                 type="checkbox"
-                className="h-4 w-4 text-indigo-600 border-gray-300 rounded cursor-pointer"
+                className="h-4 w-4 accent-[#5E2CA5] border-gray-300 rounded cursor-pointer"
               />
-              <label htmlFor="remember" className="ml-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+              <label htmlFor="remember" className="ml-2 text-[13px] text-gray-500 dark:text-gray-400 cursor-pointer">
                 Eslab qolish (30 kun)
               </label>
             </div>
@@ -143,7 +152,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="w-full flex items-center justify-center py-2.5 px-4 bg-[#5E2CA5] hover:bg-[#4a2280] disabled:opacity-70 disabled:cursor-not-allowed text-white text-[13px] font-semibold rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/40 focus:ring-offset-2"
             >
               {loading ? (
                 <>
@@ -160,8 +169,8 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          © {new Date().getFullYear()} IT O'quv Markaz CRM
+        <p className="text-center text-[12px] text-gray-400 dark:text-gray-500 mt-6">
+          © {new Date().getFullYear()} Robocode CRM
         </p>
       </div>
     </div>

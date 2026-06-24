@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
-  Plus, Trash2, X, ArrowLeft, Save, ClipboardList, BookOpen,
+  Plus, Trash2, ArrowLeft, Save, ClipboardList, BookOpen,
   Calendar, Users, TrendingUp,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/components/ui/confirm";
+import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn, getInitials } from "@/lib/utils";
 
 const BRAND = "#5E2CA5";
@@ -96,7 +96,7 @@ export default function ExamsPage() {
       {dialog}
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Imtihonlar</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Imtihon va daraja testlari, ballar</p>
@@ -212,14 +212,16 @@ export default function ExamsPage() {
 
       {/* Create modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setShowAdd(false)}>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Yangi imtihon</h2>
-              <button onClick={() => setShowAdd(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+        <Modal
+          title="Yangi imtihon"
+          onClose={() => setShowAdd(false)}
+          footer={
+            <>
+              <ModalPrimaryButton onClick={create} loading={saving}>Yaratish</ModalPrimaryButton>
+              <ModalSecondaryButton onClick={() => setShowAdd(false)}>Bekor qilish</ModalSecondaryButton>
+            </>
+          }
+        >
             <Input label="Nom" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="1-modul imtihoni" />
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -242,12 +244,7 @@ export default function ExamsPage() {
               <label className={labelCls}>Sana</label>
               <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={fieldCls} />
             </div>
-            <div className="flex gap-2 pt-1">
-              <Button onClick={create} loading={saving} className="flex-1">Yaratish</Button>
-              <Button variant="outline" onClick={() => setShowAdd(false)}>Bekor</Button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

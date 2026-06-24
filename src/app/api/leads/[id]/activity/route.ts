@@ -7,7 +7,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const user = session.user as any;
+  const user = session.user;
   const { action, details } = await req.json();
 
   const activity = await db.activity.create({

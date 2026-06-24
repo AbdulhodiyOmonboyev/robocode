@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, X, TrendingDown, Flame, BarChart2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus, Trash2, TrendingDown, Flame, BarChart2, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/components/ui/confirm";
+import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
+import { exportToCsv } from "@/lib/export";
 import { cn } from "@/lib/utils";
 
 interface Expense {
@@ -83,6 +84,18 @@ export default function ExpensesPage() {
     if (res.ok) { toast.success("O'chirildi"); load(); } else toast.error("O'chirib bo'lmadi");
   };
 
+  const exportExpenses = () => {
+    if (!expenses.length) { toast.error("Eksport qilish uchun xarajat yo'q"); return; }
+    exportToCsv(`xarajatlar-${month}`, expenses.map(e => ({
+      "Kategoriya": e.category,
+      "Summa": e.amount,
+      "To'lov turi": METHODS[e.method || ""] || e.method || "",
+      "Izoh": e.note || "",
+      "Sana": e.spentAt,
+      "Qo'shdi": e.createdBy?.fullName || "",
+    })));
+  };
+
   // Derived stats
   const avgDaily = summary.total > 0
     ? Math.round(Number(summary.total) / daysInMonth(month))
@@ -121,7 +134,7 @@ export default function ExpensesPage() {
       {dialog}
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Xarajatlar</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">{month} · {summary.count} ta yozuv</p>
@@ -131,6 +144,12 @@ export default function ExpensesPage() {
             type="month" value={month} onChange={e => setMonth(e.target.value)}
             className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
           />
+          <button
+            onClick={exportExpenses}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+          >
+            <Download className="w-4 h-4" /> Eksport
+          </button>
           <button
             onClick={() => setShowAdd(true)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
@@ -255,21 +274,16 @@ export default function ExpensesPage() {
 
       {/* Add modal */}
       {showAdd && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-          onClick={() => setShowAdd(false)}
+        <Modal
+          title="Xarajat qo'shish"
+          onClose={() => setShowAdd(false)}
+          footer={
+            <>
+              <ModalPrimaryButton onClick={save} loading={saving}>Saqlash</ModalPrimaryButton>
+              <ModalSecondaryButton onClick={() => setShowAdd(false)}>Bekor qilish</ModalSecondaryButton>
+            </>
+          }
         >
-          <div
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4"
-            onClick={ev => ev.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Xarajat qo&apos;shish</h2>
-              <button onClick={() => setShowAdd(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
             <Input label="Summa (so'm)" type="number" value={form.amount}
               onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="500000" />
 
@@ -300,12 +314,7 @@ export default function ExpensesPage() {
                 placeholder="..." className={fieldCls} />
             </div>
 
-            <div className="flex gap-2 pt-1">
-              <Button onClick={save} loading={saving} className="flex-1">Saqlash</Button>
-              <Button variant="outline" onClick={() => setShowAdd(false)}>Bekor</Button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

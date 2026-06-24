@@ -5,9 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { X, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 
 const schema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 harf"),
@@ -25,8 +26,22 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+interface EditableUser {
+  id: string;
+  fullName: string;
+  username: string;
+  email: string | null;
+  phone: string | null;
+  role: FormData["role"];
+  canManageLeads: boolean;
+  canManageCourses: boolean;
+  canManageUsers: boolean;
+  canViewReports: boolean;
+  canExportData: boolean;
+}
+
 interface Props {
-  user: any | null;
+  user: EditableUser | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -45,7 +60,6 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -75,8 +89,8 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
     try {
       const url = user ? `/api/users/${user.id}` : "/api/users";
       const method = user ? "PATCH" : "POST";
-      const body = { ...data };
-      if (user && !body.password) delete (body as any).password;
+      const body: Partial<FormData> = { ...data };
+      if (user && !body.password) delete body.password;
 
       const res = await fetch(url, {
         method,
@@ -105,18 +119,12 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
   ] as const;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {user ? "Hodimni tahrirlash" : "Yangi hodim"}
-          </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+    <Modal
+      title={user ? "Hodimni tahrirlash" : "Yangi hodim"}
+      maxWidth="max-w-lg"
+      onClose={onClose}
+    >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input label="To'liq ism *" {...register("fullName")} error={errors.fullName?.message} placeholder="Aziz Karimov" />
             <Input label="Username *" {...register("username")} error={errors.username?.message} placeholder="aziz_k" disabled={!!user} />
@@ -138,7 +146,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
                   {...register("password")}
                   type={showPass ? "text" : "password"}
                   placeholder="Kamida 8 belgi"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -160,7 +168,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Rol *</label>
             <select
               {...register("role")}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
             >
               <option value="OPERATOR">Operator</option>
               <option value="MANAGER">Menejjer</option>
@@ -178,7 +186,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
                   <input
                     type="checkbox"
                     {...register(p.key)}
-                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    className="h-4 w-4 accent-[#5E2CA5] border-gray-300 rounded"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">{p.label}</span>
                 </label>
@@ -186,12 +194,11 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>Bekor qilish</Button>
-            <Button type="submit" loading={loading}>{user ? "Saqlash" : "Qo'shish"}</Button>
+          <div className="flex gap-2 pt-1">
+            <ModalPrimaryButton type="submit" loading={loading}>{user ? "Saqlash" : "Qo'shish"}</ModalPrimaryButton>
+            <ModalSecondaryButton type="button" onClick={onClose}>Bekor qilish</ModalSecondaryButton>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

@@ -4,19 +4,19 @@ import { db } from "@/lib/db";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { LEAD_STATUS_LABELS, LEAD_SOURCE_LABELS } from "@/lib/constants";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma, type LeadStatus } from "@/generated/prisma/client";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = session.user as any;
+  const user = session.user;
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") || "";
 
   const where: Prisma.LeadWhereInput = {};
   if (user.role === "OPERATOR") where.assignedToId = user.id;
-  if (status) where.status = status as any;
+  if (status) where.status = status as LeadStatus;
 
   const leads = await db.lead.findMany({
     where,

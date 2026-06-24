@@ -32,7 +32,7 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  let body: any;
+  let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Bad request" }, { status: 400 }); }
 
   const parsed = schema.safeParse(body);

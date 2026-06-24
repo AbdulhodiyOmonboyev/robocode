@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { Prisma } from "@/generated/prisma/client";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -9,7 +10,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const body = await req.json();
 
-  const data: any = {};
+  const data: Prisma.ReminderUpdateInput = {};
   if (body.status) data.status = body.status;
   if (body.status === "DONE") data.completedAt = new Date();
   if (body.remindAt) data.remindAt = new Date(body.remindAt);

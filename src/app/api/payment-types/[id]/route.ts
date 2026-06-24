@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { Session } from "next-auth";
 
-function admin(s: any) { return s && ["SUPER_ADMIN", "ADMIN"].includes((s.user as any).role); }
+function admin(s: Session | null) { return s && ["SUPER_ADMIN", "ADMIN"].includes(s.user.role); }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();

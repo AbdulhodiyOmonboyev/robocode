@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { startOfDay, endOfDay, parseISO } from "date-fns";
+import type { Prisma } from "@/generated/prisma/client";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -11,10 +12,10 @@ export async function GET(req: NextRequest) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
 
-  const dateFilter: any = {};
+  const dateFilter: Prisma.DateTimeFilter = {};
   if (from) dateFilter.gte = startOfDay(parseISO(from));
   if (to) dateFilter.lte = endOfDay(parseISO(to));
-  const where: any = Object.keys(dateFilter).length ? { createdAt: dateFilter } : {};
+  const where: Prisma.LeadWhereInput = Object.keys(dateFilter).length ? { createdAt: dateFilter } : {};
 
   const stages = await db.stage.findMany({ orderBy: { order: "asc" } });
   const wonStageIds = stages.filter(s => s.isWon).map(s => s.id);

@@ -51,22 +51,22 @@ export default function SchedulePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Jadval</h1>
           <p className="text-sm text-gray-500 mt-0.5">Vaqt slotlari bo'yicha talablar</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={()=>setWeekStart(d=>addDays(d,-7))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <button onClick={()=>setWeekStart(d=>addDays(d,-7))} className="p-2 rounded-xl border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
             <ChevronLeft className="w-4 h-4"/>
           </button>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[200px] text-center">
             {format(weekStart,"d MMM")} — {format(addDays(weekStart,6),"d MMM yyyy")}
           </span>
-          <button onClick={()=>setWeekStart(d=>addDays(d,7))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <button onClick={()=>setWeekStart(d=>addDays(d,7))} className="p-2 rounded-xl border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
             <ChevronRight className="w-4 h-4"/>
           </button>
-          <button onClick={()=>setWeekStart(startOfWeek(new Date(),{weekStartsOn:1}))} className="px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <button onClick={()=>setWeekStart(startOfWeek(new Date(),{weekStartsOn:1}))} className="px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
             Bugun
           </button>
         </div>
@@ -81,7 +81,7 @@ export default function SchedulePage() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-100 dark:border-gray-800">
+                    <tr className="border-b border-gray-100 dark:border-white/10">
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 w-32">Vaqt</th>
                       {weekDays.map((day, i) => (
                         <th key={i} className={`px-2 py-3 text-center text-xs font-semibold ${isSameDay(day,new Date())?"text-indigo-600":"text-gray-500"}`}>

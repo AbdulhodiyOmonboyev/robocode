@@ -24,12 +24,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!["SUPER_ADMIN", "ADMIN"].includes((session.user as any).role)) {
+  if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const { id } = await params;
   await db.payment.delete({ where: { id } });
-  const u = session.user as any;
+  const u = session.user;
   await logAudit(u.id, u.name || u.fullName, "payment_deleted", "Payment", id);
   return NextResponse.json({ success: true });
 }

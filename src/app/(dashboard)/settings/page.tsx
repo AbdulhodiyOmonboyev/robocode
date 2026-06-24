@@ -2,13 +2,20 @@
 
 import { useState, useEffect, type ChangeEvent } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ToggleLeft, ToggleRight, Save } from "lucide-react";
+import {
+  Plus, Trash2, ToggleLeft, ToggleRight, Save,
+  SlidersHorizontal, Image as ImageIcon, CreditCard, CalendarDays,
+  Clock, Tag as TagIcon, MessageSquare, Send, Users as UsersIcon,
+  Bot, CheckCircle2, XCircle, Webhook,
+} from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/components/ui/confirm";
+import { useDarkMode } from "@/hooks/useDarkMode";
+import { cn } from "@/lib/utils";
 
-type Tab = "general" | "timeslots" | "tags" | "notifications";
+type Tab = "general" | "logo" | "paymentTypes" | "holidays" | "timeslots" | "tags" | "sms" | "telegram" | "users";
 
 interface TimeSlot { id: string; startTime: string; endTime: string; label: string; isActive: boolean; }
 interface Tag { id: string; name: string; color: string; }
@@ -34,10 +41,13 @@ export default function SettingsPage() {
   const [botUsername, setBotUsername] = useState("");
   const [webhookActive, setWebhookActive] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [quickTestChatId, setQuickTestChatId] = useState("");
+  const [testingQuick, setTestingQuick] = useState(false);
   const [logo, setLogo] = useState("");
   const [logoSaving, setLogoSaving] = useState(false);
   const [paymentTypes, setPaymentTypes] = useState<any[]>([]);
   const [newPaymentType, setNewPaymentType] = useState("");
+  const { dark, toggleDark } = useDarkMode();
 
   const loadPaymentTypes = () => fetch("/api/payment-types").then(r=>r.json()).then(d=>setPaymentTypes(Array.isArray(d)?d:[]));
   const addPaymentType = async () => {
@@ -143,6 +153,13 @@ export default function SettingsPage() {
     res.ok ? toast.success("Test xabar yuborildi! Telegram'ni tekshiring.") : toast.error(data.error || "Yuborilmadi");
   };
 
+  const sendQuickTest = async () => {
+    if (!quickTestChatId.trim()) { toast.error("Chat ID kiriting"); return; }
+    setTestingQuick(true);
+    await testChat(quickTestChatId.trim());
+    setTestingQuick(false);
+  };
+
   const fetchContacts = async () => {
     setLoadingContacts(true);
     const res = await fetch("/api/telegram/contacts");
@@ -222,307 +239,388 @@ export default function SettingsPage() {
     loadTags();
   };
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "general", label: "Umumiy" },
-    { key: "timeslots", label: "Vaqt slotlari" },
-    { key: "tags", label: "Teglar" },
-    { key: "notifications", label: "Bildirishnomalar" },
+  const tabs: { key: Tab; label: string; icon: typeof SlidersHorizontal }[] = [
+    { key: "general", label: "Umumiy", icon: SlidersHorizontal },
+    { key: "logo", label: "Logo", icon: ImageIcon },
+    { key: "paymentTypes", label: "To'lov turlari", icon: CreditCard },
+    { key: "holidays", label: "Bayram kunlari", icon: CalendarDays },
+    { key: "timeslots", label: "Vaqt slotlari", icon: Clock },
+    { key: "tags", label: "Teglar", icon: TagIcon },
+    { key: "sms", label: "SMS", icon: MessageSquare },
+    { key: "telegram", label: "Telegram", icon: Send },
+    { key: "users", label: "Foydalanuvchilar", icon: UsersIcon },
   ];
 
+  const inputFocus = "focus:ring-[#5E2CA5] focus:border-transparent";
+  const purpleBtn = "bg-[#5E2CA5] hover:bg-[#4e2488] text-white shadow-sm";
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {dialog}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sozlamalar</h1>
         <p className="text-sm text-gray-500 mt-0.5">Tizim sozlamalari</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
-        {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${tab===t.key?"bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm":"text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* General */}
-      {tab === "general" && (
-        <Card>
-          <CardHeader><CardTitle>Umumiy sozlamalar</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <Input label="Markaz nomi" value={centerName} onChange={e=>setCenterName(e.target.value)}/>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Vaqt mintaqasi</label>
-              <select className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="Asia/Tashkent">Asia/Tashkent (UTC+5)</option>
-                <option value="Europe/Moscow">Europe/Moscow (UTC+3)</option>
-              </select>
-            </div>
-            <Button onClick={saveGeneral} loading={saving}><Save className="w-4 h-4"/> Saqlash</Button>
-          </CardContent>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Sidebar menu */}
+        <Card className="w-full lg:w-64 shrink-0 h-fit p-2">
+          <nav className="space-y-1">
+            {tabs.map(t => {
+              const Icon = t.icon;
+              const active = tab === t.key;
+              return (
+                <button key={t.key} onClick={() => setTab(t.key)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition ${
+                    active
+                      ? "bg-[#5E2CA5]/10 text-[#5E2CA5]"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}>
+                  <Icon className="w-4 h-4 shrink-0" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </nav>
         </Card>
-      )}
 
-      {/* Logo */}
-      {tab === "general" && (
-        <Card>
-          <CardHeader><CardTitle>Logo</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-20 h-20 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={logo || "/icon.svg"} alt="Logo" className="w-full h-full object-contain" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Sayt logosi</p>
-                <p className="text-xs text-gray-500 mt-0.5">PNG yoki SVG, 1MB gacha. Login va yon menyuda chiqadi.</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <label className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    Rasm tanlash
-                    <input type="file" accept="image/*" onChange={onLogoFile} className="hidden" />
-                  </label>
-                  {logo && <Button size="sm" variant="outline" onClick={removeLogo}>Standart</Button>}
+        {/* Content */}
+        <div className="flex-1 min-w-0 space-y-6">
+          {/* General */}
+          {tab === "general" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader><CardTitle>Umumiy sozlamalar</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <Input label="Markaz nomi" value={centerName} onChange={e=>setCenterName(e.target.value)} className={inputFocus}/>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Vaqt mintaqasi</label>
+                  <select className={`w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${inputFocus}`}>
+                    <option value="Asia/Tashkent">Asia/Tashkent (UTC+5)</option>
+                    <option value="Europe/Moscow">Europe/Moscow (UTC+3)</option>
+                  </select>
                 </div>
-              </div>
-            </div>
-            <Button onClick={saveLogo} loading={logoSaving}><Save className="w-4 h-4"/> Logoni saqlash</Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Payment types */}
-      {tab === "general" && (
-        <Card>
-          <CardHeader><CardTitle>To'lov turlari</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-xs text-gray-500">Naqd / Karta / O'tkazma — asosiy turlar doim bor. Bu yerda qo'shimcha turlarni qo'shing (masalan: Click, Payme, Uzcard).</p>
-            <div className="flex flex-wrap gap-2">
-              {paymentTypes.map((t:any)=>(
-                <div key={t.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
-                  {t.name}
-                  <button onClick={()=>removePaymentType(t.id)} className="ml-1 opacity-70 hover:opacity-100"><X className="w-3 h-3"/></button>
+                <div className="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-white/10">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Qorong'i rejim</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Interfeys uchun qorong'i mavzuni yoqish</p>
+                  </div>
+                  <button onClick={toggleDark} role="switch" aria-checked={dark}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition shrink-0 ${dark ? "bg-[#5E2CA5]" : "bg-gray-200 dark:bg-gray-700"}`}>
+                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${dark ? "translate-x-5" : "translate-x-0.5"}`}/>
+                  </button>
                 </div>
-              ))}
-              {paymentTypes.length===0 && <p className="text-sm text-gray-400">Qo'shimcha tur yo'q</p>}
-            </div>
-            <div className="flex items-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-              <Input label="Yangi to'lov turi" value={newPaymentType} onChange={e=>setNewPaymentType(e.target.value)} placeholder="Click / Payme..." className="flex-1"/>
-              <Button onClick={addPaymentType}><Plus className="w-4 h-4"/> Qo'shish</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                <Button onClick={saveGeneral} loading={saving} className={purpleBtn}><Save className="w-4 h-4"/> Saqlash</Button>
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Holidays */}
-      {tab === "general" && (
-        <Card>
-          <CardHeader><CardTitle>Bayram kunlari</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-xs text-gray-500">Dars bo'lmaydigan kunlar (bayramlar, ta'til).</p>
-            <div className="space-y-1.5">
-              {holidays.map((h:any)=>(
-                <div key={h.id} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
-                  <span className="text-gray-700 dark:text-gray-300"><b>{new Date(h.date).toLocaleDateString("ru-RU")}</b> — {h.name}</span>
-                  <button onClick={()=>removeHoliday(h.id)} className="text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
-                </div>
-              ))}
-              {holidays.length===0 && <p className="text-sm text-gray-400">Bayram kuni yo'q</p>}
-            </div>
-            <div className="flex items-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Sana</label>
-                <input type="date" value={newHoliday.date} onChange={e=>setNewHoliday(h=>({...h,date:e.target.value}))} className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/>
-              </div>
-              <Input label="Nomi" value={newHoliday.name} onChange={e=>setNewHoliday(h=>({...h,name:e.target.value}))} placeholder="Navro'z" className="flex-1"/>
-              <Button onClick={addHoliday}><Plus className="w-4 h-4"/></Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Time Slots */}
-      {tab === "timeslots" && (
-        <Card>
-          <CardHeader><CardTitle>Vaqt slotlari</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              {slots.map(slot => (
-                <div key={slot.id} className={`flex items-center justify-between p-3 rounded-xl border ${slot.isActive?"border-gray-200 dark:border-gray-700":"border-gray-100 dark:border-gray-800 opacity-50"}`}>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">{slot.label}</span>
-                  <div className="flex items-center gap-2">
-                    <button onClick={()=>toggleSlot(slot)} className="text-gray-400 hover:text-indigo-600 transition">
-                      {slot.isActive ? <ToggleRight className="w-5 h-5"/> : <ToggleLeft className="w-5 h-5"/>}
-                    </button>
-                    <button onClick={()=>deleteSlot(slot.id)} className="text-gray-400 hover:text-red-600 transition"><Trash2 className="w-4 h-4"/></button>
+          {/* Logo */}
+          {tab === "logo" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader><CardTitle>Logo</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0 w-20 h-20 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={logo || "/icon.svg"} alt="Logo" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Sayt logosi</p>
+                    <p className="text-xs text-gray-500 mt-0.5">PNG yoki SVG, 1MB gacha. Login va yon menyuda chiqadi.</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <label className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        Rasm yuklash
+                        <input type="file" accept="image/*" onChange={onLogoFile} className="hidden" />
+                      </label>
+                      {logo && <Button size="sm" variant="outline" onClick={removeLogo}>Standart</Button>}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="flex items-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">Boshlanish</label>
-                <input type="time" value={newSlot.startTime} onChange={e=>setNewSlot(s=>({...s,startTime:e.target.value}))}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
-              </div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">Tugash</label>
-                <input type="time" value={newSlot.endTime} onChange={e=>setNewSlot(s=>({...s,endTime:e.target.value}))}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
-              </div>
-              <Button onClick={addSlot}><Plus className="w-4 h-4"/> Qo'shish</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                <Button onClick={saveLogo} loading={logoSaving} className={purpleBtn}><Save className="w-4 h-4"/> Logoni saqlash</Button>
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Tags */}
-      {tab === "tags" && (
-        <Card>
-          <CardHeader><CardTitle>Teglar</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {tags.map(tag => (
-                <div key={tag.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-white" style={{backgroundColor:tag.color}}>
-                  {tag.name}
-                  <button onClick={()=>deleteTag(tag.id)} className="ml-1 opacity-70 hover:opacity-100"><X className="w-3 h-3"/></button>
+          {/* Payment types */}
+          {tab === "paymentTypes" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader><CardTitle>To'lov turlari</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-gray-500">Naqd / Karta / O'tkazma — asosiy turlar doim bor. Bu yerda qo'shimcha turlarni qo'shing (masalan: Click, Payme, Uzcard).</p>
+                <div className="flex flex-wrap gap-2">
+                  {paymentTypes.map((t:any)=>(
+                    <div key={t.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-[#5E2CA5]/10 text-[#5E2CA5]">
+                      {t.name}
+                      <button onClick={()=>removePaymentType(t.id)} className="ml-1 opacity-70 hover:opacity-100"><X className="w-3 h-3"/></button>
+                    </div>
+                  ))}
+                  {paymentTypes.length===0 && <p className="text-sm text-gray-400">Qo'shimcha tur yo'q</p>}
                 </div>
-              ))}
-              {tags.length === 0 && <p className="text-sm text-gray-400">Teglar yo'q</p>}
-            </div>
-            <div className="flex items-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
-              <Input label="Teg nomi" value={newTag.name} onChange={e=>setNewTag(t=>({...t,name:e.target.value}))} placeholder="Muhim" className="flex-1"/>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Rang</label>
-                <div className="flex gap-1.5">
-                  {TAG_COLORS.map(c=>(
-                    <button key={c} type="button" onClick={()=>setNewTag(t=>({...t,color:c}))}
-                      className={`w-6 h-6 rounded-lg ${newTag.color===c?"ring-2 ring-offset-1 ring-gray-400":""}`}
-                      style={{backgroundColor:c}}/>
+                <div className="flex items-end gap-2 pt-2 border-t border-gray-100 dark:border-white/10">
+                  <Input label="Yangi to'lov turi" value={newPaymentType} onChange={e=>setNewPaymentType(e.target.value)} placeholder="Click / Payme..." className={`flex-1 ${inputFocus}`}/>
+                  <Button onClick={addPaymentType} className={purpleBtn}><Plus className="w-4 h-4"/> Qo'shish</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Holidays */}
+          {tab === "holidays" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader><CardTitle>Bayram kunlari</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-gray-500">Dars bo'lmaydigan kunlar (bayramlar, ta'til).</p>
+                <div className="space-y-1.5">
+                  {holidays.map((h:any)=>(
+                    <div key={h.id} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
+                      <span className="text-gray-700 dark:text-gray-300"><b>{new Date(h.date).toLocaleDateString("ru-RU")}</b> — {h.name}</span>
+                      <button onClick={()=>removeHoliday(h.id)} className="text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
+                    </div>
+                  ))}
+                  {holidays.length===0 && <p className="text-sm text-gray-400">Bayram kuni yo'q</p>}
+                </div>
+                <div className="flex items-end gap-2 pt-2 border-t border-gray-100 dark:border-white/10">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Sana</label>
+                    <input type="date" value={newHoliday.date} onChange={e=>setNewHoliday(h=>({...h,date:e.target.value}))} className={`px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 ${inputFocus}`}/>
+                  </div>
+                  <Input label="Nomi" value={newHoliday.name} onChange={e=>setNewHoliday(h=>({...h,name:e.target.value}))} placeholder="Navro'z" className={`flex-1 ${inputFocus}`}/>
+                  <Button onClick={addHoliday} className={purpleBtn}><Plus className="w-4 h-4"/></Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Time Slots */}
+          {tab === "timeslots" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader><CardTitle>Vaqt slotlari</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  {slots.map(slot => (
+                    <div key={slot.id} className={`flex items-center justify-between p-3 rounded-xl border ${slot.isActive?"border-gray-200 dark:border-white/10":"border-gray-100 dark:border-white/10 opacity-50"}`}>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{slot.label}</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={()=>toggleSlot(slot)} className="text-gray-400 hover:text-[#5E2CA5] transition">
+                          {slot.isActive ? <ToggleRight className="w-5 h-5"/> : <ToggleLeft className="w-5 h-5"/>}
+                        </button>
+                        <button onClick={()=>deleteSlot(slot.id)} className="text-gray-400 hover:text-red-600 transition"><Trash2 className="w-4 h-4"/></button>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-              <Button onClick={addTag}><Plus className="w-4 h-4"/></Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Notifications */}
-      {tab === "notifications" && (
-        <div className="space-y-4">
-          <Card>
-            <CardHeader><CardTitle>Telegram bot</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                  <Input label="Bot Token" value={tgToken} onChange={e=>setTgToken(e.target.value)} placeholder="123456:ABC-DEF..." type="password"/>
-                </div>
-                <Button onClick={saveToken} loading={saving}><Save className="w-4 h-4"/> Saqlash</Button>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Bot holati: {webhookActive
-                      ? <span className="text-green-600">✅ Faol {botUsername && `(@${botUsername})`}</span>
-                      : <span className="text-gray-400">o&apos;chiq</span>}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">Tokenni saqlagandan keyin botni faollashtiring — shunda bot buyruqlarga javob beradi.</p>
-                </div>
-                <Button size="sm" onClick={activateBot} loading={activating}>Botni faollashtirish</Button>
-              </div>
-              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Qanday ulanadi:</p>
-                <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-decimal list-inside">
-                  <li>@BotFather dan bot yarating va tokenini bu yerga saqlang</li>
-                  <li><b>Botni faollashtirish</b> tugmasini bosing</li>
-                  <li>Pastda har bir hodim uchun <b>ulanish havolasi</b> chiqadi — uni hodimga yuboring</li>
-                  <li>Hodim havolani ochib <b>Start</b> bossa — avtomatik ulanadi</li>
-                </ol>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Hodimlarni ulash</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xs text-gray-500">
-                Har bir hodimga o&apos;z havolasini yuboring. Hodim havolani ochib <b>Start</b> bossa — avtomatik ulanadi.
-                {webhookActive && <span className="text-green-600"> Ulangan hodimda yashil ✅ ko&apos;rinadi.</span>}
-              </p>
-              <div className="space-y-3">
-                {users.map((u:any)=>(
-                  <div key={u.id} className="flex items-center gap-2 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {chatIds[u.id] ? "✅ " : ""}{u.fullName} <span className="text-gray-400 font-normal">@{u.username}</span>
-                      </p>
-                      {botUsername && (
-                        <code className="text-xs text-indigo-600 dark:text-indigo-400 font-mono truncate block">
-                          t.me/{botUsername}?start={u.id}
-                        </code>
-                      )}
-                    </div>
-                    <Button size="sm" variant="outline" onClick={()=>copyLink(u.id)} disabled={!botUsername}>Havolani nusxalash</Button>
-                    {chatIds[u.id] && <Button size="sm" onClick={()=>testChat(chatIds[u.id])}>Test</Button>}
+                <div className="flex items-end gap-3 pt-2 border-t border-gray-100 dark:border-white/10">
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-500 mb-1">Boshlanish</label>
+                    <input type="time" value={newSlot.startTime} onChange={e=>setNewSlot(s=>({...s,startTime:e.target.value}))}
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 outline-none ${inputFocus}`}/>
                   </div>
-                ))}
-                {users.length === 0 && <p className="text-sm text-gray-400">Hodimlar yo&apos;q</p>}
-              </div>
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-500 mb-1">Tugash</label>
+                    <input type="time" value={newSlot.endTime} onChange={e=>setNewSlot(s=>({...s,endTime:e.target.value}))}
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 outline-none ${inputFocus}`}/>
+                  </div>
+                  <Button onClick={addSlot} className={purpleBtn}><Plus className="w-4 h-4"/> Qo'shish</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-              <details className="pt-2 border-t border-gray-100 dark:border-gray-800">
-                <summary className="text-xs text-gray-400 cursor-pointer">Qo&apos;lda chat ID kiritish (ixtiyoriy)</summary>
-                <div className="mt-2">
-                  <Button size="sm" variant="outline" onClick={fetchContacts} loading={loadingContacts}>Botga yozganlarni ko&apos;rsatish</Button>
-                  {contacts.length > 0 && (
-                    <div className="mt-3 space-y-1.5">
-                      {contacts.map((c:any)=>(
-                        <div key={c.chatId} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
-                          <span className="text-gray-700 dark:text-gray-300">{c.name} {c.username && <span className="text-gray-400">{c.username}</span>}</span>
-                          <code className="text-xs text-indigo-600 dark:text-indigo-400 font-mono select-all">{c.chatId}</code>
+          {/* Tags */}
+          {tab === "tags" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader><CardTitle>Teglar</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {tags.map(tag => (
+                    <div key={tag.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-white" style={{backgroundColor:tag.color}}>
+                      {tag.name}
+                      <button onClick={()=>deleteTag(tag.id)} className="ml-1 opacity-70 hover:opacity-100"><X className="w-3 h-3"/></button>
+                    </div>
+                  ))}
+                  {tags.length === 0 && <p className="text-sm text-gray-400">Teglar yo'q</p>}
+                </div>
+                <div className="flex items-end gap-3 pt-2 border-t border-gray-100 dark:border-white/10">
+                  <Input label="Teg nomi" value={newTag.name} onChange={e=>setNewTag(t=>({...t,name:e.target.value}))} placeholder="Muhim" className={`flex-1 ${inputFocus}`}/>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Rang</label>
+                    <div className="flex gap-1.5">
+                      {TAG_COLORS.map(c=>(
+                        <button key={c} type="button" onClick={()=>setNewTag(t=>({...t,color:c}))}
+                          className={`w-6 h-6 rounded-lg ${newTag.color===c?"ring-2 ring-offset-1 ring-gray-400":""}`}
+                          style={{backgroundColor:c}}/>
+                      ))}
+                    </div>
+                  </div>
+                  <Button onClick={addTag} className={purpleBtn}><Plus className="w-4 h-4"/></Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* SMS */}
+          {tab === "sms" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader><CardTitle>SMS (Eskiz.uz)</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-gray-500">SMS yuborish uchun eskiz.uz dan ro'yxatdan o'ting va email/parolingizni kiriting. Sender nomi tasdiqlanmaguncha test uchun <b>4546</b> ishlaydi.</p>
+                <Input label="Eskiz email" value={eskiz.email} onChange={e=>setEskiz(s=>({...s,email:e.target.value}))} placeholder="email@example.com" className={inputFocus}/>
+                <Input label="Eskiz parol" type="password" value={eskiz.password} onChange={e=>setEskiz(s=>({...s,password:e.target.value}))} placeholder="••••••• (o'zgartirmasangiz bo'sh qoldiring)" className={inputFocus}/>
+                <Input label="Sender (from)" value={eskiz.from} onChange={e=>setEskiz(s=>({...s,from:e.target.value}))} placeholder="4546" className={inputFocus}/>
+                <Button onClick={saveEskiz} loading={saving} className={purpleBtn}><Save className="w-4 h-4"/> Saqlash</Button>
+                <div className="pt-3 border-t border-gray-100 dark:border-white/10">
+                  <label className="block text-xs text-gray-500 mb-1">Test SMS yuborish</label>
+                  <div className="flex items-end gap-2">
+                    <input value={smsTest} onChange={e=>setSmsTest(e.target.value)} placeholder="+998 90 123 45 67"
+                      className={`flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 ${inputFocus}`}/>
+                    <Button size="sm" variant="outline" onClick={testSms}>Test</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Telegram */}
+          {tab === "telegram" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader className="flex items-center justify-between flex-row">
+                <CardTitle className="flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-[#5E2CA5]" />
+                  Telegram bot
+                </CardTitle>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium",
+                    webhookActive
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                      : "bg-gray-100 text-gray-500 dark:bg-white/8 dark:text-gray-400"
+                  )}
+                >
+                  {webhookActive ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                  {webhookActive ? `Ulangan${botUsername ? ` · @${botUsername}` : ""}` : "Ulanmagan"}
+                </span>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Token */}
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <Input label="Bot Token" value={tgToken} onChange={e=>setTgToken(e.target.value)} placeholder="123456:ABC-DEF..." type="password" className={inputFocus}/>
+                  </div>
+                  <Button onClick={saveToken} loading={saving} className={purpleBtn}><Save className="w-4 h-4"/> Saqlash</Button>
+                </div>
+
+                {/* Webhook status */}
+                <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-white/10">
+                  <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 flex items-center justify-center">
+                    <Webhook className="w-4 h-4 text-[#5E2CA5]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Webhook holati: {webhookActive
+                        ? <span className="text-emerald-600 dark:text-emerald-400">faol</span>
+                        : <span className="text-gray-400">o&apos;chiq</span>}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">Tokenni saqlagandan keyin botni faollashtiring — shunda bot buyruqlarga javob beradi.</p>
+                  </div>
+                  <Button size="sm" onClick={activateBot} loading={activating} className={purpleBtn}>Botni faollashtirish</Button>
+                </div>
+
+                {/* Quick test message */}
+                <div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 space-y-2.5">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <Send className="w-3.5 h-3.5 text-[#5E2CA5]" /> Test xabar yuborish
+                  </p>
+                  <p className="text-xs text-gray-500">Chat ID kiritib botning ishlayotganini tekshiring (Chat ID — Foydalanuvchilar bo&apos;limida).</p>
+                  <div className="flex items-end gap-2">
+                    <input
+                      value={quickTestChatId}
+                      onChange={e=>setQuickTestChatId(e.target.value)}
+                      placeholder="Chat ID"
+                      className={`flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 ${inputFocus}`}
+                    />
+                    <Button size="sm" onClick={sendQuickTest} loading={testingQuick} className={purpleBtn}>
+                      <Send className="w-3.5 h-3.5" /> Yuborish
+                    </Button>
+                  </div>
+                </div>
+
+                {/* How it connects */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Qanday ulanadi:</p>
+                  <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-decimal list-inside">
+                    <li>@BotFather dan bot yarating va tokenini bu yerga saqlang</li>
+                    <li><b>Botni faollashtirish</b> tugmasini bosing</li>
+                    <li>Foydalanuvchilar bo&apos;limida har bir hodim uchun <b>ulanish havolasi</b> chiqadi — uni hodimga yuboring</li>
+                    <li>Hodim havolani ochib <b>Start</b> bossa — avtomatik ulanadi</li>
+                  </ol>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Users */}
+          {tab === "users" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader><CardTitle>Foydalanuvchilarni ulash</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-gray-500">
+                  Har bir hodimga o&apos;z havolasini yuboring. Hodim havolani ochib <b>Start</b> bossa — avtomatik ulanadi.
+                  {webhookActive && <span className="text-green-600"> Ulangan hodimda yashil ✅ ko&apos;rinadi.</span>}
+                </p>
+                <div className="space-y-3">
+                  {users.map((u:any)=>(
+                    <div key={u.id} className="flex items-center gap-2 p-3 rounded-xl border border-gray-200 dark:border-white/10">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {chatIds[u.id] ? "✅ " : ""}{u.fullName} <span className="text-gray-400 font-normal">@{u.username}</span>
+                        </p>
+                        {botUsername && (
+                          <code className="text-xs text-[#5E2CA5] font-mono truncate block">
+                            t.me/{botUsername}?start={u.id}
+                          </code>
+                        )}
+                      </div>
+                      <Button size="sm" variant="outline" onClick={()=>copyLink(u.id)} disabled={!botUsername}>Havolani nusxalash</Button>
+                      {chatIds[u.id] && <Button size="sm" onClick={()=>testChat(chatIds[u.id])} className={purpleBtn}>Test</Button>}
+                    </div>
+                  ))}
+                  {users.length === 0 && <p className="text-sm text-gray-400">Hodimlar yo&apos;q</p>}
+                </div>
+
+                <details className="pt-2 border-t border-gray-100 dark:border-white/10">
+                  <summary className="text-xs text-gray-400 cursor-pointer">Qo&apos;lda chat ID kiritish (ixtiyoriy)</summary>
+                  <div className="mt-2">
+                    <Button size="sm" variant="outline" onClick={fetchContacts} loading={loadingContacts}>Botga yozganlarni ko&apos;rsatish</Button>
+                    {contacts.length > 0 && (
+                      <div className="mt-3 space-y-1.5">
+                        {contacts.map((c:any)=>(
+                          <div key={c.chatId} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
+                            <span className="text-gray-700 dark:text-gray-300">{c.name} {c.username && <span className="text-gray-400">{c.username}</span>}</span>
+                            <code className="text-xs text-[#5E2CA5] font-mono select-all">{c.chatId}</code>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="space-y-2 mt-3">
+                      {users.map((u:any)=>(
+                        <div key={u.id} className="flex items-end gap-2">
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-500 mb-1">{u.fullName}</label>
+                            <input value={chatIds[u.id] || ""} onChange={e=>setChatIds(c=>({...c,[u.id]:e.target.value}))}
+                              placeholder="Chat ID"
+                              className={`w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 outline-none ${inputFocus}`}/>
+                          </div>
+                          <Button size="sm" variant="outline" onClick={()=>saveChatId(u.id)}>Saqlash</Button>
                         </div>
                       ))}
                     </div>
-                  )}
-                  <div className="space-y-2 mt-3">
-                    {users.map((u:any)=>(
-                      <div key={u.id} className="flex items-end gap-2">
-                        <div className="flex-1">
-                          <label className="block text-xs text-gray-500 mb-1">{u.fullName}</label>
-                          <input value={chatIds[u.id] || ""} onChange={e=>setChatIds(c=>({...c,[u.id]:e.target.value}))}
-                            placeholder="Chat ID"
-                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
-                        </div>
-                        <Button size="sm" variant="outline" onClick={()=>saveChatId(u.id)}>Saqlash</Button>
-                      </div>
-                    ))}
                   </div>
-                </div>
-              </details>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>SMS (Eskiz.uz)</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xs text-gray-500">SMS yuborish uchun eskiz.uz dan ro'yxatdan o'ting va email/parolingizni kiriting. Sender nomi tasdiqlanmaguncha test uchun <b>4546</b> ishlaydi.</p>
-              <Input label="Eskiz email" value={eskiz.email} onChange={e=>setEskiz(s=>({...s,email:e.target.value}))} placeholder="email@example.com"/>
-              <Input label="Eskiz parol" type="password" value={eskiz.password} onChange={e=>setEskiz(s=>({...s,password:e.target.value}))} placeholder="••••••• (o'zgartirmasangiz bo'sh qoldiring)"/>
-              <Input label="Sender (from)" value={eskiz.from} onChange={e=>setEskiz(s=>({...s,from:e.target.value}))} placeholder="4546"/>
-              <Button onClick={saveEskiz} loading={saving}><Save className="w-4 h-4"/> Saqlash</Button>
-              <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
-                <label className="block text-xs text-gray-500 mb-1">Test SMS yuborish</label>
-                <div className="flex items-end gap-2">
-                  <input value={smsTest} onChange={e=>setSmsTest(e.target.value)} placeholder="+998 90 123 45 67"
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"/>
-                  <Button size="sm" variant="outline" onClick={testSms}>Test</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </details>
+              </CardContent>
+            </Card>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

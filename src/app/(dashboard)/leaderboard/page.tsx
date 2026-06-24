@@ -49,7 +49,7 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-6" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Reyting</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Tanga bo&apos;yicha o&apos;quvchilar reytingi</p>

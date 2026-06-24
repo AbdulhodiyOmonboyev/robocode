@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import type { Session } from "next-auth";
 
 export const dynamic = "force-dynamic";
 
-function isAdmin(u: any) { return ["SUPER_ADMIN", "ADMIN"].includes(u?.role); }
+function isAdmin(u: Session["user"]) { return ["SUPER_ADMIN", "ADMIN"].includes(u?.role); }
 function currentMonth() {
   const t = new Date(Date.now() + 5 * 3600 * 1000);
   return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -25,10 +26,10 @@ export async function GET(req: NextRequest) {
     include: { user: { select: { id: true, fullName: true, role: true } } },
   });
 
-  const map: Record<string, { userId: string; name: string; salary: number; bonus: number; total: number }> = {};
+  const map: Record<string, { userId: string; name: string; role: string; salary: number; bonus: number; total: number }> = {};
   for (const r of records) {
     const id = r.userId;
-    map[id] ||= { userId: id, name: r.user?.fullName || "—", salary: 0, bonus: 0, total: 0 };
+    map[id] ||= { userId: id, name: r.user?.fullName || "—", role: r.user?.role || "", salary: 0, bonus: 0, total: 0 };
     const amt = Number(r.amount || 0);
     if (r.type === "bonus") map[id].bonus += amt; else map[id].salary += amt;
     map[id].total += amt;
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdmin(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const user = session.user as any;
+  const user = session.user;
 
   const body = await req.json();
   const parsed = schema.safeParse(body);

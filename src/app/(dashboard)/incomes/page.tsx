@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, X, PlusCircle, Sparkles, Hash } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus, Trash2, PlusCircle, Sparkles, Hash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/components/ui/confirm";
+import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 
 interface Income {
@@ -113,7 +113,7 @@ export default function IncomesPage() {
       {dialog}
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Qo&apos;shimcha daromad</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">{month} · kurs to&apos;lovidan tashqari</p>
@@ -247,21 +247,16 @@ export default function IncomesPage() {
 
       {/* Add modal */}
       {showAdd && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-          onClick={() => setShowAdd(false)}
+        <Modal
+          title="Daromad qo'shish"
+          onClose={() => setShowAdd(false)}
+          footer={
+            <>
+              <ModalPrimaryButton onClick={save} loading={saving}>Saqlash</ModalPrimaryButton>
+              <ModalSecondaryButton onClick={() => setShowAdd(false)}>Bekor qilish</ModalSecondaryButton>
+            </>
+          }
         >
-          <div
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4"
-            onClick={ev => ev.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Daromad qo&apos;shish</h2>
-              <button onClick={() => setShowAdd(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
             <Input label="Summa (so'm)" type="number" value={form.amount}
               onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="1000000" />
 
@@ -292,12 +287,7 @@ export default function IncomesPage() {
                 placeholder="..." className={fieldCls} />
             </div>
 
-            <div className="flex gap-2 pt-1">
-              <Button onClick={save} loading={saving} className="flex-1">Saqlash</Button>
-              <Button variant="outline" onClick={() => setShowAdd(false)}>Bekor</Button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

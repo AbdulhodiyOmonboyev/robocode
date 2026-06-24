@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  X,
   GraduationCap,
   UserCog,
   Pin,
@@ -32,6 +33,8 @@ import {
   Trophy,
   ScrollText,
   FileBarChart,
+  AlertCircle,
+  Gift,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -51,6 +54,7 @@ const navEntries: NavEntry[] = [
       { href: "/leads/kanban", label: "Kanban", icon: Pin },
     ],
   },
+  { type: "item", href: "/students", label: "Talabalar", icon: GraduationCap },
   { type: "item", href: "/groups", label: "Guruhlar", icon: GraduationCap },
   { type: "item", href: "/teachers", label: "O'qituvchilar", icon: Presentation },
   {
@@ -71,6 +75,8 @@ const navEntries: NavEntry[] = [
     icon: Wallet,
     children: [
       { href: "/payments", label: "To'lovlar", icon: Wallet },
+      { href: "/debtors", label: "Qarzdorlar", icon: AlertCircle },
+      { href: "/bonuses", label: "Bonuslar", icon: Gift },
       { href: "/incomes", label: "Qo'shimcha daromad", icon: PlusCircle },
       { href: "/payroll", label: "Ish haqi", icon: Banknote },
       { href: "/expenses", label: "Xarajatlar", icon: TrendingDown },
@@ -126,7 +132,12 @@ interface SessionUser {
 
 const ICON = "w-[18px] h-[18px] flex-shrink-0";
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen = false, onClose = () => {} }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
@@ -141,6 +152,8 @@ export default function Sidebar() {
       .then((d: { logo?: string }) => { if (d.logo) setLogo(d.logo); })
       .catch(() => {});
   }, []);
+
+  useEffect(() => { onClose(); }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const user = session?.user as SessionUser | undefined;
 
@@ -275,45 +288,60 @@ export default function Sidebar() {
   };
 
   return (
-    <aside
-      className={cn(
-        "relative flex flex-col h-full bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-white/5 transition-all duration-300",
-        collapsed ? "w-[68px]" : "w-64"
-      )}
-      style={{ fontFamily: "'Inter', sans-serif" }}
-    >
-      {/* Logo */}
-      <div className={cn(
-        "flex items-center h-16 border-b border-gray-100 dark:border-white/5",
-        collapsed ? "justify-center px-0" : "px-4 gap-3"
-      )}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={logo || "/icon.svg"}
-          alt="Logo"
-          className="w-8 h-8 rounded-xl object-contain flex-shrink-0"
+    <>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={onClose}
         />
-        {!collapsed && (
-          <div className="min-w-0">
+      )}
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex flex-col h-full w-64 bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-white/5 transition-transform duration-300 lg:relative lg:inset-auto lg:translate-x-0 lg:transition-[width] lg:duration-300",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+          collapsed ? "lg:w-[68px]" : "lg:w-64"
+        )}
+        style={{ fontFamily: "'Inter', sans-serif" }}
+      >
+        {/* Logo */}
+        <div className={cn(
+          "flex items-center h-16 border-b border-gray-100 dark:border-white/5",
+          collapsed ? "lg:justify-center lg:px-0 px-4 gap-3" : "px-4 gap-3"
+        )}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logo || "/icon.svg"}
+            alt="Logo"
+            className="w-8 h-8 rounded-xl object-contain flex-shrink-0"
+          />
+          <div className={cn("min-w-0 flex-1", collapsed && "lg:hidden")}>
             <p className="font-semibold text-gray-900 dark:text-white text-sm leading-tight truncate">
               Robocode CRM
             </p>
             <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">Lidlar tizimi</p>
           </div>
-        )}
-      </div>
+          {/* Mobile close */}
+          <button
+            onClick={onClose}
+            className="lg:hidden p-2 rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 transition-colors flex-shrink-0"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-[72px] z-10 w-6 h-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-full flex items-center justify-center shadow-sm hover:shadow-md hover:border-[#5E2CA5]/40 transition-all duration-150"
-      >
-        {collapsed ? (
-          <ChevronRight className="w-3 h-3 text-gray-400" />
-        ) : (
-          <ChevronLeft className="w-3 h-3 text-gray-400" />
-        )}
-      </button>
+        {/* Collapse toggle (desktop only) */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden lg:flex absolute -right-3 top-[72px] z-10 w-6 h-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-full items-center justify-center shadow-sm hover:shadow-md hover:border-[#5E2CA5]/40 transition-all duration-150"
+        >
+          {collapsed ? (
+            <ChevronRight className="w-3 h-3 text-gray-400" />
+          ) : (
+            <ChevronLeft className="w-3 h-3 text-gray-400" />
+          )}
+        </button>
 
       {/* Navigation */}
       <nav className="flex-1 px-2.5 py-4 overflow-y-auto space-y-0.5 scrollbar-none">
@@ -323,19 +351,28 @@ export default function Sidebar() {
       {/* User profile */}
       <div className="border-t border-gray-100 dark:border-white/5 p-3">
         <div className={cn("flex items-center gap-2.5", collapsed && "justify-center")}>
-          <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 flex items-center justify-center">
-            <span className="text-xs font-semibold text-[#5E2CA5] dark:text-purple-400">
-              {user ? getInitials(user.fullName ?? user.name ?? "U") : "U"}
-            </span>
-          </div>
-          {!collapsed && (
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-gray-900 dark:text-white truncate leading-tight">
-                {user?.fullName ?? user?.name}
-              </p>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{user?.role}</p>
+          <Link
+            href="/profile"
+            title="Profil"
+            className={cn(
+              "flex items-center gap-2.5 min-w-0 flex-1 rounded-xl -m-1 p-1 transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-white/5",
+              collapsed && "flex-initial justify-center"
+            )}
+          >
+            <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 flex items-center justify-center">
+              <span className="text-xs font-semibold text-[#5E2CA5] dark:text-purple-400">
+                {user ? getInitials(user.fullName ?? user.name ?? "U") : "U"}
+              </span>
             </div>
-          )}
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium text-gray-900 dark:text-white truncate leading-tight">
+                  {user?.fullName ?? user?.name}
+                </p>
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{user?.role}</p>
+              </div>
+            )}
+          </Link>
           {!collapsed && (
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
@@ -356,6 +393,7 @@ export default function Sidebar() {
           </button>
         )}
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

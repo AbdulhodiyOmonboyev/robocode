@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, GraduationCap, Clock, Users2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/components/ui/confirm";
+import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { formatCurrency } from "@/lib/utils";
 
 const COLORS = ["#6366f1","#10b981","#f59e0b","#f43f5e","#06b6d4","#8b5cf6","#ec4899","#14b8a6"];
@@ -95,104 +94,158 @@ export default function CoursesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
       {dialog}
-      <div className="flex items-center justify-between">
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Kurslar</h1>
-          <p className="text-sm text-gray-500 mt-1">{courses.length} ta kurs</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Kurslar</h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">{courses.length} ta kurs</p>
         </div>
-        <Button onClick={openCreate}><Plus className="w-4 h-4" /> Kurs qo'shish</Button>
+        <button
+          onClick={openCreate}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Yangi kurs
+        </button>
       </div>
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({length:5}).map((_,i)=><div key={i} className="h-40 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 animate-pulse"/>)}
+          {Array.from({length:5}).map((_,i)=><div key={i} className="h-52 bg-white dark:bg-gray-900 rounded-2xl shadow-sm animate-pulse"/>)}
         </div>
       ) : courses.length === 0 ? (
-        <Card>
-          <div className="py-20 text-center">
-            <div className="text-5xl mb-4">📚</div>
-            <p className="text-gray-500 font-medium">Hali kurs yo'q</p>
-            <Button className="mt-4" onClick={openCreate}><Plus className="w-4 h-4"/>Birinchi kursni qo'shing</Button>
-          </div>
-        </Card>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm py-20 text-center">
+          <GraduationCap className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-400 font-medium text-[13px]">Hali kurs yo&apos;q</p>
+          <button
+            onClick={openCreate}
+            className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Birinchi kursni qo&apos;shing
+          </button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {courses.map(c => (
-            <Card key={c.id} className={!c.isActive ? "opacity-60" : ""}>
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex-shrink-0" style={{ backgroundColor: c.color || "#6366f1" }} />
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{c.name}</h3>
-                      <p className="text-xs text-gray-400">/{c.slug}</p>
-                    </div>
+            <div
+              key={c.id}
+              className={`bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5 ${!c.isActive ? "opacity-60" : ""}`}
+            >
+              {/* Top: icon, name, status badge */}
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-[15px]"
+                    style={{ backgroundColor: c.color || "#5E2CA5" }}
+                  >
+                    {c.name.charAt(0).toUpperCase()}
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-lg font-medium ${c.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
-                    {c.isActive ? "Faol" : "Nofaol"}
-                  </span>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-gray-900 dark:text-white truncate">{c.name}</h3>
+                    <p className="text-[11px] text-gray-400 truncate">/{c.slug}</p>
+                  </div>
                 </div>
-                {c.description && <p className="text-sm text-gray-500 mb-3 line-clamp-2">{c.description}</p>}
-                <div className="flex items-center justify-between text-sm mb-4">
-                  <span className="font-semibold text-indigo-600">{formatCurrency(c.price, c.currency)}</span>
-                  <span className="text-gray-500">{c.durationMonths} oy</span>
-                  <span className="text-gray-500">{c._count.leads} lid</span>
+                <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold flex-shrink-0 whitespace-nowrap ${c.isActive ? "bg-green-500/10 text-green-600" : "bg-gray-100 text-gray-400 dark:bg-white/5"}`}>
+                  {c.isActive ? "Faol" : "Nofaol"}
+                </span>
+              </div>
+
+              {c.description && <p className="text-[13px] text-gray-400 mb-3 line-clamp-2">{c.description}</p>}
+
+              <div className="border-t border-gray-100 dark:border-white/5 my-3" />
+
+              {/* 2x2 stats */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">Davomiyligi</p>
+                    <p className="text-[13px] font-semibold text-gray-900 dark:text-white whitespace-nowrap">{c.durationMonths} oy</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => openEdit(c)} className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
-                    <Edit className="w-3 h-3"/> Tahrirlash
-                  </button>
-                  <button onClick={() => toggleActive(c)} className="p-1.5 text-gray-400 hover:text-amber-600 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-amber-50 transition" title={c.isActive?"O'chirish":"Yoqish"}>
-                    {c.isActive ? <ToggleRight className="w-4 h-4"/> : <ToggleLeft className="w-4 h-4"/>}
-                  </button>
-                  <button onClick={() => deleteCourse(c)} className="p-1.5 text-gray-400 hover:text-red-600 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-red-50 transition">
-                    <Trash2 className="w-4 h-4"/>
-                  </button>
+                  <div className="w-7 h-7 rounded-lg bg-[#5E2CA5]/10 text-[#5E2CA5] flex items-center justify-center flex-shrink-0">
+                    <Wallet className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">Narxi</p>
+                    <p className="text-[13px] font-semibold text-[#5E2CA5] truncate">{formatCurrency(c.price, c.currency)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center flex-shrink-0">
+                    <GraduationCap className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">Guruhlar</p>
+                    <p className="text-[13px] font-semibold text-gray-900 dark:text-white">—</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-green-500/10 text-green-600 flex items-center justify-center flex-shrink-0">
+                    <Users2 className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">O&apos;quvchilar</p>
+                    <p className="text-[13px] font-semibold text-gray-900 dark:text-white">{c._count.leads}</p>
+                  </div>
                 </div>
               </div>
-            </Card>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                <button onClick={() => openEdit(c)} className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-medium border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-gray-600 dark:text-gray-300">
+                  <Edit className="w-3.5 h-3.5"/> Tahrirlash
+                </button>
+                <button onClick={() => toggleActive(c)} className="p-2 text-gray-400 hover:text-amber-600 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors" title={c.isActive?"O'chirish":"Yoqish"}>
+                  {c.isActive ? <ToggleRight className="w-4 h-4"/> : <ToggleLeft className="w-4 h-4"/>}
+                </button>
+                <button onClick={() => deleteCourse(c)} className="p-2 text-gray-400 hover:text-red-600 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                  <Trash2 className="w-4 h-4"/>
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{editing ? "Kursni tahrirlash" : "Yangi kurs"}</h2>
-              <button onClick={()=>setModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+        <Modal
+          title={editing ? "Kursni tahrirlash" : "Yangi kurs"}
+          onClose={() => setModalOpen(false)}
+        >
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <Input label="Kurs nomi *" {...register("name")} error={errors.name?.message} placeholder="Frontend Development"/>
+            <Input label="Slug *" {...register("slug")} error={errors.slug?.message} placeholder="frontend-dev"/>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tavsif</label>
+              <textarea {...register("description")} rows={2} className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition" placeholder="Qisqa tavsif..."/>
             </div>
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-              <Input label="Kurs nomi *" {...register("name")} error={errors.name?.message} placeholder="Frontend Development"/>
-              <Input label="Slug *" {...register("slug")} error={errors.slug?.message} placeholder="frontend-dev"/>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tavsif</label>
-                <textarea {...register("description")} rows={2} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Qisqa tavsif..."/>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Narxi (UZS) *" type="number" {...register("price")} error={errors.price?.message}/>
+              <Input label="Davomiyligi (oy) *" type="number" {...register("durationMonths")} error={errors.durationMonths?.message}/>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rang</label>
+              <div className="flex gap-2 flex-wrap">
+                {COLORS.map(color => (
+                  <button key={color} type="button" onClick={()=>setValue("color", color)}
+                    className={`w-7 h-7 rounded-lg transition ${selectedColor===color?"ring-2 ring-offset-2 ring-[#5E2CA5] scale-110":""}`}
+                    style={{backgroundColor:color}}/>
+                ))}
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Input label="Narxi (UZS) *" type="number" {...register("price")} error={errors.price?.message}/>
-                <Input label="Davomiyligi (oy) *" type="number" {...register("durationMonths")} error={errors.durationMonths?.message}/>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rang</label>
-                <div className="flex gap-2 flex-wrap">
-                  {COLORS.map(color => (
-                    <button key={color} type="button" onClick={()=>setValue("color", color)}
-                      className={`w-7 h-7 rounded-lg transition ${selectedColor===color?"ring-2 ring-offset-2 ring-indigo-500 scale-110":""}`}
-                      style={{backgroundColor:color}}/>
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <Button type="button" variant="outline" onClick={()=>setModalOpen(false)}>Bekor</Button>
-                <Button type="submit" loading={saving}>{editing?"Saqlash":"Qo'shish"}</Button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <ModalPrimaryButton type="submit" loading={saving}>{editing ? "Saqlash" : "Qo'shish"}</ModalPrimaryButton>
+              <ModalSecondaryButton type="button" onClick={() => setModalOpen(false)}>Bekor qilish</ModalSecondaryButton>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

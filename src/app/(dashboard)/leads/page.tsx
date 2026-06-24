@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Plus, Filter, Download, Phone, MessageCircle, Edit, Trash2,
-  LayoutGrid, ChevronLeft, ChevronRight, Search, X,
+  LayoutGrid, ChevronLeft, ChevronRight, Search, X, Users,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm";
+import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
 import { cn, formatDate, formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
 
@@ -156,7 +157,7 @@ export default function LeadsPage() {
       {dialog}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Lidlar</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">{total} ta natija</p>
@@ -272,15 +273,18 @@ export default function LeadsPage() {
         {loading ? (
           <div className="py-16 text-center text-gray-400 text-sm animate-pulse">Yuklanmoqda...</div>
         ) : leads.length === 0 ? (
-          <div className="py-20 text-center">
-            <div className="text-5xl mb-4">👥</div>
-            <p className="text-gray-500 font-medium">Hech qanday lid topilmadi</p>
-            <Link href="/leads/new">
-              <button className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] text-white mx-auto hover:bg-[#4a2280] transition-colors">
-                <Plus className="w-4 h-4" /> Yangi lid qo'shish
-              </button>
-            </Link>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="Hech qanday lid topilmadi"
+            description="Yangi lid qo'shib mijozlar bazasini to'ldirishni boshlang."
+            action={
+              <Link href="/leads/new">
+                <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] text-white mx-auto hover:bg-[#4a2280] transition-colors">
+                  <Plus className="w-4 h-4" /> Yangi lid qo'shish
+                </button>
+              </Link>
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -442,11 +446,18 @@ export default function LeadsPage() {
 
       {/* Guruhga qo'shish modal */}
       {showGroupModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowGroupModal(false)}>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Guruhga qo&apos;shish</h3>
-            <p className="text-sm text-gray-400 mb-5">{selected.size} ta lid tanlandi</p>
-
+        <Modal
+          title="Guruhga qo'shish"
+          subtitle={`${selected.size} ta lid tanlandi`}
+          maxWidth="max-w-lg"
+          onClose={() => setShowGroupModal(false)}
+          footer={
+            <>
+              <ModalPrimaryButton onClick={assignToGroup} loading={assigning}>Qo&apos;shish</ModalPrimaryButton>
+              <ModalSecondaryButton onClick={() => setShowGroupModal(false)}>Bekor qilish</ModalSecondaryButton>
+            </>
+          }
+        >
             <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-5">
               {(["new", "existing"] as const).map(mode => (
                 <button key={mode} onClick={() => setGroupMode(mode)} className={cn("flex-1 px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors", groupMode === mode ? "bg-white dark:bg-gray-900 shadow-sm text-gray-900 dark:text-white" : "text-gray-500")}>
@@ -500,13 +511,7 @@ export default function LeadsPage() {
                 </div>
               </div>
             )}
-
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" size="sm" onClick={() => setShowGroupModal(false)}>Bekor</Button>
-              <Button size="sm" loading={assigning} onClick={assignToGroup}>Qo&apos;shish</Button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -1,115 +1,173 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Users, GraduationCap, Wallet, TrendingUp } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+interface AnalyticsData {
+  bySource: { source: string; count: number; enrolled: number; revenue: number; conversion: number }[];
+  byManager: { name: string; total: number; enrolled: number; revenue: number; conversion: number }[];
+  monthly: { month: string; revenue: number }[];
+  forecast: number;
+  totals: { leads: number; enrolled: number; revenue: number };
+}
+
+function money(v: number) { return Number(v || 0).toLocaleString("ru-RU"); }
+
+const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap";
+
+const PERIODS = [
+  { key: "3", label: "3 oy" },
+  { key: "6", label: "6 oy" },
+];
 
 export default function AnalyticsPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("6");
 
   useEffect(() => {
     fetch("/api/analytics").then(r => r.json()).then(d => { setData(d); setLoading(false); });
   }, []);
 
-  if (loading) return <div className="text-center text-gray-400 py-20">Yuklanmoqda...</div>;
-  if (!data) return <div className="text-center text-gray-400 py-20">Ma'lumot yo'q</div>;
+  const monthly = useMemo(() => {
+    if (!data) return [];
+    const n = Number(period);
+    return data.monthly.slice(-n);
+  }, [data, period]);
 
-  const maxRev = Math.max(1, ...data.monthly.map((m: any) => m.revenue));
+  if (loading) return <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 flex items-center justify-center text-[13px] text-gray-400 animate-pulse">Yuklanmoqda...</div>;
+  if (!data) return <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 flex items-center justify-center text-[13px] text-gray-400">Ma&apos;lumot yo&apos;q</div>;
+
+  const maxRev = Math.max(1, ...monthly.map((m) => m.revenue));
+
+  const kpiCards = [
+    { label: "Jami lidlar", value: String(data.totals.leads), icon: Users, chip: "bg-indigo-500/10 text-indigo-600" },
+    { label: "O'qishga yozildi", value: String(data.totals.enrolled), icon: GraduationCap, chip: "bg-green-500/10 text-green-600" },
+    { label: "Jami daromad", value: `${money(data.totals.revenue)} so'm`, icon: Wallet, chip: "bg-amber-500/10 text-amber-600" },
+    { label: "Prognoz (keyingi oy)", value: `${money(data.forecast)} so'm`, icon: TrendingUp, chip: "bg-[#5E2CA5]/10 text-[#5E2CA5]" },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analitika</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Manba, menejer va daromad tahlili</p>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Analitika</h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Manba, menejer va daromad tahlili</p>
+        </div>
+        <div className="inline-flex items-center gap-1 bg-white dark:bg-gray-900 rounded-xl shadow-sm p-1">
+          {PERIODS.map(p => (
+            <button
+              key={p.key}
+              onClick={() => setPeriod(p.key)}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors",
+                period === p.key ? "bg-[#5E2CA5] text-white shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Totals */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card><CardContent className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center"><Users className="w-5 h-5 text-indigo-600" /></div>
-          <div><p className="text-xs text-gray-500">Jami lidlar</p><p className="text-xl font-bold text-gray-900 dark:text-white">{data.totals.leads}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center"><GraduationCap className="w-5 h-5 text-green-600" /></div>
-          <div><p className="text-xs text-gray-500">O'qishga yozildi</p><p className="text-xl font-bold text-gray-900 dark:text-white">{data.totals.enrolled}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center"><Wallet className="w-5 h-5 text-amber-600" /></div>
-          <div><p className="text-xs text-gray-500">Jami daromad</p><p className="text-lg font-bold text-gray-900 dark:text-white">{money(data.totals.revenue)}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-violet-600" /></div>
-          <div><p className="text-xs text-gray-500">Prognoz (keyingi oy)</p><p className="text-lg font-bold text-gray-900 dark:text-white">{money(data.forecast)}</p></div>
-        </CardContent></Card>
+      {/* KPI cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpiCards.map(card => {
+          const Icon = card.icon;
+          return (
+            <div key={card.label} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5 flex items-start gap-4">
+              <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0", card.chip)}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[12px] text-gray-400 dark:text-gray-500 mb-0.5">{card.label}</p>
+                <p className="text-[18px] font-bold text-gray-900 dark:text-white leading-tight truncate">{card.value}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Monthly revenue */}
-      <Card>
-        <CardHeader><CardTitle>Oylik daromad (6 oy)</CardTitle></CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3 h-48">
-            {data.monthly.map((m: any) => (
-              <div key={m.month} className="flex-1 flex flex-col items-center gap-2">
-                <div className="w-full flex items-end justify-center" style={{ height: "150px" }}>
-                  <div className="w-full max-w-[48px] bg-indigo-500 rounded-t-lg transition-all" style={{ height: `${(m.revenue / maxRev) * 100}%`, minHeight: m.revenue > 0 ? "4px" : "0" }} title={money(m.revenue)} />
-                </div>
-                <span className="text-[10px] text-gray-500">{m.month.slice(5)}</span>
-                <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300">{m.revenue >= 1000000 ? (m.revenue / 1000000).toFixed(1) + "M" : Math.round(m.revenue / 1000) + "k"}</span>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5">
+        <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-4">Oylik daromad ({PERIODS.find(p => p.key === period)?.label})</p>
+        <div className="flex items-end gap-3 h-48">
+          {monthly.map((m) => (
+            <div key={m.month} className="flex-1 flex flex-col items-center gap-2">
+              <div className="w-full flex items-end justify-center" style={{ height: "150px" }}>
+                <div
+                  className="w-full max-w-[48px] rounded-t-lg transition-all"
+                  style={{ height: `${(m.revenue / maxRev) * 100}%`, minHeight: m.revenue > 0 ? "4px" : "0", backgroundColor: "#5E2CA5" }}
+                  title={money(m.revenue)}
+                />
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <span className="text-[10px] text-gray-400">{m.month.slice(5)}</span>
+              <span className="text-[10px] font-semibold text-gray-700 dark:text-gray-300">{m.revenue >= 1000000 ? (m.revenue / 1000000).toFixed(1) + "M" : Math.round(m.revenue / 1000) + "k"}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* By source */}
-        <Card>
-          <CardHeader><CardTitle>Manba bo'yicha</CardTitle></CardHeader>
-          <CardContent className="p-0 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 text-xs uppercase">
-                <tr><th className="text-left font-medium px-4 py-2.5">Manba</th><th className="text-right font-medium px-4 py-2.5">Lid</th><th className="text-right font-medium px-4 py-2.5">Yozildi</th><th className="text-right font-medium px-4 py-2.5">Konv.</th><th className="text-right font-medium px-4 py-2.5">Daromad</th></tr>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden">
+          <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-4 pt-4 pb-1">Manba bo&apos;yicha</p>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 dark:border-white/5">
+                  <th className={TH}>Manba</th>
+                  <th className={cn(TH, "text-right")}>Lid</th>
+                  <th className={cn(TH, "text-right")}>Yozildi</th>
+                  <th className={cn(TH, "text-right")}>Konv.</th>
+                  <th className={cn(TH, "text-right")}>Daromad</th>
+                </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {data.bySource.map((s: any) => (
-                  <tr key={s.source}>
-                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{s.source}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-300">{s.count}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-300">{s.enrolled}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-300">{s.conversion}%</td>
-                    <td className="px-4 py-2.5 text-right font-medium text-green-600">{money(s.revenue)}</td>
+              <tbody className="divide-y divide-gray-50 dark:divide-white/5">
+                {data.bySource.map((s) => (
+                  <tr key={s.source} className="hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors duration-100">
+                    <td className="px-4 py-2.5 text-[13px] font-medium text-gray-900 dark:text-white whitespace-nowrap">{s.source}</td>
+                    <td className="px-4 py-2.5 text-right text-[13px] text-gray-500 dark:text-gray-400">{s.count}</td>
+                    <td className="px-4 py-2.5 text-right text-[13px] text-gray-500 dark:text-gray-400">{s.enrolled}</td>
+                    <td className="px-4 py-2.5 text-right text-[13px] text-gray-500 dark:text-gray-400">{s.conversion}%</td>
+                    <td className="px-4 py-2.5 text-right text-[13px] font-semibold text-green-600 whitespace-nowrap">{money(s.revenue)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* By manager */}
-        <Card>
-          <CardHeader><CardTitle>Menejerlar reytingi</CardTitle></CardHeader>
-          <CardContent className="p-0 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 text-xs uppercase">
-                <tr><th className="text-left font-medium px-4 py-2.5">Menejer</th><th className="text-right font-medium px-4 py-2.5">Lid</th><th className="text-right font-medium px-4 py-2.5">Yozildi</th><th className="text-right font-medium px-4 py-2.5">Konv.</th><th className="text-right font-medium px-4 py-2.5">Daromad</th></tr>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden">
+          <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-4 pt-4 pb-1">Menejerlar reytingi</p>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 dark:border-white/5">
+                  <th className={TH}>Menejer</th>
+                  <th className={cn(TH, "text-right")}>Lid</th>
+                  <th className={cn(TH, "text-right")}>Yozildi</th>
+                  <th className={cn(TH, "text-right")}>Konv.</th>
+                  <th className={cn(TH, "text-right")}>Daromad</th>
+                </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {data.byManager.map((m: any, i: number) => (
-                  <tr key={i}>
-                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{m.name}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-300">{m.total}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-300">{m.enrolled}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-300">{m.conversion}%</td>
-                    <td className="px-4 py-2.5 text-right font-medium text-green-600">{money(m.revenue)}</td>
+              <tbody className="divide-y divide-gray-50 dark:divide-white/5">
+                {data.byManager.map((m, i) => (
+                  <tr key={i} className="hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors duration-100">
+                    <td className="px-4 py-2.5 text-[13px] font-medium text-gray-900 dark:text-white whitespace-nowrap">{m.name}</td>
+                    <td className="px-4 py-2.5 text-right text-[13px] text-gray-500 dark:text-gray-400">{m.total}</td>
+                    <td className="px-4 py-2.5 text-right text-[13px] text-gray-500 dark:text-gray-400">{m.enrolled}</td>
+                    <td className="px-4 py-2.5 text-right text-[13px] text-gray-500 dark:text-gray-400">{m.conversion}%</td>
+                    <td className="px-4 py-2.5 text-right text-[13px] font-semibold text-green-600 whitespace-nowrap">{money(m.revenue)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

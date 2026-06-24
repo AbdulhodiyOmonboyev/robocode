@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import crypto from "crypto";
+import type { Session } from "next-auth";
 
 async function getToken() {
   const s = await db.setting.findUnique({ where: { key: "telegram_bot_token" } });
   return s?.value || process.env.TELEGRAM_BOT_TOKEN || "";
 }
 
-function isAdmin(user: any) {
+function isAdmin(user: Session["user"]) {
   return ["SUPER_ADMIN", "ADMIN"].includes(user?.role);
 }
 
@@ -30,8 +31,8 @@ export async function GET() {
       webhookUrl: info?.result?.url || "",
       active: Boolean(info?.result?.url),
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }
 
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
       webhookUrl: url,
       username: uname || null,
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }

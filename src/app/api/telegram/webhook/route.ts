@@ -3,12 +3,19 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+interface TgChat { id: number; first_name?: string; last_name?: string; title?: string; username?: string; }
+interface TgMessage { chat?: TgChat; text?: string; }
+interface TgCallbackQuery { id: string; data?: string; message?: { chat?: TgChat }; }
+interface TgUpdate { message?: TgMessage; edited_message?: TgMessage; callback_query?: TgCallbackQuery; }
+interface LeadDraft { name: string; phone: string; }
+interface ConvState { step: "name" | "phone" | "course" | "search"; data?: Partial<LeadDraft>; }
+
 async function getToken() {
   const s = await db.setting.findUnique({ where: { key: "telegram_bot_token" } });
   return s?.value || process.env.TELEGRAM_BOT_TOKEN || "";
 }
 
-async function tg(token: string, method: string, payload: any) {
+async function tg(token: string, method: string, payload: Record<string, unknown>) {
   try {
     const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
       method: "POST",
@@ -32,17 +39,17 @@ const MAIN_KB = {
 
 const CANCEL_KB = { keyboard: [["❌ Bekor qilish"]], resize_keyboard: true };
 
-async function send(token: string, chatId: number | string, text: string, kb: any = MAIN_KB) {
+async function send(token: string, chatId: number | string, text: string, kb: Record<string, unknown> = MAIN_KB) {
   await tg(token, "sendMessage", { chat_id: chatId, text, reply_markup: kb });
 }
 
 // ---- per-chat conversation state (stored in Setting) ----
-async function getState(chatId: number | string): Promise<any | null> {
+async function getState(chatId: number | string): Promise<ConvState | null> {
   const s = await db.setting.findUnique({ where: { key: `tg_state_${chatId}` } });
   if (!s) return null;
   try { return JSON.parse(s.value); } catch { return null; }
 }
-async function setState(chatId: number | string, obj: any) {
+async function setState(chatId: number | string, obj: ConvState) {
   await db.setting.upsert({
     where: { key: `tg_state_${chatId}` },
     update: { value: JSON.stringify(obj) },
@@ -74,7 +81,7 @@ function cleanPhone(t: string) {
 
 async function courseKeyboard() {
   const courses = await db.course.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, take: 20 });
-  const rows: any[] = [];
+  const rows: { text: string; callback_data: string }[][] = [];
   for (let i = 0; i < courses.length; i += 2) {
     rows.push(
       courses.slice(i, i + 2).map((c) => ({ text: c.name, callback_data: `course:${c.id}` }))
@@ -84,7 +91,7 @@ async function courseKeyboard() {
   return { inline_keyboard: rows };
 }
 
-async function createLead(token: string, chatId: number, userId: string, data: any, courseId: string | null) {
+async function createLead(token: string, chatId: number, userId: string, data: LeadDraft, courseId: string | null) {
   const newStage = await db.stage.findFirst({ orderBy: { order: "asc" } });
   const course = courseId ? await db.course.findUnique({ where: { id: courseId } }) : null;
   const lead = await db.lead.create({
@@ -118,7 +125,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
   }
 
-  let update: any;
+  let update: TgUpdate;
   try { update = await req.json(); } catch { return NextResponse.json({ ok: true }); }
 
   // ---------- CALLBACK (inline buttons: course selection) ----------
@@ -134,9 +141,10 @@ export async function POST(req: NextRequest) {
 
     if (data.startsWith("course:")) {
       const st = await getState(chatId);
-      if (st?.step === "course" && st.data?.name && st.data?.phone) {
+      const { name, phone } = st?.data || {};
+      if (st?.step === "course" && name && phone) {
         const courseId = data === "course:skip" ? null : data.replace("course:", "");
-        await createLead(token, chatId, user.id, st.data, courseId);
+        await createLead(token, chatId, user.id, { name, phone }, courseId);
       } else {
         await send(token, chatId, "Bu amal eskirgan. Qaytadan «➕ Yangi lid» bosing.");
       }

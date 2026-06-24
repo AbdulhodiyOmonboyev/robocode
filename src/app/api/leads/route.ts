@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = session.user as any;
+  const user = session.user;
   const { searchParams } = new URL(req.url);
 
   const page = parseInt(searchParams.get("page") || "1");
@@ -68,12 +68,12 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  if (status) where.status = status as any;
+  if (status) where.status = status as Prisma.EnumLeadStatusFilter["equals"];
   const stageId = searchParams.get("stageId") || "";
   if (stageId) where.stageId = stageId;
   if (courseId) where.courseId = courseId;
-  if (source) where.source = source as any;
-  if (timePreference) where.timePreference = timePreference as any;
+  if (source) where.source = source as Prisma.EnumLeadSourceFilter["equals"];
+  if (timePreference) where.timePreference = timePreference as Prisma.EnumTimePreferenceFilter["equals"];
 
   if (assignedToId === "unassigned") {
     where.assignedToId = null;
@@ -82,9 +82,10 @@ export async function GET(req: NextRequest) {
   }
 
   if (dateFrom || dateTo) {
-    where.createdAt = {};
-    if (dateFrom) (where.createdAt as any).gte = new Date(dateFrom);
-    if (dateTo) (where.createdAt as any).lte = new Date(dateTo + "T23:59:59");
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (dateFrom) createdAt.gte = new Date(dateFrom);
+    if (dateTo) createdAt.lte = new Date(dateTo + "T23:59:59");
+    where.createdAt = createdAt;
   }
 
   const [leads, total] = await Promise.all([
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = session.user as any;
+  const user = session.user;
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

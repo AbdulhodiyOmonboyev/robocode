@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Modal, ModalSecondaryButton } from "@/components/ui/modal";
+import { cn } from "@/lib/utils";
 
 type Opts = { title?: string; message?: string; confirmText?: string; danger?: boolean };
 
@@ -21,22 +22,34 @@ export function useConfirm() {
   const danger = state.opts.danger !== false;
 
   const dialog = state.open ? (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4" onClick={() => close(false)}>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${danger ? "bg-red-100 dark:bg-red-900/30" : "bg-indigo-100 dark:bg-indigo-900/30"}`}>
-          <AlertTriangle className={`w-6 h-6 ${danger ? "text-red-600" : "text-indigo-600"}`} />
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{state.opts.title || "Tasdiqlaysizmi?"}</h3>
-        {state.opts.message && <p className="text-sm text-gray-500 mt-1">{state.opts.message}</p>}
-        <div className="flex gap-2 mt-5">
-          <Button variant="outline" className="flex-1" onClick={() => close(false)}>Bekor</Button>
-          <button onClick={() => close(true)}
-            className={`flex-1 py-2 text-white text-sm font-medium rounded-xl transition ${danger ? "bg-red-600 hover:bg-red-700" : "bg-indigo-600 hover:bg-indigo-700"}`}>
+    <Modal
+      title={state.opts.title || "Tasdiqlaysizmi?"}
+      maxWidth="max-w-sm"
+      zIndex="z-[60]"
+      onClose={() => close(false)}
+      footer={
+        <>
+          <button
+            onClick={() => close(true)}
+            className={cn(
+              "flex-1 py-2.5 text-white text-[13px] font-semibold rounded-xl transition-colors",
+              danger ? "bg-red-600 hover:bg-red-700" : "bg-[#5E2CA5] hover:bg-[#4a2280]"
+            )}
+          >
             {state.opts.confirmText || "O'chirish"}
           </button>
-        </div>
+          <ModalSecondaryButton onClick={() => close(false)}>Bekor qilish</ModalSecondaryButton>
+        </>
+      }
+    >
+      <div className={cn(
+        "w-12 h-12 rounded-2xl flex items-center justify-center mb-1",
+        danger ? "bg-red-100 dark:bg-red-900/30" : "bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20"
+      )}>
+        <AlertTriangle className={cn("w-6 h-6", danger ? "text-red-600" : "text-[#5E2CA5]")} />
       </div>
-    </div>
+      {state.opts.message && <p className="text-[13px] text-gray-500 dark:text-gray-400">{state.opts.message}</p>}
+    </Modal>
   ) : null;
 
   return { confirm, dialog };

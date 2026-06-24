@@ -40,8 +40,9 @@ export async function GET(req: NextRequest) {
   });
 
   // group by assignee
-  const byUser: Record<string, any[]> = {};
-  const unassigned: any[] = [];
+  type StaleLead = (typeof stale)[number];
+  const byUser: Record<string, StaleLead[]> = {};
+  const unassigned: StaleLead[] = [];
   for (const l of stale) {
     if (l.assignedToId) (byUser[l.assignedToId] ||= []).push(l);
     else unassigned.push(l);

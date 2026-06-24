@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!["SUPER_ADMIN", "ADMIN"].includes((session.user as any).role)) {
+  if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -32,8 +32,8 @@ export async function GET() {
     map[t].groups++;
     map[t].students += g._count.leads;
   }
-  for (const a of att as any[]) { const t = g2t[a.groupId]; if (map[t]) { map[t].total++; if (a.status === "present") map[t].present++; } }
-  for (const p of pays as any[]) { const t = g2t[p.groupId]; if (map[t]) map[t].revenue += Number(p.amount || 0); }
+  for (const a of att) { if (!a.groupId) continue; const t = g2t[a.groupId]; if (map[t]) { map[t].total++; if (a.status === "present") map[t].present++; } }
+  for (const p of pays) { if (!p.groupId) continue; const t = g2t[p.groupId]; if (map[t]) map[t].revenue += Number(p.amount || 0); }
 
   const teachers = Object.values(map).map((m) => ({
     ...m,

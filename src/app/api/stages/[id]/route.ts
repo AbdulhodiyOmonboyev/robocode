@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import type { Session } from "next-auth";
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -11,7 +12,7 @@ const updateSchema = z.object({
   isLost: z.boolean().optional(),
 });
 
-function canManage(user: any) {
+function canManage(user: Session["user"]) {
   return ["SUPER_ADMIN", "ADMIN"].includes(user.role);
 }
 

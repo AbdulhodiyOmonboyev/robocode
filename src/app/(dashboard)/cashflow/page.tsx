@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const BRAND = "#5E2CA5";
 
 function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
 function short(v: number) { return v >= 1000000 ? (v / 1000000).toFixed(1) + "M" : Math.round(v / 1000) + "k"; }
+
+const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap";
 
 export default function CashflowPage() {
   const [data, setData] = useState<any>(null);
@@ -15,73 +19,182 @@ export default function CashflowPage() {
     fetch("/api/cashflow").then(r => r.json()).then(d => { setData(d); setLoading(false); });
   }, []);
 
-  if (loading) return <div className="text-center text-gray-400 py-20">Yuklanmoqda...</div>;
-  if (!data || !data.months) return <div className="text-center text-gray-400 py-20">Ma'lumot yo'q</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl h-24 animate-pulse" />)}
+        </div>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl h-72 animate-pulse" />
+      </div>
+    );
+  }
+  if (!data || !data.months) {
+    return (
+      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm py-20 text-center text-[13px] text-gray-400">
+          Ma&apos;lumot yo&apos;q
+        </div>
+      </div>
+    );
+  }
 
   const max = Math.max(1, ...data.months.flatMap((m: any) => [m.income, m.outflow]));
 
+  // Month-over-month trend (last vs previous month)
+  const trendOf = (key: "income" | "outflow" | "profit"): number | null => {
+    if (data.months.length < 2) return null;
+    const last = data.months[data.months.length - 1][key];
+    const prev = data.months[data.months.length - 2][key];
+    if (!prev) return null;
+    return Math.round(((last - prev) / Math.abs(prev)) * 100);
+  };
+
+  const kpiCards = [
+    {
+      label: "Jami daromad",
+      value: money(data.totals.income),
+      icon: TrendingUp,
+      chip: "bg-emerald-500/10 text-emerald-600",
+      valueColor: "text-gray-900 dark:text-white",
+      trend: trendOf("income"),
+    },
+    {
+      label: "Jami chiqim",
+      value: money(data.totals.outflow),
+      icon: TrendingDown,
+      chip: "bg-red-500/10 text-red-600",
+      valueColor: "text-gray-900 dark:text-white",
+      trend: trendOf("outflow"),
+      invertTrend: true,
+    },
+    {
+      label: "Sof foyda",
+      value: money(data.totals.profit),
+      icon: Wallet,
+      chip: "bg-[#5E2CA5]/10 text-[#5E2CA5]",
+      valueColor: data.totals.profit >= 0 ? "text-emerald-600" : "text-red-600",
+      trend: trendOf("profit"),
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Pul oqimi</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Daromad, chiqim va sof foyda (6 oy)</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Pul oqimi</h1>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Daromad, chiqim va sof foyda · so&apos;ngi 6 oy</p>
       </div>
 
+      {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card><CardContent className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-green-600" /></div>
-          <div><p className="text-xs text-gray-500">Jami daromad</p><p className="text-lg font-bold text-gray-900 dark:text-white">{money(data.totals.income)}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center"><TrendingDown className="w-5 h-5 text-red-600" /></div>
-          <div><p className="text-xs text-gray-500">Jami chiqim</p><p className="text-lg font-bold text-gray-900 dark:text-white">{money(data.totals.outflow)}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center"><Wallet className="w-5 h-5 text-indigo-600" /></div>
-          <div><p className="text-xs text-gray-500">Sof foyda</p><p className={`text-lg font-bold ${data.totals.profit >= 0 ? "text-green-600" : "text-red-600"}`}>{money(data.totals.profit)}</p></div>
-        </CardContent></Card>
+        {kpiCards.map(card => {
+          const Icon = card.icon;
+          const trendUp = card.trend !== null && card.trend! > 0;
+          const trendGood = card.invertTrend ? !trendUp : trendUp;
+          return (
+            <div key={card.label} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0", card.chip)}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                {card.trend !== null && (
+                  <span className={cn(
+                    "inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full",
+                    trendGood ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                              : "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400"
+                  )}>
+                    {trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                    {Math.abs(card.trend!)}%
+                  </span>
+                )}
+              </div>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-3">{card.label}</p>
+              <p className={cn("text-[22px] font-bold leading-tight mt-0.5", card.valueColor)}>
+                {card.value} <span className="text-[13px] font-normal text-gray-400">so&apos;m</span>
+              </p>
+            </div>
+          );
+        })}
       </div>
 
-      <Card>
-        <CardHeader><CardTitle>Oylar kesimida (yashil — daromad, qizil — chiqim)</CardTitle></CardHeader>
-        <CardContent>
-          <div className="flex items-end justify-between gap-2 h-52">
-            {data.months.map((m: any) => (
-              <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full flex items-end justify-center gap-1" style={{ height: "160px" }}>
-                  <div className="w-1/2 max-w-[26px] bg-green-500 rounded-t" style={{ height: `${(m.income / max) * 100}%`, minHeight: m.income > 0 ? "3px" : "0" }} title={`Daromad: ${money(m.income)}`} />
-                  <div className="w-1/2 max-w-[26px] bg-red-500 rounded-t" style={{ height: `${(m.outflow / max) * 100}%`, minHeight: m.outflow > 0 ? "3px" : "0" }} title={`Chiqim: ${money(m.outflow)}`} />
-                </div>
-                <span className="text-[10px] text-gray-500">{m.month.slice(5)}</span>
-                <span className={`text-[10px] font-medium ${m.profit >= 0 ? "text-green-600" : "text-red-600"}`}>{short(m.profit)}</span>
-              </div>
-            ))}
+      {/* Bar chart card */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5">
+        <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+          <h2 className="text-[14px] font-semibold text-gray-900 dark:text-white">Oylik kirim / chiqim</h2>
+          {/* Legend */}
+          <div className="flex items-center gap-4 text-[12px] text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /> Kirim
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /> Chiqim
+            </span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card><CardContent className="p-0 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 text-xs uppercase">
-            <tr>
-              <th className="text-left font-medium px-4 py-3">Oy</th>
-              <th className="text-right font-medium px-4 py-3">Daromad</th>
-              <th className="text-right font-medium px-4 py-3">Chiqim</th>
-              <th className="text-right font-medium px-4 py-3">Sof foyda</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {data.months.map((m: any) => (
-              <tr key={m.month} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{m.month}</td>
-                <td className="px-4 py-3 text-right text-green-600">{money(m.income)}</td>
-                <td className="px-4 py-3 text-right text-red-600">{money(m.outflow)}</td>
-                <td className={`px-4 py-3 text-right font-semibold ${m.profit >= 0 ? "text-green-600" : "text-red-600"}`}>{money(m.profit)} so'm</td>
+        <div className="flex items-end justify-between gap-2 h-56">
+          {data.months.map((m: any) => (
+            <div key={m.month} className="flex-1 flex flex-col items-center gap-2">
+              <div className="w-full flex items-end justify-center gap-1.5" style={{ height: "176px" }}>
+                <div
+                  className="w-1/2 max-w-[28px] bg-emerald-500 rounded-t-lg transition-all hover:bg-emerald-600"
+                  style={{ height: `${(m.income / max) * 100}%`, minHeight: m.income > 0 ? "4px" : "0" }}
+                  title={`Kirim: ${money(m.income)} so'm`}
+                />
+                <div
+                  className="w-1/2 max-w-[28px] bg-red-500 rounded-t-lg transition-all hover:bg-red-600"
+                  style={{ height: `${(m.outflow / max) * 100}%`, minHeight: m.outflow > 0 ? "4px" : "0" }}
+                  title={`Chiqim: ${money(m.outflow)} so'm`}
+                />
+              </div>
+              <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{m.month.slice(5)}</span>
+              <span className={cn(
+                "text-[11px] font-bold tabular-nums",
+                m.profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+              )}>
+                {m.profit >= 0 ? "+" : ""}{short(m.profit)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Monthly breakdown table */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-100 dark:border-white/5">
+                <th className={TH}>Oy</th>
+                <th className={cn(TH, "text-right")}>Daromad</th>
+                <th className={cn(TH, "text-right")}>Chiqim</th>
+                <th className={cn(TH, "text-right")}>Sof foyda</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardContent></Card>
+            </thead>
+            <tbody className="divide-y divide-gray-50 dark:divide-white/5">
+              {data.months.map((m: any) => (
+                <tr key={m.month} className="hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors duration-100">
+                  <td className="px-4 py-3 text-[13px] font-medium text-gray-900 dark:text-white">{m.month}</td>
+                  <td className="px-4 py-3 text-right text-[13px] font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    +{money(m.income)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-[13px] font-semibold text-red-600 dark:text-red-400 whitespace-nowrap">
+                    −{money(m.outflow)}
+                  </td>
+                  <td className={cn(
+                    "px-4 py-3 text-right text-[13px] font-bold whitespace-nowrap",
+                    m.profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                  )}>
+                    {m.profit >= 0 ? "+" : ""}{money(m.profit)} so&apos;m
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

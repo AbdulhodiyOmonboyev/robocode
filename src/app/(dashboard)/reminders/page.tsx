@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Bell, Check, Clock, X, Phone, RefreshCw, ChevronDown, ChevronRight } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { formatDateTime, formatRelativeTime, isOverdue, phoneToTel } from "@/lib/utils";
-import { addMinutes, format } from "date-fns";
+import { Bell, Check, Clock, X, Phone, Plus } from "lucide-react";
+import { formatDateTime, phoneToTel } from "@/lib/utils";
+import { addMinutes, addDays, isSameDay, format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Reminder {
   id: string; title: string; description: string | null;
@@ -17,14 +16,31 @@ interface Reminder {
 }
 
 interface ReminderData {
+  reminders: Reminder[];
   overdue: Reminder[]; today: Reminder[]; upcoming: Reminder[]; done: Reminder[];
   totalToday: number;
+}
+
+const FILTERS = [
+  { key: "today", label: "Bugun" },
+  { key: "tomorrow", label: "Ertaga" },
+  { key: "week", label: "Bu hafta" },
+  { key: "done", label: "Bajarilgan" },
+] as const;
+
+type FilterKey = typeof FILTERS[number]["key"];
+
+function reminderType(title: string): { label: string; classes: string } {
+  const t = (title || "").toLowerCase();
+  if (/qo'ng'iroq|qongiroq|call|tel\b/.test(t)) return { label: "Qo'ng'iroq", classes: "bg-blue-500/10 text-blue-600" };
+  if (/to'lov|tolov|pay/.test(t)) return { label: "To'lov", classes: "bg-amber-500/10 text-amber-600" };
+  return { label: "Vazifa", classes: "bg-[#5E2CA5]/10 text-[#5E2CA5]" };
 }
 
 export default function RemindersPage() {
   const [data, setData] = useState<ReminderData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [collapsedDone, setCollapsedDone] = useState(true);
+  const [filter, setFilter] = useState<FilterKey>("today");
 
   const load = useCallback(async () => {
     const res = await fetch("/api/reminders");
@@ -49,109 +65,164 @@ export default function RemindersPage() {
     }
   };
 
-  const ReminderCard = ({ r, showSnooze = false }: { r: Reminder; showSnooze?: boolean }) => {
-    const overdue = isOverdue(r.remindAt) && r.status === "PENDING";
-    return (
-      <div className={`flex items-start gap-3 p-4 rounded-xl border transition ${
-        overdue ? "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/10" :
-        r.status === "DONE" ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-900/10 opacity-70" :
-        "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900"
-      }`}>
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${overdue?"bg-red-100 dark:bg-red-900":r.status==="DONE"?"bg-emerald-100 dark:bg-emerald-900":"bg-indigo-100 dark:bg-indigo-900"}`}>
-          {r.status === "DONE" ? <Check className="w-4 h-4 text-emerald-600"/> : <Bell className={`w-4 h-4 ${overdue?"text-red-600":"text-indigo-600"}`}/>}
+  const tomorrowItems = useMemo(() => {
+    if (!data) return [];
+    const tmrw = addDays(new Date(), 1);
+    return data.upcoming.filter(r => isSameDay(new Date(r.remindAt), tmrw));
+  }, [data]);
+
+  const counts = useMemo(() => ({
+    today: (data?.overdue.length || 0) + (data?.today.length || 0),
+    tomorrow: tomorrowItems.length,
+    week: data?.upcoming.length || 0,
+    done: data?.done.length || 0,
+  }), [data, tomorrowItems]);
+
+  const list: Reminder[] = useMemo(() => {
+    if (!data) return [];
+    switch (filter) {
+      case "today": return [...data.overdue, ...data.today];
+      case "tomorrow": return tomorrowItems;
+      case "week": return data.upcoming;
+      case "done": return data.done;
+    }
+  }, [data, filter, tomorrowItems]);
+
+  return (
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Eslatmalar</h1>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">{data?.totalToday || 0} ta bugungi eslatma</p>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">{r.title}</p>
-            <span className={`text-xs px-2 py-0.5 rounded-lg font-medium flex-shrink-0 ${overdue?"bg-red-100 text-red-700":r.status==="DONE"?"bg-emerald-100 text-emerald-700":"bg-indigo-100 text-indigo-700"}`}>
-              {overdue?"Kechikkan":r.status==="DONE"?"Bajarildi":r.status==="MISSED"?"O'tkazib yuborildi":formatRelativeTime(r.remindAt)}
-            </span>
-          </div>
-          <div className="flex items-center gap-3 mt-1">
-            <Link href={`/leads/${r.lead.id}`} className="text-xs text-indigo-600 hover:underline font-medium">{r.lead.fullName}</Link>
-            <a href={phoneToTel(r.lead.phone)} className="text-xs text-gray-500 hover:text-green-600 flex items-center gap-1">
-              <Phone className="w-3 h-3"/>{r.lead.phone}
-            </a>
-          </div>
-          {r.description && <p className="text-xs text-gray-500 mt-1">{r.description}</p>}
-          <p className="text-xs text-gray-400 mt-1">{formatDateTime(r.remindAt)}</p>
-        </div>
-        {r.status === "PENDING" && (
-          <div className="flex flex-col gap-1 flex-shrink-0">
-            <button onClick={()=>setStatus(r.id,"DONE")} className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition" title="Bajarildi">
-              <Check className="w-3.5 h-3.5"/>
-            </button>
-            {showSnooze && (
-              <button onClick={()=>setStatus(r.id,"PENDING",15)} className="p-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition" title="15 daqiqa kechiktirish">
-                <Clock className="w-3.5 h-3.5"/>
-              </button>
+        <button
+          onClick={() => toast.info("Eslatma qo'shish uchun lid sahifasiga o'ting")}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Yangi eslatma
+        </button>
+      </div>
+
+      {/* Filter chips */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {FILTERS.map(f => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={cn(
+              "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors",
+              filter === f.key
+                ? "bg-[#5E2CA5] text-white shadow-sm"
+                : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:text-gray-700 shadow-sm"
             )}
-            <button onClick={()=>setStatus(r.id,"CANCELLED")} className="p-1.5 bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-600 rounded-lg transition" title="Bekor qilish">
-              <X className="w-3.5 h-3.5"/>
-            </button>
+          >
+            {f.label}
+            <span className={cn(
+              "text-[11px] px-1.5 py-0.5 rounded-full",
+              filter === f.key ? "bg-white/20" : "bg-gray-100 dark:bg-white/10"
+            )}>
+              {counts[f.key]}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* List card */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="divide-y divide-gray-50 dark:divide-white/5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-16 animate-pulse bg-gray-50/60 dark:bg-white/5" />
+            ))}
+          </div>
+        ) : list.length === 0 ? (
+          <div className="py-16 text-center">
+            <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-[13px] text-gray-400">Eslatmalar yo&apos;q</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50 dark:divide-white/5">
+            {list.map(r => {
+              const done = r.status === "DONE";
+              const cancelled = r.status === "CANCELLED" || r.status === "MISSED";
+              const type = reminderType(r.title);
+              return (
+                <div
+                  key={r.id}
+                  className={cn(
+                    "flex items-start gap-3 px-4 py-3.5 transition-colors duration-100",
+                    done ? "bg-green-50/40 dark:bg-green-500/5" : "hover:bg-gray-50/60 dark:hover:bg-white/5"
+                  )}
+                >
+                  {/* Checkbox */}
+                  <button
+                    onClick={() => !done && !cancelled && setStatus(r.id, "DONE")}
+                    disabled={done || cancelled}
+                    className={cn(
+                      "mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-colors",
+                      done ? "bg-green-500 border-green-500" :
+                      cancelled ? "bg-gray-200 border-gray-200 dark:bg-white/10 dark:border-white/10" :
+                      "border-gray-300 dark:border-white/20 hover:border-[#5E2CA5]"
+                    )}
+                  >
+                    {done && <Check className="w-3 h-3 text-white" />}
+                    {cancelled && <X className="w-3 h-3 text-gray-400" />}
+                  </button>
+
+                  {/* Time */}
+                  <div className="w-14 flex-shrink-0 pt-0.5">
+                    <p className="text-[13px] font-bold text-[#5E2CA5] whitespace-nowrap">
+                      {format(new Date(r.remindAt), "HH:mm")}
+                    </p>
+                  </div>
+
+                  {/* Title + description */}
+                  <div className="flex-1 min-w-0">
+                    <p className={cn(
+                      "text-[13px] font-medium",
+                      done ? "text-gray-400 line-through" : "text-gray-900 dark:text-white"
+                    )}>
+                      {r.title}
+                    </p>
+                    {r.description && (
+                      <p className={cn("text-[12px] mt-0.5", done ? "text-gray-300 line-through" : "text-gray-400")}>
+                        {r.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-3 mt-1">
+                      <Link href={`/leads/${r.lead.id}`} className="text-[11px] text-[#5E2CA5] hover:underline font-medium">
+                        {r.lead.fullName}
+                      </Link>
+                      <a href={phoneToTel(r.lead.phone)} className="text-[11px] text-gray-400 hover:text-green-600 flex items-center gap-1">
+                        <Phone className="w-3 h-3" />{r.lead.phone}
+                      </a>
+                      <span className="text-[11px] text-gray-300">{formatDateTime(r.remindAt)}</span>
+                    </div>
+                  </div>
+
+                  {/* Type badge */}
+                  <span className={cn("text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0 whitespace-nowrap", type.classes)}>
+                    {type.label}
+                  </span>
+
+                  {/* Actions */}
+                  {r.status === "PENDING" && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button onClick={() => setStatus(r.id, "PENDING", 15)} className="p-1.5 text-gray-300 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-colors" title="15 daqiqa kechiktirish">
+                        <Clock className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => setStatus(r.id, "CANCELLED")} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" title="Bekor qilish">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
-    );
-  };
-
-  const Section = ({ title, items, color, icon, showSnooze = false }: { title: string; items: Reminder[]; color: string; icon: React.ReactNode; showSnooze?: boolean }) => (
-    items.length > 0 ? (
-      <div>
-        <div className={`flex items-center gap-2 mb-3 px-1`}>
-          <span className={`w-2 h-2 rounded-full ${color}`}/>
-          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{title}</span>
-          <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">{items.length}</span>
-        </div>
-        <div className="space-y-2">
-          {items.map(r => <ReminderCard key={r.id} r={r} showSnooze={showSnooze}/>)}
-        </div>
-      </div>
-    ) : null
-  );
-
-  return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Eslatmalar</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{data?.totalToday || 0} ta bugungi eslatma</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={load}><RefreshCw className="w-4 h-4"/> Yangilash</Button>
-      </div>
-
-      {loading ? (
-        <div className="space-y-3">{Array.from({length:5}).map((_,i)=><div key={i} className="h-20 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 animate-pulse"/>)}</div>
-      ) : !data || (data.overdue.length+data.today.length+data.upcoming.length+data.done.length) === 0 ? (
-        <Card>
-          <div className="py-20 text-center">
-            <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4"/>
-            <p className="text-gray-500 font-medium">Eslatmalar yo'q</p>
-            <p className="text-sm text-gray-400 mt-1">Lid sahifasidan eslatma qo'shing</p>
-          </div>
-        </Card>
-      ) : (
-        <div className="space-y-6">
-          <Section title="Kechikkanlar" items={data?.overdue||[]} color="bg-red-500" icon={null} showSnooze/>
-          <Section title="Bugun" items={data?.today||[]} color="bg-amber-400" icon={null} showSnooze/>
-          <Section title="Kelgusi 7 kun" items={data?.upcoming||[]} color="bg-indigo-400" icon={null}/>
-
-          {/* Done / Cancelled */}
-          {(data?.done?.length || 0) > 0 && (
-            <div>
-              <button onClick={()=>setCollapsedDone(!collapsedDone)} className="flex items-center gap-2 mb-3 px-1 text-sm font-semibold text-gray-400 hover:text-gray-600 transition">
-                {collapsedDone ? <ChevronRight className="w-4 h-4"/> : <ChevronDown className="w-4 h-4"/>}
-                <span>Yakunlangan / Bekor ({data?.done?.length})</span>
-              </button>
-              {!collapsedDone && (
-                <div className="space-y-2">
-                  {data?.done?.map(r => <ReminderCard key={r.id} r={r}/>)}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

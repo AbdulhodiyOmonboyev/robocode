@@ -3,11 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
-  Plus, Trash2, X, Search, Wallet, CalendarDays, AlertCircle, Receipt,
+  Plus, Trash2, X, Search, Wallet, CalendarDays, AlertCircle, Receipt, Download,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/components/ui/confirm";
+import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
+import { EmptyState } from "@/components/ui/empty-state";
+import { exportToCsv } from "@/lib/export";
 import { cn } from "@/lib/utils";
 
 interface Payment {
@@ -72,6 +74,23 @@ export default function PaymentsPage() {
     else toast.error("O'chirib bo'lmadi (faqat admin)");
   };
 
+  const exportPayments = () => {
+    if (!payments.length) { toast.error("Eksport qilish uchun to'lov yo'q"); return; }
+    exportToCsv("tolovlar", payments.map(p => ({
+      "O'quvchi": p.lead?.fullName || "",
+      "Telefon": p.lead?.phone || "",
+      "Summa": p.amount,
+      "Chegirma": p.discount || 0,
+      "Valyuta": p.currency,
+      "To'lov turi": METHODS[p.method] || p.method,
+      "Kurs": p.course?.name || "",
+      "Guruh": p.group?.name || "",
+      "Oy uchun": p.forMonth || "",
+      "Sana": p.paidAt,
+      "Qabul qildi": p.createdBy?.fullName || "",
+    })));
+  };
+
   const kpiCards = [
     {
       label: `Bu oy tushum (${summary.month || "—"})`,
@@ -99,17 +118,25 @@ export default function PaymentsPage() {
       {dialog}
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">To&apos;lovlar</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">O&apos;quvchi to&apos;lovlari va daromad</p>
         </div>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
-        >
-          <Plus className="w-4 h-4" /> To&apos;lov qabul qilish
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportPayments}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+          >
+            <Download className="w-4 h-4" /> Eksport
+          </button>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" /> To&apos;lov qabul qilish
+          </button>
+        </div>
       </div>
 
       {/* KPI cards */}
@@ -194,9 +221,13 @@ export default function PaymentsPage() {
                     <tr><td colSpan={8} className="px-4 py-12 text-center text-[13px] text-gray-400 animate-pulse">Yuklanmoqda...</td></tr>
                   ) : payments.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-16 text-center">
-                        <Receipt className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                        <p className="text-[13px] text-gray-400">To&apos;lov yo&apos;q</p>
+                      <td colSpan={8} className="p-0">
+                        <EmptyState
+                          icon={Receipt}
+                          title="To'lov topilmadi"
+                          description="Hozircha hech qanday to'lov qayd etilmagan."
+                          className="shadow-none rounded-none"
+                        />
                       </td>
                     </tr>
                   ) : payments.map(p => (
@@ -419,15 +450,16 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; o
   const labelCls = "block text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1.5";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">To&apos;lov qabul qilish</h2>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
+    <Modal
+      title="To'lov qabul qilish"
+      onClose={onClose}
+      footer={
+        <>
+          <ModalPrimaryButton onClick={save} loading={saving}>Saqlash</ModalPrimaryButton>
+          <ModalSecondaryButton onClick={onClose}>Bekor qilish</ModalSecondaryButton>
+        </>
+      }
+    >
         {/* Lead picker */}
         <div className="relative">
           <label className={labelCls}>O&apos;quvchi</label>
@@ -500,12 +532,6 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; o
           <label className={labelCls}>Izoh (ixtiyoriy)</label>
           <input value={note} onChange={e => setNote(e.target.value)} className={fieldCls} placeholder="..." />
         </div>
-
-        <div className="flex gap-2 pt-1">
-          <Button onClick={save} loading={saving} className="flex-1">Saqlash</Button>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

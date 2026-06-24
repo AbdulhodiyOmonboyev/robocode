@@ -10,7 +10,7 @@ async function getToken() {
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const user = session.user as any;
+  const user = session.user;
 
   const { id } = await params;
   const { text } = await req.json();
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!data.ok) return NextResponse.json({ error: data.description || "Yuborilmadi" }, { status: 400 });
     await db.activity.create({ data: { leadId: id, userId: user.id, action: "telegram_sent", details: { text } } });
     return NextResponse.json({ success: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }

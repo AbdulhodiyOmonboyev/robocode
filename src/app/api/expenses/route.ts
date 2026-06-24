@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import type { Session } from "next-auth";
 
 export const dynamic = "force-dynamic";
 
-function isAdmin(u: any) { return ["SUPER_ADMIN", "ADMIN"].includes(u?.role); }
+function isAdmin(u: Session["user"]) { return ["SUPER_ADMIN", "ADMIN"].includes(u?.role); }
 
 // month "YYYY-MM" -> [start, end) in UTC accounting for Tashkent (+5)
 function monthRange(month: string) {
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdmin(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const user = session.user as any;
+  const user = session.user;
 
   const body = await req.json();
   const parsed = schema.safeParse(body);

@@ -6,13 +6,14 @@ import Link from "next/link";
 import { toast } from "sonner";
 import {
   ArrowLeft, Phone, MessageCircle, Edit, Trash2, Bell, Pin, PinOff,
-  Clock, User, BookOpen, Tag, Activity, FileText, Check, X, ExternalLink
+  Clock, User, BookOpen, Activity, Check, X, Coins, Send, CalendarCheck,
+  Wallet, GraduationCap, Plus, Minus,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm";
-import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_SOURCE_LABELS, TIME_PREFERENCE_LABELS } from "@/lib/constants";
-import { formatDate, formatDateTime, formatRelativeTime, formatPhone, phoneToTel, phoneToTelegram, phoneToWhatsapp, formatCurrency } from "@/lib/utils";
+import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_SOURCE_LABELS } from "@/lib/constants";
+import { formatDate, formatDateTime, formatRelativeTime, formatPhone, phoneToTel, phoneToTelegram, phoneToWhatsapp, formatCurrency, getInitials } from "@/lib/utils";
 
 interface Lead {
   id: string; fullName: string; phone: string; phoneSecondary: string | null;
@@ -36,14 +37,23 @@ interface Lead {
   activities: any[];
 }
 
-type Tab = "info" | "activity" | "reminders" | "notes";
+type Tab = "activity" | "reminders" | "payments" | "attendance" | "scores";
+
+const ACTIVITY_DOT: Record<string, string> = {
+  lead_created: "bg-emerald-500",
+  status_changed: "bg-[#5E2CA5]",
+  comment: "bg-blue-500",
+  note_added: "bg-blue-400",
+  reminder_created: "bg-amber-500",
+  lead_updated: "bg-gray-400",
+};
 
 export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("info");
+  const [tab, setTab] = useState<Tab>("activity");
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editData, setEditData] = useState<any>({});
@@ -156,126 +166,255 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     else toast.error("O'chirib bo'lmadi");
   };
 
-  if (loading) return <div className="animate-pulse space-y-4"><div className="h-20 bg-white dark:bg-gray-900 rounded-2xl"/><div className="h-80 bg-white dark:bg-gray-900 rounded-2xl"/></div>;
+  if (loading) return <div className="animate-pulse space-y-4"><div className="h-32 bg-white dark:bg-gray-900 rounded-2xl"/><div className="h-80 bg-white dark:bg-gray-900 rounded-2xl"/></div>;
   if (!lead) return null;
 
-  const comments = lead.activities.filter((a:any)=>a.action==="comment");
   const currentStageIdx = stages.findIndex((s:any)=>s.id===lead.stageId);
+  const total = (lead.payments || []).reduce((a: number, p: any) => a + Number(p.amount || 0), 0);
+  const att = lead.attendances || [];
+  const present = att.filter((a) => a.status === "present").length;
+  const absent = att.filter((a) => a.status === "absent").length;
+  const late = att.filter((a) => a.status === "late").length;
+  const attTotal = present + absent + late;
+  const statusCls = LEAD_STATUS_COLORS[lead.status as keyof typeof LEAD_STATUS_COLORS] || "";
+
+  const tabs: { key: Tab; label: string; icon: typeof Activity; badge?: number }[] = [
+    { key: "activity", label: "Faoliyat", icon: Activity },
+    { key: "reminders", label: "Eslatmalar", icon: Bell, badge: lead.reminders.filter((r:any)=>r.status==="PENDING").length },
+    { key: "payments", label: "To'lovlar", icon: Wallet },
+    { key: "attendance", label: "Davomat", icon: CalendarCheck },
+    { key: "scores", label: "Ballar", icon: GraduationCap },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-4">
+    <div className="max-w-6xl mx-auto space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
       {dialog}
-      {/* Top bar */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <Link href="/leads" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-          <ArrowLeft className="w-5 h-5 text-gray-500"/>
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{lead.fullName}</h1>
-            {lead.isPinned && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg">📌 Pinlangan</span>}
-            {lead.frozenAt && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg">❄️ Muzlatilgan</span>}
-            {lead.isArchived && <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-lg">🗄 Arxiv</span>}
-          </div>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Qo'shilgan: {formatDate(lead.createdAt)} · {lead.createdBy.fullName}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={togglePin} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-500" title={lead.isPinned?"Pindan olib tashlash":"Pinlash"}>
-            {lead.isPinned ? <PinOff className="w-4 h-4"/> : <Pin className="w-4 h-4"/>}
-          </button>
-          {editing ? (
-            <>
-              <Button size="sm" variant="outline" onClick={()=>setEditing(false)}>Bekor</Button>
-              <Button size="sm" loading={saving} onClick={save}>Saqlash</Button>
-            </>
-          ) : (
-            <Button size="sm" variant="outline" onClick={()=>setEditing(true)}><Edit className="w-4 h-4"/> Tahrirlash</Button>
-          )}
-          <Button size="sm" variant="outline" onClick={toggleFreeze}>{lead.frozenAt ? "Faollashtirish" : "Muzlatish"}</Button>
-          <Button size="sm" variant="outline" onClick={toggleArchive}>{lead.isArchived ? "Arxivdan" : "Arxivlash"}</Button>
-          <Button size="sm" variant="danger" onClick={deleteLead}><Trash2 className="w-4 h-4"/></Button>
-        </div>
-      </div>
 
+      {/* Profile card */}
+      <Card className="rounded-2xl shadow-sm">
+        <CardContent className="p-5 sm:p-6">
+          <div className="flex items-start gap-3 mb-2">
+            <Link href="/leads" className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition flex-shrink-0">
+              <ArrowLeft className="w-4 h-4 text-gray-500"/>
+            </Link>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+            {/* Avatar */}
+            <div className="w-16 h-16 rounded-2xl bg-[#5E2CA5]/10 text-[#5E2CA5] flex items-center justify-center text-xl font-bold flex-shrink-0">
+              {getInitials(lead.fullName)}
+            </div>
+
+            {/* Name / status / contact */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">{lead.fullName}</h1>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusCls}`}>
+                  {LEAD_STATUS_LABELS[lead.status as keyof typeof LEAD_STATUS_LABELS]}
+                </span>
+                {lead.isPinned && <span className="text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 px-2 py-0.5 rounded-full">📌 Pinlangan</span>}
+                {lead.frozenAt && <span className="text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400 px-2 py-0.5 rounded-full">❄️ Muzlatilgan</span>}
+                {lead.isArchived && <span className="text-xs font-medium bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400 px-2 py-0.5 rounded-full">🗄 Arxiv</span>}
+              </div>
+
+              <div className="flex items-center gap-4 mt-1.5 flex-wrap text-sm">
+                <a href={phoneToTel(lead.phone)} className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-[#5E2CA5] transition">
+                  <Phone className="w-3.5 h-3.5"/> {formatPhone(lead.phone)}
+                </a>
+                {lead.course && (
+                  <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+                    <BookOpen className="w-3.5 h-3.5"/>
+                    <span className="w-2 h-2 rounded-full" style={{backgroundColor:lead.course.color||"#5E2CA5"}}/>
+                    {lead.course.name}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-xs text-gray-400 mt-1.5">
+                Qo&apos;shilgan: {formatDate(lead.createdAt)} · {lead.createdBy.fullName}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button onClick={togglePin} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition text-gray-500" title={lead.isPinned?"Pindan olib tashlash":"Pinlash"}>
+                {lead.isPinned ? <PinOff className="w-4 h-4"/> : <Pin className="w-4 h-4"/>}
+              </button>
+              {editing ? (
+                <>
+                  <Button size="sm" variant="outline" onClick={()=>setEditing(false)}><X className="w-3.5 h-3.5"/> Bekor</Button>
+                  <Button size="sm" loading={saving} onClick={save} className="bg-[#5E2CA5] hover:bg-[#4e2488] text-white shadow-sm"><Check className="w-3.5 h-3.5"/> Saqlash</Button>
+                </>
+              ) : (
+                <Button size="sm" variant="outline" onClick={()=>setEditing(true)}><Edit className="w-4 h-4"/> Tahrirlash</Button>
+              )}
+              <Button size="sm" variant="outline" onClick={toggleFreeze}>{lead.frozenAt ? "Faollashtirish" : "Muzlatish"}</Button>
+              <Button size="sm" variant="outline" onClick={toggleArchive}>{lead.isArchived ? "Arxivdan" : "Arxivlash"}</Button>
+              <Button size="sm" variant="danger" onClick={deleteLead}><Trash2 className="w-4 h-4"/></Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left: main content */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Tabs */}
-          <Card>
-            <div className="flex border-b border-gray-100 dark:border-gray-800 px-4">
-              {(["info","activity","reminders","notes"] as Tab[]).map(t=>(
-                <button key={t} onClick={()=>setTab(t)}
-                  className={`px-4 py-3 text-sm font-medium border-b-2 transition ${tab===t ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
-                  {t==="info"?"Ma'lumotlar":t==="activity"?"Tarix":t==="reminders"?"Eslatmalar":"Izohlar"}
-                  {t==="reminders" && lead.reminders.length>0 && <span className="ml-1.5 bg-indigo-100 text-indigo-700 text-xs px-1.5 py-0.5 rounded-full">{lead.reminders.filter(r=>r.status==="PENDING").length}</span>}
-                </button>
-              ))}
+        {/* Left column */}
+        <div className="space-y-4">
+          {/* Ma'lumotlar */}
+          <Card className="rounded-2xl shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-white/10">
+              <h3 className="font-semibold text-gray-900 dark:text-white text-base">Ma&apos;lumotlar</h3>
+            </div>
+            <CardContent className="space-y-4">
+              {/* Quick contact */}
+              <div className="space-y-2">
+                <a href={phoneToTel(lead.phone)} className="flex items-center gap-3 p-2.5 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-800/50 rounded-xl hover:bg-green-100 dark:hover:bg-green-500/15 transition">
+                  <Phone className="w-4 h-4 text-green-600"/> <span className="text-sm font-medium text-green-700 dark:text-green-400">{formatPhone(lead.phone)}</span>
+                </a>
+                {lead.phoneSecondary && (
+                  <a href={phoneToTel(lead.phoneSecondary)} className="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition">
+                    <Phone className="w-4 h-4 text-gray-500"/> <span className="text-sm text-gray-700 dark:text-gray-300">{formatPhone(lead.phoneSecondary)}</span>
+                  </a>
+                )}
+                <div className="flex gap-2">
+                  <a href={phoneToTelegram(lead.phone)} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-400 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-500/15 transition">
+                    <MessageCircle className="w-3.5 h-3.5"/> Telegram
+                  </a>
+                  <a href={phoneToWhatsapp(lead.phone)} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-800/50 text-green-700 dark:text-green-400 rounded-xl hover:bg-green-100 dark:hover:bg-green-500/15 transition">
+                    <MessageCircle className="w-3.5 h-3.5"/> WhatsApp
+                  </a>
+                </div>
+              </div>
+
+              {/* Fields */}
+              <div className="grid grid-cols-1 gap-3 text-sm pt-1">
+                {[
+                  ["Yoshi", "age", lead.age ? `${lead.age} yosh` : "—"],
+                  ["Manzil", "address", lead.address || "—"],
+                  ["Ota-ona ismi", "parentName", lead.parentName || "—"],
+                  ["Ota-ona tel", "parentPhone", lead.parentPhone || "—"],
+                  ["Manba", null, LEAD_SOURCE_LABELS[lead.source as keyof typeof LEAD_SOURCE_LABELS]],
+                  ["Manba detali", "sourceDetails", lead.sourceDetails || "—"],
+                  ["Dars kunlari", "preferredDays", lead.preferredDays || "—"],
+                  ["Dars vaqti", "lessonTime", lead.lessonTime || "—"],
+                  ["Yozilgan sana", null, lead.enrolledAt ? formatDate(lead.enrolledAt) : "—"],
+                ].map(([label, field, value]) => (
+                  <div key={label as string} className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide flex-shrink-0">{label}</span>
+                    {editing && field ? (
+                      <input value={editData[field as string] || ""} onChange={e=>setEditData((d:any)=>({...d,[field as string]:e.target.value}))}
+                        className="block w-32 px-2 py-1.5 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none text-right"/>
+                    ) : (
+                      <p className="text-gray-900 dark:text-white font-medium text-right truncate">{value as string}</p>
+                    )}
+                  </div>
+                ))}
+                {lead.assignedTo && (
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-1.5"><User className="w-3.5 h-3.5"/> Mas&apos;ul</span>
+                    {editing ? (
+                      <select value={editData.assignedToId||""} onChange={e=>setEditData((d:any)=>({...d,assignedToId:e.target.value||null}))}
+                        className="w-32 px-2 py-1.5 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none">
+                        <option value="">Tayinlanmagan</option>
+                        {users.map((u:any)=><option key={u.id} value={u.id}>{u.fullName}</option>)}
+                      </select>
+                    ) : (
+                      <p className="text-gray-900 dark:text-white font-medium text-right truncate">{lead.assignedTo.fullName}</p>
+                    )}
+                  </div>
+                )}
+                {editing && (
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Kurs</span>
+                    <select value={editData.courseId||""} onChange={e=>setEditData((d:any)=>({...d,courseId:e.target.value||null}))}
+                      className="w-32 px-2 py-1.5 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none">
+                      <option value="">Tanlanmagan</option>
+                      {courses.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Telegram student bot */}
+              <div className="pt-3 border-t border-gray-100 dark:border-white/10">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Send className="w-3.5 h-3.5"/> Telegram (o&apos;quvchi)</p>
+                {lead.telegramChatId ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-green-600 dark:text-green-400 font-medium">✅ Botga ulangan</p>
+                    <Button size="sm" variant="outline" className="w-full" onClick={notifyStudent}>Xabar yuborish</Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-500">O&apos;quvchi botga ulanmagan. Havolani yuboring — &quot;Start&quot; bossa ulanadi.</p>
+                    <Button size="sm" variant="outline" className="w-full" onClick={copyStudentLink} disabled={!botUsername}>Ulanish havolasini nusxalash</Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tangalar */}
+          <Card className="rounded-2xl shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-white/10">
+              <h3 className="font-semibold text-gray-900 dark:text-white text-base">Tangalar</h3>
+            </div>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-800/40">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1.5"><Coins className="w-4 h-4 text-amber-500"/> Balans</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400 text-lg">{lead.coins ?? 0}</span>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={()=>giveCoins(1)}><Plus className="w-3.5 h-3.5"/> Berish</Button>
+                <Button size="sm" variant="outline" className="flex-1" onClick={()=>giveCoins(-1)}><Minus className="w-3.5 h-3.5"/> Olish</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right column: tabs */}
+        <div className="lg:col-span-2">
+          <Card className="rounded-2xl shadow-sm">
+            <div className="flex border-b border-gray-100 dark:border-white/10 px-4 overflow-x-auto">
+              {tabs.map(t=>{
+                const Icon = t.icon;
+                return (
+                  <button key={t.key} onClick={()=>setTab(t.key)}
+                    className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap ${tab===t.key ? "border-[#5E2CA5] text-[#5E2CA5]" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>
+                    <Icon className="w-4 h-4"/>
+                    {t.label}
+                    {!!t.badge && <span className="ml-1 bg-[#5E2CA5]/10 text-[#5E2CA5] text-xs px-1.5 py-0.5 rounded-full">{t.badge}</span>}
+                  </button>
+                );
+              })}
             </div>
             <CardContent>
-              {tab === "info" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  {[
-                    ["To'liq ism", "fullName", lead.fullName],
-                    ["Telefon", "phone", formatPhone(lead.phone)],
-                    ["Qo'shimcha tel", "phoneSecondary", lead.phoneSecondary || "—"],
-                    ["Yoshi", "age", lead.age ? `${lead.age} yosh` : "—"],
-                    ["Manzil", "address", lead.address || "—"],
-                    ["Ota-ona ismi", "parentName", lead.parentName || "—"],
-                    ["Ota-ona tel", "parentPhone", lead.parentPhone || "—"],
-                    ["Manba", null, LEAD_SOURCE_LABELS[lead.source as keyof typeof LEAD_SOURCE_LABELS]],
-                    ["Manba detali", "sourceDetails", lead.sourceDetails || "—"],
-                    ["Dars kunlari", "preferredDays", lead.preferredDays || "—"],
-                    ["Dars vaqti", "lessonTime", lead.lessonTime || "—"],
-                    ["Yozilgan sana", null, lead.enrolledAt ? formatDate(lead.enrolledAt) : "—"],
-                  ].map(([label, field, value]) => (
-                    <div key={label as string}>
-                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
-                      {editing && field ? (
-                        <input value={editData[field as string] || ""} onChange={e=>setEditData((d:any)=>({...d,[field as string]:e.target.value}))}
-                          className="mt-1 block w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
-                      ) : (
-                        <p className="mt-1 text-gray-900 dark:text-white font-medium">{value as string}</p>
-                      )}
-                    </div>
-                  ))}
-                  {editing && (
-                    <>
-                      <div>
-                        <span className="text-xs font-medium text-gray-500 uppercase">Kurs</span>
-                        <select value={editData.courseId||""} onChange={e=>setEditData((d:any)=>({...d,courseId:e.target.value||null}))}
-                          className="mt-1 block w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                          <option value="">Tanlanmagan</option>
-                          {courses.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <span className="text-xs font-medium text-gray-500 uppercase">Mas'ul</span>
-                        <select value={editData.assignedToId||""} onChange={e=>setEditData((d:any)=>({...d,assignedToId:e.target.value||null}))}
-                          className="mt-1 block w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                          <option value="">Tayinlanmagan</option>
-                          {users.map((u:any)=><option key={u.id} value={u.id}>{u.fullName}</option>)}
-                        </select>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
               {tab === "activity" && (
-                <div className="space-y-3">
-                  {lead.activities.length === 0 ? <p className="text-center text-gray-400 py-8">Faollik yo'q</p> : (
+                <div className="space-y-5">
+                  {/* Add comment */}
+                  <div>
+                    <textarea value={newNote} onChange={e=>setNewNote(e.target.value)} rows={2}
+                      placeholder="Mijoz bilan suhbatingizni yozing... (masalan: 'Telefon qildim, 2 kundan keyin qayta aloqaga chiqaman dedi')"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none"/>
+                    <div className="flex justify-end mt-2">
+                      <Button size="sm" onClick={saveNote} disabled={!newNote.trim()} className="bg-[#5E2CA5] hover:bg-[#4e2488] text-white shadow-sm">Izoh qo&apos;shish</Button>
+                    </div>
+                  </div>
+
+                  {/* Initial note */}
+                  {lead.notes && (
+                    <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-800/40 rounded-xl p-3 text-sm">
+                      <span className="text-xs font-medium text-amber-700 dark:text-amber-400">Dastlabki izoh</span>
+                      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{lead.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Timeline */}
+                  {lead.activities.length === 0 ? <p className="text-center text-gray-400 py-8">Faollik yo&apos;q</p> : (
                     <div className="relative">
-                      <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-100 dark:bg-gray-800"/>
-                      <div className="space-y-3">
+                      <div className="absolute left-[5px] top-1 bottom-1 w-0.5 bg-gray-100 dark:bg-white/10"/>
+                      <div className="space-y-4">
                         {lead.activities.map((a:any) => (
-                          <div key={a.id} className="relative flex items-start gap-4 pl-8">
-                            <div className="absolute left-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center flex-shrink-0">
-                              <Activity className="w-3 h-3 text-indigo-600 dark:text-indigo-400"/>
-                            </div>
-                            <div>
+                          <div key={a.id} className="relative flex items-start gap-3 pl-6">
+                            <span className={`absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-gray-900 ${ACTIVITY_DOT[a.action] || "bg-gray-300"}`}/>
+                            <div className="min-w-0">
                               <p className="text-sm text-gray-800 dark:text-gray-200">
                                 <span className="font-medium">{a.user.fullName}</span>{" "}
                                 {a.action === "status_changed" ? `statusni "${(LEAD_STATUS_LABELS as any)[a.details?.from]}" → "${(LEAD_STATUS_LABELS as any)[a.details?.to]}" ga o'zgartirdi` :
@@ -296,15 +435,28 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               )}
 
               {tab === "reminders" && (
-                <div className="space-y-3">
+                <div className="space-y-4">
+                  {/* Add reminder */}
+                  <div className="p-3 rounded-xl border border-gray-100 dark:border-white/10 space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input value={reminder.title} onChange={e=>setReminder(r=>({...r,title:e.target.value}))}
+                        placeholder="Sarlavha..." className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none"/>
+                      <input type="datetime-local" value={reminder.remindAt} onChange={e=>setReminder(r=>({...r,remindAt:e.target.value}))}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none"/>
+                    </div>
+                    <Button size="sm" className="w-full bg-[#5E2CA5] hover:bg-[#4e2488] text-white shadow-sm" onClick={addReminder} loading={addingReminder}>
+                      <Bell className="w-4 h-4"/> Eslatma qo'shish
+                    </Button>
+                  </div>
+
                   {lead.reminders.map((r:any) => (
-                    <div key={r.id} className={`flex items-start gap-3 p-3 rounded-xl border ${r.status==="PENDING"?"border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20":r.status==="DONE"?"border-emerald-200 bg-emerald-50 dark:border-emerald-800":"border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"}`}>
+                    <div key={r.id} className={`flex items-start gap-3 p-3 rounded-xl border ${r.status==="PENDING"?"border-[#5E2CA5]/30 bg-[#5E2CA5]/5 dark:border-[#5E2CA5]/40":r.status==="DONE"?"border-emerald-200 bg-emerald-50 dark:border-emerald-800/50 dark:bg-emerald-500/10":"border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5"}`}>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">{r.title}</p>
                         <p className="text-xs text-gray-500 mt-0.5">{formatDateTime(r.remindAt)} · {r.user.fullName}</p>
                         {r.description && <p className="text-xs text-gray-500 mt-1">{r.description}</p>}
                       </div>
-                      <span className={`text-xs px-2 py-0.5 rounded-lg font-medium ${r.status==="DONE"?"bg-emerald-100 text-emerald-700":r.status==="MISSED"?"bg-red-100 text-red-700":"bg-indigo-100 text-indigo-700"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-lg font-medium ${r.status==="DONE"?"bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400":r.status==="MISSED"?"bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400":"bg-[#5E2CA5]/10 text-[#5E2CA5]"}`}>
                         {r.status==="PENDING"?"Kutilmoqda":r.status==="DONE"?"Bajarildi":r.status==="MISSED"?"O'tkazildi":"Bekor"}
                       </span>
                     </div>
@@ -313,221 +465,66 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               )}
 
-              {tab === "notes" && (
+              {tab === "payments" && (
                 <div className="space-y-4">
-                  {/* Add comment */}
-                  <div>
-                    <textarea value={newNote} onChange={e=>setNewNote(e.target.value)} rows={2}
-                      placeholder="Mijoz bilan suhbatingizni yozing... (masalan: 'Telefon qildim, 2 kundan keyin qayta aloqaga chiqaman dedi')"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
-                    <div className="flex justify-end mt-2">
-                      <Button size="sm" onClick={saveNote} disabled={!newNote.trim()}>Izoh qo&apos;shish</Button>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-800/40">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Jami to&apos;lov</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 text-lg">{total.toLocaleString("ru-RU")} so&apos;m</span>
+                  </div>
+                  {lead.course && (
+                    <div className="flex items-center justify-between text-sm px-1">
+                      <span className="text-gray-500">Kurs narxi</span>
+                      <span className="font-semibold text-[#5E2CA5]">{formatCurrency(lead.course.price)}</span>
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    {(lead.payments || []).map((p: any) => (
+                      <div key={p.id} className="flex items-center justify-between text-sm px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5">
+                        <span className="text-gray-500">{new Date(p.paidAt).toLocaleDateString("ru-RU")}{p.forMonth ? ` · ${p.forMonth}` : ""}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{Number(p.amount).toLocaleString("ru-RU")} so&apos;m</span>
+                      </div>
+                    ))}
+                    {(lead.payments || []).length === 0 && <p className="text-center text-gray-400 py-6">To&apos;lovlar yo&apos;q</p>}
+                  </div>
+                </div>
+              )}
+
+              {tab === "attendance" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-800/40 text-center">
+                      <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{present}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Keldi</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-800/40 text-center">
+                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{late}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Kechikdi</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-800/40 text-center">
+                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">{absent}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Kelmadi</p>
                     </div>
                   </div>
-
-                  {/* Comments timeline */}
-                  {comments.length === 0 ? (
-                    <p className="text-center text-gray-400 py-6 text-sm">Hozircha izoh yo&apos;q. Mijoz bilan har bir suhbatingizni shu yerga yozib boring.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {comments.map((a:any)=>(
-                        <div key={a.id} className="flex gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-xs font-semibold text-indigo-600 dark:text-indigo-300 flex-shrink-0">
-                            {a.user.fullName.slice(0,2).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-900 dark:text-white">{a.user.fullName}</span>
-                              <span className="text-xs text-gray-400">{formatRelativeTime(a.createdAt)}</span>
-                            </div>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 whitespace-pre-wrap break-words">{a.details?.text}</p>
-                          </div>
-                        </div>
-                      ))}
+                  {attTotal > 0 && (
+                    <div className="h-2 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden flex">
+                      <div className="bg-emerald-500 h-full" style={{ width: `${(present/attTotal)*100}%` }}/>
+                      <div className="bg-amber-500 h-full" style={{ width: `${(late/attTotal)*100}%` }}/>
+                      <div className="bg-red-500 h-full" style={{ width: `${(absent/attTotal)*100}%` }}/>
                     </div>
                   )}
+                  {attTotal === 0 && <p className="text-center text-gray-400 py-6">Davomat ma&apos;lumoti yo&apos;q</p>}
+                </div>
+              )}
 
-                  {/* Initial note (from create form) */}
-                  {lead.notes && (
-                    <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-xl p-3 text-sm">
-                      <span className="text-xs font-medium text-amber-700 dark:text-amber-400">Dastlabki izoh</span>
-                      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{lead.notes}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right: contact + quick actions */}
-        <div className="space-y-4">
-          {/* Contact panel */}
-          <Card>
-            <CardHeader><CardTitle>Aloqa</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <a href={phoneToTel(lead.phone)} className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl hover:bg-green-100 transition">
-                <Phone className="w-4 h-4 text-green-600"/> <span className="text-sm font-medium text-green-700">{formatPhone(lead.phone)}</span>
-              </a>
-              {lead.phoneSecondary && (
-                <a href={phoneToTel(lead.phoneSecondary)} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-100 transition">
-                  <Phone className="w-4 h-4 text-gray-500"/> <span className="text-sm text-gray-700 dark:text-gray-300">{formatPhone(lead.phoneSecondary)}</span>
-                </a>
-              )}
-              <div className="flex gap-2">
-                <a href={phoneToTelegram(lead.phone)} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 rounded-xl hover:bg-blue-100 transition">
-                  <MessageCircle className="w-3.5 h-3.5"/> Telegram
-                </a>
-                <a href={phoneToWhatsapp(lead.phone)} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-xl hover:bg-green-100 transition">
-                  <MessageCircle className="w-3.5 h-3.5"/> WhatsApp
-                </a>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Add Reminder */}
-          <Card>
-            <CardHeader><CardTitle>Eslatma qo'shish</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <input value={reminder.title} onChange={e=>setReminder(r=>({...r,title:e.target.value}))}
-                placeholder="Sarlavha..." className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
-              <input type="datetime-local" value={reminder.remindAt} onChange={e=>setReminder(r=>({...r,remindAt:e.target.value}))}
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
-              <Button size="sm" className="w-full" onClick={addReminder} loading={addingReminder}>
-                <Bell className="w-4 h-4"/> Eslatma qo'shish
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Summary */}
-          <Card>
-            <CardHeader><CardTitle>Umumiy ma'lumot</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {lead.course && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500 flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5"/> Kurs</span>
-                  <span className="font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full" style={{backgroundColor:lead.course.color||"#6366f1"}}/>
-                    {lead.course.name}
-                  </span>
-                </div>
-              )}
-              {lead.course && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Narx</span>
-                  <span className="font-semibold text-indigo-600">{formatCurrency(lead.course.price)}</span>
-                </div>
-              )}
-              {lead.assignedTo && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500 flex items-center gap-1.5"><User className="w-3.5 h-3.5"/> Mas'ul</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{lead.assignedTo.fullName}</span>
-                </div>
-              )}
-              {lead.lessonTime && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> Dars vaqti</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{lead.lessonTime}</span>
-                </div>
-              )}
-              {lead.preferredDays && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Kunlar</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{lead.preferredDays}</span>
-                </div>
-              )}
-              {lead.timeSlot && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> Slot</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{lead.timeSlot.label}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <span className="text-gray-500">Manba</span>
-                <span className="font-medium text-gray-900 dark:text-white">{LEAD_SOURCE_LABELS[lead.source as keyof typeof LEAD_SOURCE_LABELS]}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-500">Qo'shilgan</span>
-                <span className="text-gray-600 dark:text-gray-400">{formatDate(lead.createdAt)}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payments & Attendance */}
-          <Card>
-            <CardHeader><CardTitle>To'lovlar va davomat</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {(() => {
-                const total = (lead.payments || []).reduce((a: number, p: any) => a + Number(p.amount || 0), 0);
-                const att = lead.attendances || [];
-                const present = att.filter((a) => a.status === "present").length;
-                const absent = att.filter((a) => a.status === "absent").length;
-                const late = att.filter((a) => a.status === "late").length;
-                return (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Jami to'lov</span>
-                      <span className="font-semibold text-green-600">{total.toLocaleString("ru-RU")} so'm</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Davomat</span>
-                      <span className="text-gray-700 dark:text-gray-300">✅ {present} · ⏰ {late} · ❌ {absent}</span>
-                    </div>
-                  </>
-                );
-              })()}
-              {(lead.payments || []).length > 0 && (
-                <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-1.5">
-                  {(lead.payments || []).slice(0, 5).map((p: any) => (
-                    <div key={p.id} className="flex items-center justify-between text-xs">
-                      <span className="text-gray-500">{new Date(p.paidAt).toLocaleDateString("ru-RU")}{p.forMonth ? ` · ${p.forMonth}` : ""}</span>
-                      <span className="font-medium text-gray-900 dark:text-white">{Number(p.amount).toLocaleString("ru-RU")}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Telegram (student) */}
-          <Card>
-            <CardHeader><CardTitle>Telegram (o'quvchi)</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {lead.telegramChatId ? (
-                <>
-                  <p className="text-green-600 font-medium">✅ Botga ulangan</p>
-                  <Button size="sm" variant="outline" onClick={notifyStudent}>Xabar yuborish</Button>
-                </>
-              ) : (
-                <>
-                  <p className="text-gray-500">O'quvchi botga ulanmagan. Havolani yuboring — &quot;Start&quot; bossa ulanadi va eslatma oladi.</p>
-                  <Button size="sm" variant="outline" onClick={copyStudentLink} disabled={!botUsername}>Ulanish havolasini nusxalash</Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Coins & scores */}
-          <Card>
-            <CardHeader><CardTitle>Tanga va ballar</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-500">Tanga balansi</span>
-                <span className="font-bold text-amber-600">🏆 {lead.coins ?? 0}</span>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={()=>giveCoins(1)}>+ Tanga berish</Button>
-                <Button size="sm" variant="outline" onClick={()=>giveCoins(-1)}>− Tanga olish</Button>
-              </div>
-              {(lead.scores || []).length > 0 && (
-                <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-1.5">
-                  <p className="text-xs font-medium text-gray-500">Imtihon ballari:</p>
-                  {(lead.scores || []).slice(0, 8).map((s: any) => (
-                    <div key={s.id} className="flex items-center justify-between text-xs">
+              {tab === "scores" && (
+                <div className="space-y-1.5">
+                  {(lead.scores || []).map((s: any) => (
+                    <div key={s.id} className="flex items-center justify-between text-sm px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5">
                       <span className="text-gray-600 dark:text-gray-300 truncate">{s.exam?.title || "—"}</span>
                       <span className="font-medium text-gray-900 dark:text-white">{s.score}{s.exam?.maxScore ? `/${s.exam.maxScore}` : ""}</span>
                     </div>
                   ))}
+                  {(lead.scores || []).length === 0 && <p className="text-center text-gray-400 py-6">Ballar yo&apos;q</p>}
                 </div>
               )}
             </CardContent>

@@ -5,7 +5,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        "bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm",
+        "bg-white dark:bg-gray-900 rounded-2xl shadow-sm",
         className
       )}
       {...props}
@@ -14,7 +14,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 }
 
 export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("px-6 py-4 border-b border-gray-100 dark:border-gray-800", className)} {...props} />;
+  return <div className={cn("px-6 py-4 border-b border-gray-100 dark:border-white/5", className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
@@ -28,7 +28,7 @@ export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivEleme
 export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("px-6 py-4 border-t border-gray-100 dark:border-gray-800", className)}
+      className={cn("px-6 py-4 border-t border-gray-100 dark:border-white/5", className)}
       {...props}
     />
   );

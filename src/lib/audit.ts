@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import type { Prisma } from "@/generated/prisma/client";
 
 // Fire-and-forget audit logger. Never throws.
 export async function logAudit(
@@ -7,7 +8,7 @@ export async function logAudit(
   action: string,
   entity: string,
   entityId?: string,
-  details?: any
+  details?: Prisma.InputJsonValue
 ) {
   try {
     await db.auditLog.create({

@@ -10,6 +10,7 @@ import {
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Modal, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 
 interface Stage { id: string; name: string; color: string; order: number; isWon: boolean; isLost: boolean; }
@@ -150,7 +151,7 @@ export default function KanbanPage() {
     <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Kanban</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Lidlarni drag &amp; drop bilan boshqaring</p>
@@ -262,7 +263,7 @@ export default function KanbanPage() {
                         )}
                         <button
                           onClick={() => setColorOpen(colorOpen === stage.id ? null : stage.id)}
-                          className="w-5 h-5 rounded-full border-2 border-white dark:border-gray-700 shadow-sm flex-shrink-0 hover:scale-110 transition-transform"
+                          className="w-5 h-5 rounded-full border-2 border-white dark:border-white/10 shadow-sm flex-shrink-0 hover:scale-110 transition-transform"
                           style={{ backgroundColor: stage.color }}
                           title="Rang"
                         />
@@ -385,7 +386,7 @@ export default function KanbanPage() {
                       ))}
                       {provided.placeholder}
                       {items.length === 0 && !snapshot.isDraggingOver && (
-                        <div className="h-16 flex items-center justify-center text-[12px] text-gray-400 dark:text-gray-600 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+                        <div className="h-16 flex items-center justify-center text-[12px] text-gray-400 dark:text-gray-600 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-xl">
                           Bo&apos;sh
                         </div>
                       )}
@@ -398,7 +399,7 @@ export default function KanbanPage() {
 
           {/* Add column (manage mode) */}
           {manage && (
-            <div className="flex-shrink-0 w-72 bg-gray-100/60 dark:bg-gray-800/30 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-4">
+            <div className="flex-shrink-0 w-72 bg-gray-100/60 dark:bg-gray-800/30 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 p-4">
               <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
                 Yangi ustun
               </p>
@@ -420,32 +421,29 @@ export default function KanbanPage() {
 
       {/* Delete confirm modal */}
       {confirmDelete && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-          onClick={() => setConfirmDelete(null)}
-        >
-          <div
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-              <Trash2 className="w-5 h-5 text-red-600" />
-            </div>
-            <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">Ustunni o&apos;chirish</h3>
-            <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1.5">
-              <span className="font-semibold text-gray-700 dark:text-gray-200">{confirmDelete.name}</span> ustunini o&apos;chirasizmi? Ichidagi lidlar birinchi ustunga ko&apos;chiriladi.
-            </p>
-            <div className="flex gap-2 mt-5">
-              <Button variant="outline" className="flex-1" onClick={() => setConfirmDelete(null)}>Bekor</Button>
+        <Modal
+          title="Ustunni o'chirish"
+          maxWidth="max-w-sm"
+          onClose={() => setConfirmDelete(null)}
+          footer={
+            <>
               <button
                 onClick={() => { const id = confirmDelete.id; setConfirmDelete(null); deleteStage(id); }}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-[13px] font-semibold rounded-xl transition-colors"
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-[13px] font-semibold rounded-xl transition-colors"
               >
                 O&apos;chirish
               </button>
-            </div>
+              <ModalSecondaryButton onClick={() => setConfirmDelete(null)}>Bekor qilish</ModalSecondaryButton>
+            </>
+          }
+        >
+          <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-1">
+            <Trash2 className="w-5 h-5 text-red-600" />
           </div>
-        </div>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">
+            <span className="font-semibold text-gray-700 dark:text-gray-200">{confirmDelete.name}</span> ustunini o&apos;chirasizmi? Ichidagi lidlar birinchi ustunga ko&apos;chiriladi.
+          </p>
+        </Modal>
       )}
     </div>
   );

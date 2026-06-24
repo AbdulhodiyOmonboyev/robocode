@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
+import type { Prisma } from "@/generated/prisma/client";
 
 const updateSchema = z.object({
   fullName: z.string().min(2).optional(),
@@ -74,12 +75,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const user = session.user as any;
+  const user = session.user;
   const current = await db.lead.findUnique({ where: { id }, select: { status: true, stageId: true, assignedToId: true } });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const { trialDate, enrolledAt, lastContactedAt, frozenAt, frozenUntil, ...rest } = parsed.data;
-  const updateData: any = { ...rest };
+  const updateData: Prisma.LeadUpdateInput = { ...rest };
   if (trialDate !== undefined) updateData.trialDate = trialDate ? new Date(trialDate) : null;
   if (enrolledAt !== undefined) updateData.enrolledAt = enrolledAt ? new Date(enrolledAt) : null;
   if (lastContactedAt !== undefined) updateData.lastContactedAt = lastContactedAt ? new Date(lastContactedAt) : null;
@@ -110,7 +111,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = session.user as any;
+  const user = session.user;
   if (!["SUPER_ADMIN", "ADMIN"].includes(user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

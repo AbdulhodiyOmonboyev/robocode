@@ -138,7 +138,7 @@ const statements: string[] = [
 export async function POST() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!["SUPER_ADMIN", "ADMIN"].includes((session.user as any).role)) {
+  if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -147,8 +147,8 @@ export async function POST() {
     try {
       await db.$executeRawUnsafe(statements[i]);
       results.push({ i, status: "ok" });
-    } catch (e: any) {
-      results.push({ i, status: "ERROR: " + (e?.message || String(e)) });
+    } catch (e) {
+      results.push({ i, status: "ERROR: " + (e instanceof Error ? e.message : String(e)) });
     }
   }
   const ok = results.every((r) => r.status === "ok");

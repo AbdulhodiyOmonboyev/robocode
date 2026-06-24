@@ -5,10 +5,11 @@ import Link from "next/link";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Users, Clock, Calendar, GraduationCap,
-  ChevronDown, MapPin, X,
+  ChevronDown, MapPin,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm";
+import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
+import { EmptyState } from "@/components/ui/empty-state";
 import { WEEKDAYS } from "@/lib/constants";
 import { cn, formatPhone, getInitials } from "@/lib/utils";
 
@@ -86,7 +87,7 @@ export default function GroupsPage() {
       {dialog}
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Guruhlar</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
@@ -109,14 +110,16 @@ export default function GroupsPage() {
           ))}
         </div>
       ) : groups.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm py-20 text-center">
-          <div className="text-5xl mb-4">👥</div>
-          <p className="text-gray-600 dark:text-gray-300 font-medium">Hali guruh yo&apos;q</p>
-          <p className="text-[13px] text-gray-400 mt-1.5 max-w-xs mx-auto">Lidlar ro&apos;yxatida bir nechta lidni belgilab &quot;Guruhga qo&apos;shish&quot; orqali guruh ochishingiz mumkin.</p>
-          <button onClick={() => setShowCreate(true)} className="mt-5 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] text-white mx-auto hover:bg-[#4a2280] transition-colors">
-            <Plus className="w-4 h-4" /> Guruh yaratish
-          </button>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="Hali guruh yo'q"
+          description={`Lidlar ro'yxatida bir nechta lidni belgilab "Guruhga qo'shish" orqali guruh ochishingiz mumkin.`}
+          action={
+            <button onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] text-white mx-auto hover:bg-[#4a2280] transition-colors">
+              <Plus className="w-4 h-4" /> Guruh yaratish
+            </button>
+          }
+        />
       ) : (
         /* Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -265,21 +268,16 @@ export default function GroupsPage() {
 
       {/* Create group modal */}
       {showCreate && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-          onClick={() => setShowCreate(false)}
+        <Modal
+          title="Yangi guruh"
+          onClose={() => setShowCreate(false)}
+          footer={
+            <>
+              <ModalPrimaryButton onClick={create} loading={creating}>Yaratish</ModalPrimaryButton>
+              <ModalSecondaryButton onClick={() => setShowCreate(false)}>Bekor qilish</ModalSecondaryButton>
+            </>
+          }
         >
-          <div
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Yangi guruh</h2>
-              <button onClick={() => setShowCreate(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
             {/* Guruh nomi */}
             <div>
               <label className={labelCls}>Guruh nomi *</label>
@@ -351,13 +349,7 @@ export default function GroupsPage() {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-2 pt-1">
-              <Button onClick={create} loading={creating} className="flex-1">Yaratish</Button>
-              <Button variant="outline" onClick={() => setShowCreate(false)}>Bekor</Button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

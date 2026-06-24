@@ -38,8 +38,10 @@ function isWeekend(dateStr: string): boolean {
 const selectCls =
   "px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition";
 
+interface GroupOption { id: string; name: string; }
+
 export default function AttendancePage() {
-  const [groups, setGroups] = useState<any[]>([]);
+  const [groups, setGroups] = useState<GroupOption[]>([]);
   const [groupId, setGroupId] = useState("");
   const [month, setMonth] = useState(ym(new Date()));
   const [students, setStudents] = useState<Student[]>([]);
@@ -70,9 +72,9 @@ export default function AttendancePage() {
     } else if (Array.isArray(data.dates)) {
       // Backend returned array of { date, records } objects
       const j: JournalData = {};
-      data.dates.forEach((entry: any) => {
+      data.dates.forEach((entry: { date: string; records?: { leadId: string; status: string | null }[] }) => {
         j[entry.date] = {};
-        (entry.records || []).forEach((r: any) => { j[entry.date][r.leadId] = r.status; });
+        (entry.records || []).forEach((r) => { j[entry.date][r.leadId] = r.status; });
       });
       setJournal(j);
     } else {
@@ -158,7 +160,7 @@ export default function AttendancePage() {
     <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Davomat</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">

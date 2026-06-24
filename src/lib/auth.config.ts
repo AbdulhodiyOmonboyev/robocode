@@ -18,29 +18,29 @@ export const authConfig: NextAuthConfig = {
     },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
-        token.fullName = (user as any).fullName;
-        token.username = (user as any).username;
-        token.canManageLeads = (user as any).canManageLeads;
-        token.canManageCourses = (user as any).canManageCourses;
-        token.canManageUsers = (user as any).canManageUsers;
-        token.canViewReports = (user as any).canViewReports;
-        token.canExportData = (user as any).canExportData;
+        token.id = user.id as string;
+        token.role = user.role;
+        token.fullName = user.fullName;
+        token.username = user.username;
+        token.canManageLeads = user.canManageLeads;
+        token.canManageCourses = user.canManageCourses;
+        token.canManageUsers = user.canManageUsers;
+        token.canViewReports = user.canViewReports;
+        token.canExportData = user.canExportData;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id as string;
-        (session.user as any).role = token.role;
-        (session.user as any).fullName = token.fullName;
-        (session.user as any).username = token.username;
-        (session.user as any).canManageLeads = token.canManageLeads;
-        (session.user as any).canManageCourses = token.canManageCourses;
-        (session.user as any).canManageUsers = token.canManageUsers;
-        (session.user as any).canViewReports = token.canViewReports;
-        (session.user as any).canExportData = token.canExportData;
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.fullName = token.fullName;
+        session.user.username = token.username;
+        session.user.canManageLeads = token.canManageLeads;
+        session.user.canManageCourses = token.canManageCourses;
+        session.user.canManageUsers = token.canManageUsers;
+        session.user.canViewReports = token.canViewReports;
+        session.user.canExportData = token.canExportData;
       }
       return session;
     },
