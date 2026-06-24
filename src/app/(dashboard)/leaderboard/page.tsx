@@ -30,8 +30,16 @@ function avatarColor(name: string) {
   return AVATAR_COLORS[(name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
 }
 
+interface LeaderboardEntry {
+  id: string;
+  fullName: string;
+  coins: number | null;
+  group: { name: string } | null;
+  course: { name: string } | null;
+}
+
 export default function LeaderboardPage() {
-  const [list, setList] = useState<any[]>([]);
+  const [list, setList] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("all");
 

@@ -1,16 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, TrendingUp, Bell, GraduationCap, BarChart2, Clock, ArrowUpRight } from "lucide-react";
+import { Users, TrendingUp, Bell, GraduationCap, Clock, ArrowUpRight } from "lucide-react";
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart,
 } from "recharts";
-import { Badge } from "@/components/ui/badge";
 import { LEAD_SOURCE_LABELS } from "@/lib/constants";
 import { formatRelativeTime } from "@/lib/utils";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+
+interface RecentLead {
+  id: string;
+  fullName: string;
+  course: { name: string } | null;
+  stage: { name: string; color: string } | null;
+}
+
+interface RecentActivity {
+  id: string;
+  action: string;
+  createdAt: string;
+  user: { fullName: string } | null;
+  lead: { fullName: string } | null;
+}
 
 interface DashboardData {
   kpis: { totalLeads: number; todayLeads: number; enrolledThisMonth: number; todayReminders: number; conversionRate: string };
@@ -18,8 +32,8 @@ interface DashboardData {
   sourceDistribution: { source: string; count: number }[];
   leadsByDay: { date: string; count: number }[];
   topCourses: { courseId: string; course: { name: string; color: string } | null; count: number }[];
-  recentLeads: any[];
-  recentActivities: any[];
+  recentLeads: RecentLead[];
+  recentActivities: RecentActivity[];
 }
 
 const BRAND = "#5E2CA5";
@@ -58,7 +72,7 @@ export default function DashboardPage() {
   if (!data) {
     return (
       <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-400 text-sm">Ma'lumot yuklanmadi</p>
+        <p className="text-gray-400 text-sm">Ma&apos;lumot yuklanmadi</p>
       </div>
     );
   }
@@ -146,7 +160,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-base font-semibold text-gray-900 dark:text-white">Lidlar dinamikasi</h2>
-              <p className="text-xs text-gray-400 mt-0.5">So'nggi 30 kun</p>
+              <p className="text-xs text-gray-400 mt-0.5">So&apos;nggi 30 kun</p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={240}>
@@ -173,15 +187,15 @@ export default function DashboardPage() {
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm flex flex-col">
           <div className="flex items-center justify-between px-5 pt-5 pb-3">
             <div>
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white">So'nggi lidlar</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Oxirgi qo'shilganlar</p>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">So&apos;nggi lidlar</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Oxirgi qo&apos;shilganlar</p>
             </div>
             <Link href="/leads" className="text-[11px] font-medium text-[#5E2CA5] hover:underline flex items-center gap-0.5">
               Barchasi <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="flex-1 overflow-y-auto divide-y divide-gray-50 dark:divide-white/5">
-            {data.recentLeads.slice(0, 8).map((lead: any) => (
+            {data.recentLeads.slice(0, 8).map((lead) => (
               <Link
                 key={lead.id}
                 href={`/leads/${lead.id}`}
@@ -279,7 +293,7 @@ export default function DashboardPage() {
         {/* Top courses */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-6">
           <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Top kurslar</h2>
-          <p className="text-xs text-gray-400 mb-4">Eng ko'p tanlanganlar</p>
+          <p className="text-xs text-gray-400 mb-4">Eng ko&apos;p tanlanganlar</p>
           <ResponsiveContainer width="100%" height={190}>
             <BarChart
               data={data.topCourses.map((c) => ({ name: c.course?.name ?? "Noma'lum", count: c.count }))}
@@ -302,13 +316,13 @@ export default function DashboardPage() {
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm">
         <div className="flex items-center justify-between px-6 pt-5 pb-3">
           <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">So'nggi faollik</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Tizimda bo'lgan amallar</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">So&apos;nggi faollik</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Tizimda bo&apos;lgan amallar</p>
           </div>
           <Clock className="w-4 h-4 text-gray-300 dark:text-gray-600" />
         </div>
         <div className="divide-y divide-gray-50 dark:divide-white/5 max-h-72 overflow-y-auto">
-          {data.recentActivities.map((act: any) => (
+          {data.recentActivities.map((act) => (
             <div key={act.id} className="flex items-start gap-3 px-6 py-3">
               <div
                 className="mt-0.5 w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-semibold"

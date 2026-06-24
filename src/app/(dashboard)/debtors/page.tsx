@@ -18,7 +18,7 @@ interface Debtor {
   lastPaymentAt: string | null;
 }
 
-function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+function money(v: number | string) { return Number(v || 0).toLocaleString("ru-RU"); }
 function ym(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
 
 export default function DebtorsPage() {

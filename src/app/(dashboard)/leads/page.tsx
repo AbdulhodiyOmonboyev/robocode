@@ -25,6 +25,8 @@ interface Lead {
 
 interface Course { id: string; name: string; }
 interface User { id: string; fullName: string; }
+interface Stage { id: string; name: string; color: string; }
+interface Group { id: string; name: string; _count?: { leads: number }; }
 
 const BRAND = "#5E2CA5";
 
@@ -40,8 +42,8 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [stages, setStages] = useState<any[]>([]);
-  const [groups, setGroups] = useState<any[]>([]);
+  const [stages, setStages] = useState<Stage[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [groupMode, setGroupMode] = useState<"new" | "existing">("new");
   const [selectedGroupId, setSelectedGroupId] = useState("");
@@ -200,7 +202,7 @@ export default function LeadsPage() {
           Barchasi
           {!filters.stageId && <span className="ml-1.5 opacity-70 text-[11px]">{total}</span>}
         </button>
-        {stages.map((s: any) => (
+        {stages.map((s) => (
           <button key={s.id} onClick={() => setFilter("stageId", filters.stageId === s.id ? "" : s.id)} className={chipCls(filters.stageId === s.id)}>
             {s.name}
           </button>
@@ -257,11 +259,11 @@ export default function LeadsPage() {
               onChange={e => { if (e.target.value) handleBulkStageChange(e.target.value); e.target.value = ""; }}
               className="px-2.5 py-1 text-xs border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-white focus:outline-none"
             >
-              <option value="">Bosqichni o'zgartirish...</option>
-              {stages.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              <option value="">Bosqichni o&apos;zgartirish...</option>
+              {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
             <button onClick={() => setShowGroupModal(true)} className="px-2.5 py-1 text-xs font-medium rounded-lg bg-[#5E2CA5] text-white hover:bg-[#4a2280] transition-colors">
-              + Guruhga qo'shish
+              + Guruhga qo&apos;shish
             </button>
             <button onClick={() => setSelected(new Set())} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
               Bekor
@@ -280,7 +282,7 @@ export default function LeadsPage() {
             action={
               <Link href="/leads/new">
                 <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] text-white mx-auto hover:bg-[#4a2280] transition-colors">
-                  <Plus className="w-4 h-4" /> Yangi lid qo'shish
+                  <Plus className="w-4 h-4" /> Yangi lid qo&apos;shish
                 </button>
               </Link>
             }
@@ -421,7 +423,7 @@ export default function LeadsPage() {
         {pages > 1 && (
           <div className="px-5 py-3 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
             <span className="text-[13px] text-gray-400">
-              {total} ta natijadan {((filters.page - 1) * 20) + 1}–{Math.min(filters.page * 20, total)} ko'rsatilmoqda
+              {total} ta natijadan {((filters.page - 1) * 20) + 1}–{Math.min(filters.page * 20, total)} ko&apos;rsatilmoqda
             </span>
             <div className="flex items-center gap-1.5">
               <button
@@ -469,7 +471,7 @@ export default function LeadsPage() {
             {groupMode === "existing" ? (
               <select value={selectedGroupId} onChange={e => setSelectedGroupId(e.target.value)} className={inputCls}>
                 <option value="">Guruhni tanlang</option>
-                {groups.map((g: any) => <option key={g.id} value={g.id}>{g.name} ({g._count?.leads ?? 0} a&apos;zo)</option>)}
+                {groups.map((g) => <option key={g.id} value={g.id}>{g.name} ({g._count?.leads ?? 0} a&apos;zo)</option>)}
               </select>
             ) : (
               <div className="space-y-3">

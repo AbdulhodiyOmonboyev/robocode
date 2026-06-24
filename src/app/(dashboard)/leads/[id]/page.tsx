@@ -6,7 +6,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import {
   ArrowLeft, Phone, MessageCircle, Edit, Trash2, Bell, Pin, PinOff,
-  Clock, User, BookOpen, Activity, Check, X, Coins, Send, CalendarCheck,
+  User, BookOpen, Activity, Check, X, Coins, Send, CalendarCheck,
   Wallet, GraduationCap, Plus, Minus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,13 +15,18 @@ import { useConfirm } from "@/components/ui/confirm";
 import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_SOURCE_LABELS } from "@/lib/constants";
 import { formatDate, formatDateTime, formatRelativeTime, formatPhone, phoneToTel, phoneToTelegram, phoneToWhatsapp, formatCurrency, getInitials } from "@/lib/utils";
 
+interface LeadPayment { id: string; amount: string | number; paidAt: string; forMonth: string | null; }
+interface LeadScore { id: string; score: number; exam: { title: string; maxScore: number } | null; }
+interface LeadReminder { id: string; title: string; description: string | null; remindAt: string; status: string; user: { fullName: string }; }
+interface LeadActivity { id: string; action: string; createdAt: string; user: { fullName: string }; details?: { from?: string; to?: string; text?: string } | null; }
+
 interface Lead {
   id: string; fullName: string; phone: string; phoneSecondary: string | null;
   email: string | null; age: number | null; address: string | null;
   parentName: string | null; parentPhone: string | null; telegramChatId: string | null;
   status: string; source: string; sourceDetails: string | null; notes: string | null;
-  payments?: any[]; attendances?: { status: string }[];
-  coins?: number; scores?: any[];
+  payments?: LeadPayment[]; attendances?: { status: string }[];
+  coins?: number; scores?: LeadScore[];
   frozenAt?: string | null; isArchived?: boolean;
   timePreference: string; preferredDays: string | null; lessonTime: string | null; isPinned: boolean;
   trialDate: string | null; enrolledAt: string | null; lastContactedAt: string | null;
@@ -33,9 +38,13 @@ interface Lead {
   assignedTo: { id: string; fullName: string; username: string } | null;
   createdBy: { id: string; fullName: string };
   tags: { id: string; name: string; color: string }[];
-  reminders: any[];
-  activities: any[];
+  reminders: LeadReminder[];
+  activities: LeadActivity[];
 }
+
+interface CourseOption { id: string; name: string; }
+interface UserOption { id: string; fullName: string; }
+interface StageOption { id: string; name: string; }
 
 type Tab = "activity" | "reminders" | "payments" | "attendance" | "scores";
 
@@ -56,14 +65,14 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const [tab, setTab] = useState<Tab>("activity");
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editData, setEditData] = useState<any>({});
+  const [editData, setEditData] = useState<Record<string, unknown>>({});
   const [newNote, setNewNote] = useState("");
   const [reminder, setReminder] = useState({ title: "", remindAt: "" });
   const [addingReminder, setAddingReminder] = useState(false);
-  const [courses, setCourses] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const [timeSlots, setTimeSlots] = useState<any[]>([]);
-  const [stages, setStages] = useState<any[]>([]);
+  const [courses, setCourses] = useState<CourseOption[]>([]);
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [, setTimeSlots] = useState<{ id: string; label: string }[]>([]);
+  const [stages, setStages] = useState<StageOption[]>([]);
   const [botUsername, setBotUsername] = useState("");
 
   const load = async () => {
@@ -128,7 +137,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ stageId }),
     });
-    if (res.ok) { const s = stages.find((x:any)=>x.id===stageId); toast.success(`Bosqich → ${s?.name||""}`); load(); }
+    if (res.ok) { const s = stages.find((x)=>x.id===stageId); toast.success(`Bosqich → ${s?.name||""}`); load(); }
   };
 
   const togglePin = async () => {
@@ -169,8 +178,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   if (loading) return <div className="animate-pulse space-y-4"><div className="h-32 bg-white dark:bg-gray-900 rounded-2xl"/><div className="h-80 bg-white dark:bg-gray-900 rounded-2xl"/></div>;
   if (!lead) return null;
 
-  const currentStageIdx = stages.findIndex((s:any)=>s.id===lead.stageId);
-  const total = (lead.payments || []).reduce((a: number, p: any) => a + Number(p.amount || 0), 0);
+  const currentStageIdx = stages.findIndex((s)=>s.id===lead.stageId);
+  const total = (lead.payments || []).reduce((a: number, p) => a + Number(p.amount || 0), 0);
   const att = lead.attendances || [];
   const present = att.filter((a) => a.status === "present").length;
   const absent = att.filter((a) => a.status === "absent").length;
@@ -180,7 +189,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
   const tabs: { key: Tab; label: string; icon: typeof Activity; badge?: number }[] = [
     { key: "activity", label: "Faoliyat", icon: Activity },
-    { key: "reminders", label: "Eslatmalar", icon: Bell, badge: lead.reminders.filter((r:any)=>r.status==="PENDING").length },
+    { key: "reminders", label: "Eslatmalar", icon: Bell, badge: lead.reminders.filter((r)=>r.status==="PENDING").length },
     { key: "payments", label: "To'lovlar", icon: Wallet },
     { key: "attendance", label: "Davomat", icon: CalendarCheck },
     { key: "scores", label: "Ballar", icon: GraduationCap },
@@ -300,7 +309,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <div key={label as string} className="flex items-center justify-between gap-3">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wide flex-shrink-0">{label}</span>
                     {editing && field ? (
-                      <input value={editData[field as string] || ""} onChange={e=>setEditData((d:any)=>({...d,[field as string]:e.target.value}))}
+                      <input value={(editData[field as string] as string) || ""} onChange={e=>setEditData((d)=>({...d,[field as string]:e.target.value}))}
                         className="block w-32 px-2 py-1.5 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none text-right"/>
                     ) : (
                       <p className="text-gray-900 dark:text-white font-medium text-right truncate">{value as string}</p>
@@ -311,10 +320,10 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-1.5"><User className="w-3.5 h-3.5"/> Mas&apos;ul</span>
                     {editing ? (
-                      <select value={editData.assignedToId||""} onChange={e=>setEditData((d:any)=>({...d,assignedToId:e.target.value||null}))}
+                      <select value={(editData.assignedToId as string)||""} onChange={e=>setEditData((d)=>({...d,assignedToId:e.target.value||null}))}
                         className="w-32 px-2 py-1.5 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none">
                         <option value="">Tayinlanmagan</option>
-                        {users.map((u:any)=><option key={u.id} value={u.id}>{u.fullName}</option>)}
+                        {users.map((u)=><option key={u.id} value={u.id}>{u.fullName}</option>)}
                       </select>
                     ) : (
                       <p className="text-gray-900 dark:text-white font-medium text-right truncate">{lead.assignedTo.fullName}</p>
@@ -324,10 +333,10 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 {editing && (
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Kurs</span>
-                    <select value={editData.courseId||""} onChange={e=>setEditData((d:any)=>({...d,courseId:e.target.value||null}))}
+                    <select value={(editData.courseId as string)||""} onChange={e=>setEditData((d)=>({...d,courseId:e.target.value||null}))}
                       className="w-32 px-2 py-1.5 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none">
                       <option value="">Tanlanmagan</option>
-                      {courses.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}
+                      {courses.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                 )}
@@ -411,13 +420,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     <div className="relative">
                       <div className="absolute left-[5px] top-1 bottom-1 w-0.5 bg-gray-100 dark:bg-white/10"/>
                       <div className="space-y-4">
-                        {lead.activities.map((a:any) => (
+                        {lead.activities.map((a) => (
                           <div key={a.id} className="relative flex items-start gap-3 pl-6">
                             <span className={`absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-gray-900 ${ACTIVITY_DOT[a.action] || "bg-gray-300"}`}/>
                             <div className="min-w-0">
                               <p className="text-sm text-gray-800 dark:text-gray-200">
                                 <span className="font-medium">{a.user.fullName}</span>{" "}
-                                {a.action === "status_changed" ? `statusni "${(LEAD_STATUS_LABELS as any)[a.details?.from]}" → "${(LEAD_STATUS_LABELS as any)[a.details?.to]}" ga o'zgartirdi` :
+                                {a.action === "status_changed" ? `statusni "${(LEAD_STATUS_LABELS as Record<string, string>)[a.details?.from ?? ""]}" → "${(LEAD_STATUS_LABELS as Record<string, string>)[a.details?.to ?? ""]}" ga o'zgartirdi` :
                                  a.action === "lead_created" ? "lidni qo'shdi" :
                                  a.action === "comment" ? `izoh qoldirdi: "${a.details?.text || ""}"` :
                                  a.action === "note_added" ? "izoh qo'shdi" :
@@ -445,11 +454,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                         className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none"/>
                     </div>
                     <Button size="sm" className="w-full bg-[#5E2CA5] hover:bg-[#4e2488] text-white shadow-sm" onClick={addReminder} loading={addingReminder}>
-                      <Bell className="w-4 h-4"/> Eslatma qo'shish
+                      <Bell className="w-4 h-4"/> Eslatma qo&apos;shish
                     </Button>
                   </div>
 
-                  {lead.reminders.map((r:any) => (
+                  {lead.reminders.map((r) => (
                     <div key={r.id} className={`flex items-start gap-3 p-3 rounded-xl border ${r.status==="PENDING"?"border-[#5E2CA5]/30 bg-[#5E2CA5]/5 dark:border-[#5E2CA5]/40":r.status==="DONE"?"border-emerald-200 bg-emerald-50 dark:border-emerald-800/50 dark:bg-emerald-500/10":"border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5"}`}>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">{r.title}</p>
@@ -461,7 +470,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                       </span>
                     </div>
                   ))}
-                  {lead.reminders.length === 0 && <p className="text-center text-gray-400 py-6">Eslatmalar yo'q</p>}
+                  {lead.reminders.length === 0 && <p className="text-center text-gray-400 py-6">Eslatmalar yo&apos;q</p>}
                 </div>
               )}
 
@@ -478,7 +487,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                   )}
                   <div className="space-y-1.5">
-                    {(lead.payments || []).map((p: any) => (
+                    {(lead.payments || []).map((p) => (
                       <div key={p.id} className="flex items-center justify-between text-sm px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5">
                         <span className="text-gray-500">{new Date(p.paidAt).toLocaleDateString("ru-RU")}{p.forMonth ? ` · ${p.forMonth}` : ""}</span>
                         <span className="font-medium text-gray-900 dark:text-white">{Number(p.amount).toLocaleString("ru-RU")} so&apos;m</span>
@@ -518,7 +527,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
               {tab === "scores" && (
                 <div className="space-y-1.5">
-                  {(lead.scores || []).map((s: any) => (
+                  {(lead.scores || []).map((s) => (
                     <div key={s.id} className="flex items-center justify-between text-sm px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-white/5">
                       <span className="text-gray-600 dark:text-gray-300 truncate">{s.exam?.title || "—"}</span>
                       <span className="font-medium text-gray-900 dark:text-white">{s.score}{s.exam?.maxScore ? `/${s.exam.maxScore}` : ""}</span>

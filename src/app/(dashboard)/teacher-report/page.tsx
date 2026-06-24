@@ -6,7 +6,9 @@ import { cn, getInitials } from "@/lib/utils";
 
 const BRAND = "#5E2CA5";
 
-function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+function money(v: number) { return Number(v || 0).toLocaleString("ru-RU"); }
+
+interface TeacherStat { name: string; groups: number; students: number; present: number; total: number; revenue: number; attendance: number; averageScore?: number | null; }
 
 // Derived star rating from attendance % (no separate rating data exists)
 function ratingFromAttendance(pct: number): number {
@@ -20,7 +22,7 @@ function ratingFromAttendance(pct: number): number {
 const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap";
 
 export default function TeacherReportPage() {
-  const [list, setList] = useState<any[]>([]);
+  const [list, setList] = useState<TeacherStat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

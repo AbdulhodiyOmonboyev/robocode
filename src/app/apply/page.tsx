@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { User, Phone, BookOpen, Clock, MessageSquare, Users, Check } from "lucide-react";
 
 export default function ApplyPage() {
-  const [cfg, setCfg] = useState<{ courses: any[]; name: string; logo: string }>({ courses: [], name: "Robocode CRM", logo: "" });
+  const [cfg, setCfg] = useState<{ courses: { id: string; name: string }[]; name: string; logo: string }>({ courses: [], name: "Robocode CRM", logo: "" });
   const [form, setForm] = useState({ fullName: "", phone: "", courseId: "", preferredDays: "", lessonTime: "", note: "", referrerName: "", referrerPhone: "", website: "" });
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);

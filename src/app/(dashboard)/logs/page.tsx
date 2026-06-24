@@ -30,8 +30,16 @@ function actionBadgeCls(action: string): string {
 
 const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap";
 
+interface AuditLogEntry {
+  id: string;
+  createdAt: string;
+  userName: string | null;
+  action: string;
+  entity: string | null;
+}
+
 export default function LogsPage() {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   Plus, Trash2, ArrowLeft, Save, ClipboardList, BookOpen,
@@ -36,7 +36,25 @@ const GRADE_CLS: Record<string, string> = {
   "—":  "bg-gray-100 text-gray-400 dark:bg-white/8 dark:text-gray-500",
 };
 
-function examStatus(e: any): { label: string; cls: string } {
+interface GroupOption { id: string; name: string; }
+
+interface Exam {
+  id: string;
+  title: string;
+  type: string;
+  date: string;
+  group: { name: string } | null;
+  averageScore: number | null;
+  _count?: { scores: number };
+}
+
+interface ScoreStudent {
+  leadId: string;
+  fullName: string;
+  score: number | string | null;
+}
+
+function examStatus(e: Exam): { label: string; cls: string } {
   const d = new Date(e.date); d.setHours(0, 0, 0, 0);
   const now = new Date(); now.setHours(0, 0, 0, 0);
   if ((e._count?.scores ?? 0) > 0)
@@ -55,13 +73,13 @@ const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:tex
 
 export default function ExamsPage() {
   const { confirm, dialog } = useConfirm();
-  const [exams, setExams] = useState<any[]>([]);
-  const [groups, setGroups] = useState<any[]>([]);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [groups, setGroups] = useState<GroupOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ title: "", type: "exam", groupId: "", courseId: "", date: ymd(new Date()), maxScore: "100" });
   const [saving, setSaving] = useState(false);
-  const [selected, setSelected] = useState<any>(null);
+  const [selected, setSelected] = useState<Exam | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -251,8 +269,8 @@ export default function ExamsPage() {
 }
 
 /* ─────────────── ScoreEntry ─────────────── */
-function ScoreEntry({ exam, onBack, dialog }: { exam: any; onBack: () => void; dialog: any }) {
-  const [students, setStudents] = useState<any[]>([]);
+function ScoreEntry({ exam, onBack, dialog }: { exam: Exam; onBack: () => void; dialog: ReactNode }) {
+  const [students, setStudents] = useState<ScoreStudent[]>([]);
   const [maxScore, setMaxScore] = useState(100);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -279,13 +297,13 @@ function ScoreEntry({ exam, onBack, dialog }: { exam: any; onBack: () => void; d
       body: JSON.stringify({ records }),
     });
     setSaving(false);
-    res.ok ? toast.success("Ballar saqlandi") : toast.error("Saqlab bo'lmadi");
+    if (res.ok) toast.success("Ballar saqlandi"); else toast.error("Saqlab bo'lmadi");
   };
 
   // Sorted results for the ranking table
   const ranked = [...students]
     .filter(s => s.score !== null && s.score !== undefined)
-    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+    .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
   const unscored = students.filter(s => s.score === null || s.score === undefined);
 
   return (
@@ -384,8 +402,8 @@ function ScoreEntry({ exam, onBack, dialog }: { exam: any; onBack: () => void; d
                   </thead>
                   <tbody className="divide-y divide-gray-50 dark:divide-white/5">
                     {ranked.map((s, idx) => {
-                      const pct = Math.round((s.score / maxScore) * 100);
-                      const g = grade(s.score, maxScore);
+                      const pct = Math.round((Number(s.score) / maxScore) * 100);
+                      const g = grade(Number(s.score), maxScore);
                       const pctColor =
                         pct >= 90 ? "text-emerald-600 dark:text-emerald-400" :
                         pct >= 70 ? "text-[#5E2CA5] dark:text-purple-400" :

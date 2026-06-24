@@ -9,7 +9,7 @@ import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui
 import { cn } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/permissions";
 
-function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+function money(v: number | string) { return Number(v || 0).toLocaleString("ru-RU"); }
 function ym(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
 
 const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap";
@@ -17,10 +17,14 @@ const fieldCls =
   "w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition";
 const labelCls = "block text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1.5";
 
+interface ByUserRow { userId: string; name: string; role: string; salary: number; bonus: number; total: number; }
+interface SalaryRecord { id: string; type: string; amount: string | number; note: string | null; user: { fullName: string } | null; }
+interface PayrollData { byUser: ByUserRow[]; records: SalaryRecord[]; total: number; }
+
 export default function PayrollPage() {
   const { confirm, dialog } = useConfirm();
-  const [data, setData] = useState<any>({ byUser: [], records: [], total: 0 });
-  const [users, setUsers] = useState<any[]>([]);
+  const [data, setData] = useState<PayrollData>({ byUser: [], records: [], total: 0 });
+  const [users, setUsers] = useState<{ id: string; fullName: string }[]>([]);
   const [month, setMonth] = useState(ym(new Date()));
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -128,7 +132,7 @@ export default function PayrollPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-white/5">
-                {data.byUser.map((u: any) => {
+                {data.byUser.map((u) => {
                   const paid = Number(u.total || 0);
                   return (
                     <tr key={u.userId} className="hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors duration-100">
@@ -178,7 +182,7 @@ export default function PayrollPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-white/5">
-                  {data.records.map((r: any) => (
+                  {data.records.map((r) => (
                     <tr key={r.id} className="hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors duration-100">
                       <td className="px-4 py-2.5 text-[13px] text-gray-900 dark:text-white whitespace-nowrap">{r.user?.fullName || "—"}</td>
                       <td className="px-4 py-2.5">

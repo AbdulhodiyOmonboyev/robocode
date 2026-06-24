@@ -51,7 +51,7 @@ export default function RemindersPage() {
   useEffect(() => { load(); }, [load]);
 
   const setStatus = async (id: string, status: string, snoozeMin?: number) => {
-    const body: any = { status };
+    const body: { status: string; remindAt?: string } = { status };
     if (status === "PENDING" && snoozeMin) {
       body.remindAt = format(addMinutes(new Date(), snoozeMin), "yyyy-MM-dd'T'HH:mm");
       body.status = "PENDING";

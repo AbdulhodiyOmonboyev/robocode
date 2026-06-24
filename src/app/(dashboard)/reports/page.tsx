@@ -8,8 +8,20 @@ import { cn, formatCurrency } from "@/lib/utils";
 
 const BRAND = "#5E2CA5";
 
+interface ReportsData {
+  totalLeads: number;
+  conversionRate: string;
+  actualRevenue: number;
+  potentialRevenue: number;
+  enrolledCount: number;
+  stageDistribution: { stageId: string; name: string; color: string; count: number }[];
+  sourceDistribution: { source: string; count: number }[];
+  courseStats: { courseId: string | null; course: { name: string; color: string } | null; count: number }[];
+  userStats: { id: string; fullName: string; totalLeads: number; createdLeads: number }[];
+}
+
 export default function ReportsPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -75,6 +87,8 @@ export default function ReportsPage() {
             <div className="bg-white dark:bg-gray-900 rounded-2xl h-72 animate-pulse" />
           </div>
         </div>
+      ) : !data ? (
+        <div className="text-center text-gray-400 py-20 text-sm">Ma&apos;lumot yuklanmadi</div>
       ) : (
         <>
           {/* Derived, honest percentages (no fabricated trend data) */}
@@ -104,8 +118,8 @@ export default function ReportsPage() {
                 value: `${data.conversionRate}%`,
                 icon: TrendingUp,
                 chip: "bg-blue-500/10 text-blue-600",
-                badge: data.conversionRate >= 50 ? "Yaxshi" : "O'rtacha",
-                badgeCls: data.conversionRate >= 50
+                badge: Number(data.conversionRate) >= 50 ? "Yaxshi" : "O'rtacha",
+                badgeCls: Number(data.conversionRate) >= 50
                   ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                   : "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400",
               },
@@ -151,7 +165,7 @@ export default function ReportsPage() {
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5">
               <h2 className="text-[14px] font-semibold text-gray-900 dark:text-white mb-4">Kurslar bo&apos;yicha lidlar</h2>
               <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={data.courseStats.map((c: any) => ({ name: c.course?.name || "Noma'lum", count: c.count }))}>
+                <BarChart data={data.courseStats.map((c) => ({ name: c.course?.name || "Noma'lum", count: c.count }))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f5" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={{ stroke: "#f1f1f5" }} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
@@ -169,10 +183,10 @@ export default function ReportsPage() {
               <h2 className="text-[14px] font-semibold text-gray-900 dark:text-white mb-4">Lidlar manbasi</h2>
               <div className="space-y-3.5">
                 {(() => {
-                  const total = (data.sourceDistribution || []).reduce((a: number, s: any) => a + s.count, 0) || 1;
+                  const total = (data.sourceDistribution || []).reduce((a: number, s) => a + s.count, 0) || 1;
                   return [...(data.sourceDistribution || [])]
-                    .sort((a: any, b: any) => b.count - a.count)
-                    .map((s: any) => {
+                    .sort((a, b) => b.count - a.count)
+                    .map((s) => {
                       const pct = Math.round((s.count / total) * 100);
                       return (
                         <div key={s.source}>
@@ -206,9 +220,9 @@ export default function ReportsPage() {
               <h2 className="text-[14px] font-semibold text-gray-900 dark:text-white mb-4">Bosqich bo&apos;yicha taqsimot</h2>
               <div className="space-y-3.5">
                 {(() => {
-                  const stages = (data.stageDistribution || []).filter((s: any) => s.count > 0);
-                  const total = stages.reduce((a: number, s: any) => a + s.count, 0) || 1;
-                  return stages.map((s: any) => {
+                  const stages = (data.stageDistribution || []).filter((s) => s.count > 0);
+                  const total = stages.reduce((a: number, s) => a + s.count, 0) || 1;
+                  return stages.map((s) => {
                     const pct = Math.round((s.count / total) * 100);
                     return (
                       <div key={s.stageId}>
@@ -239,8 +253,8 @@ export default function ReportsPage() {
               <h2 className="text-[14px] font-semibold text-gray-900 dark:text-white mb-4">Hodimlar samaradorligi</h2>
               <div className="space-y-3.5">
                 {[...data.userStats]
-                  .sort((a: any, b: any) => b.totalLeads - a.totalLeads)
-                  .map((u: any) => {
+                  .sort((a, b) => b.totalLeads - a.totalLeads)
+                  .map((u) => {
                     const pct = Math.min((u.totalLeads / (data.totalLeads || 1)) * 100, 100);
                     return (
                       <div key={u.id} className="flex items-center gap-3">

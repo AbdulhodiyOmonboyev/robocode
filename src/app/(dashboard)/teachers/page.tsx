@@ -16,7 +16,7 @@ interface Teacher {
 
 const BRAND = "#5E2CA5";
 
-function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+function money(v: number | string) { return Number(v || 0).toLocaleString("ru-RU"); }
 
 const AVATAR_COLORS = [BRAND, "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#f97316", "#ef4444"];
 const SUBJECT_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6", "#06b6d4", "#f97316"];

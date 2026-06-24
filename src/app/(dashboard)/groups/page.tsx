@@ -20,17 +20,39 @@ const fieldCls =
   "w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition";
 const labelCls = "block text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1.5";
 
+interface Group {
+  id: string;
+  name: string;
+  room: string | null;
+  days: string | null;
+  timeFrom: string | null;
+  timeTo: string | null;
+  course: { name: string; color: string } | null;
+  teacher: { fullName: string } | null;
+  _count?: { leads: number };
+}
+
+interface Member {
+  id: string;
+  fullName: string;
+  phone: string;
+  stage: { name: string; color: string } | null;
+}
+
+interface CourseOption { id: string; name: string; }
+interface UserOption { id: string; fullName: string; }
+
 export default function GroupsPage() {
-  const [groups, setGroups] = useState<any[]>([]);
-  const [courses, setCourses] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [courses, setCourses] = useState<CourseOption[]>([]);
+  const [users, setUsers] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [days, setDays] = useState<string[]>([]);
   const [form, setForm] = useState({ name: "", courseId: "", teacherId: "", timeFrom: "", timeTo: "", room: "", startDate: "" });
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [members, setMembers] = useState<Record<string, any[]>>({});
+  const [members, setMembers] = useState<Record<string, Member[]>>({});
 
   const load = async () => {
     setLoading(true);
@@ -123,9 +145,8 @@ export default function GroupsPage() {
       ) : (
         /* Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {groups.map((g: any) => {
+          {groups.map((g) => {
             const accent = g.course?.color || BRAND;
-            const initials = g.name.slice(0, 2).toUpperCase();
             const daysList: string[] = g.days ? g.days.split(",").filter(Boolean) : [];
             const isOpen = expanded === g.id;
 
@@ -237,7 +258,7 @@ export default function GroupsPage() {
                   <div className="border-t border-gray-50 dark:border-white/5 px-5 py-3 space-y-1.5 bg-gray-50/50 dark:bg-white/5">
                     {(members[g.id] || []).length === 0 ? (
                       <p className="text-[12px] text-gray-400 py-2">A&apos;zolar yo&apos;q</p>
-                    ) : (members[g.id] || []).map((m: any) => (
+                    ) : (members[g.id] || []).map((m) => (
                       <div key={m.id} className="flex items-center justify-between gap-2 py-0.5">
                         <Link
                           href={`/leads/${m.id}`}
@@ -295,14 +316,14 @@ export default function GroupsPage() {
                 <label className={labelCls}>Kurs</label>
                 <select value={form.courseId} onChange={e => setForm(f => ({ ...f, courseId: e.target.value }))} className={fieldCls}>
                   <option value="">Ixtiyoriy</option>
-                  {courses.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className={labelCls}>O&apos;qituvchi</label>
                 <select value={form.teacherId} onChange={e => setForm(f => ({ ...f, teacherId: e.target.value }))} className={fieldCls}>
                   <option value="">Ixtiyoriy</option>
-                  {users.map((u: any) => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+                  {users.map((u) => <option key={u.id} value={u.id}>{u.fullName}</option>)}
                 </select>
               </div>
             </div>

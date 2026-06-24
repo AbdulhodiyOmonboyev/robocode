@@ -24,7 +24,13 @@ interface Payment {
 const METHODS: Record<string, string> = { cash: "Naqd", card: "Karta", transfer: "O'tkazma" };
 const BRAND = "#5E2CA5";
 
-function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+interface PaymentSummary { total: number; count: number; monthTotal: number; month: string; }
+interface Debtor { id: string; fullName: string; phone: string; group: string | null; course: string | null; expected: number; }
+interface DebtorsData { debtors: Debtor[]; totalExpected: number; month: string; }
+interface PresetLead { id: string; fullName: string; phone: string; group?: { id: string } | null; }
+interface PaymentType { id: string; name: string; isActive: boolean; }
+
+function money(v: number | string) { return Number(v || 0).toLocaleString("ru-RU"); }
 function ym(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
 
 const inputCls =
@@ -34,14 +40,14 @@ const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:tex
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [summary, setSummary] = useState<any>({ total: 0, count: 0, monthTotal: 0, month: "" });
+  const [summary, setSummary] = useState<PaymentSummary>({ total: 0, count: 0, monthTotal: 0, month: "" });
   const [q, setQ] = useState("");
   const [month, setMonth] = useState("");
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [presetLead, setPresetLead] = useState<any>(null);
+  const [presetLead, setPresetLead] = useState<PresetLead | null>(null);
   const [view, setView] = useState<"payments" | "debtors">("payments");
-  const [debtors, setDebtors] = useState<any>({ debtors: [], totalExpected: 0, month: "" });
+  const [debtors, setDebtors] = useState<DebtorsData>({ debtors: [], totalExpected: 0, month: "" });
   const [debtMonth, setDebtMonth] = useState(ym(new Date()));
 
   const load = useCallback(async () => {
@@ -351,7 +357,7 @@ export default function PaymentsPage() {
                         <p className="text-[13px] text-gray-400">Qarzdor yo&apos;q</p>
                       </td>
                     </tr>
-                  ) : debtors.debtors.map((d: any) => (
+                  ) : debtors.debtors.map((d) => (
                     <tr key={d.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-100">
                       {/* O'quvchi + avatar */}
                       <td className="px-4 py-3">
@@ -405,10 +411,10 @@ export default function PaymentsPage() {
   );
 }
 
-function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; onClose: () => void; onSaved: () => void }) {
+function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: PresetLead | null; onClose: () => void; onSaved: () => void }) {
   const [leadQ, setLeadQ] = useState("");
-  const [leadResults, setLeadResults] = useState<any[]>([]);
-  const [lead, setLead] = useState<any>(presetLead || null);
+  const [leadResults, setLeadResults] = useState<PresetLead[]>([]);
+  const [lead, setLead] = useState<PresetLead | null>(presetLead || null);
   const [amount, setAmount] = useState("");
   const [forMonth, setForMonth] = useState(ym(new Date()));
   const [method, setMethod] = useState("cash");
@@ -416,11 +422,11 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; o
   const [discount, setDiscount] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
-  const [types, setTypes] = useState<any[]>([]);
+  const [types, setTypes] = useState<PaymentType[]>([]);
 
   useEffect(() => {
     fetch("/api/payment-types").then(r => r.json())
-      .then(d => setTypes(Array.isArray(d) ? d.filter((t: any) => t.isActive) : []))
+      .then(d => setTypes(Array.isArray(d) ? d.filter((t: PaymentType) => t.isActive) : []))
       .catch(() => {});
   }, []);
 
@@ -513,8 +519,8 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; o
             <select value={method} onChange={e => setMethod(e.target.value)} className={fieldCls}>
               <option value="cash">Naqd</option>
               <option value="card">Karta</option>
-              <option value="transfer">O'tkazma</option>
-              {types.map((t: any) => <option key={t.id} value={t.name}>{t.name}</option>)}
+              <option value="transfer">O&apos;tkazma</option>
+              {types.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
           </div>
         </div>
@@ -522,8 +528,8 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: any; o
         <div>
           <label className={labelCls}>Turi</label>
           <select value={type} onChange={e => setType(e.target.value)} className={fieldCls}>
-            <option value="tuition">Oylik to'lov</option>
-            <option value="enrollment">Ro'yxatdan o'tish</option>
+            <option value="tuition">Oylik to&apos;lov</option>
+            <option value="enrollment">Ro&apos;yxatdan o&apos;tish</option>
             <option value="other">Boshqa</option>
           </select>
         </div>

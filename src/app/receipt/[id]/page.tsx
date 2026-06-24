@@ -1,17 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { Printer } from "lucide-react";
 
-function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+interface Receipt {
+  id: string; amount: string | number; discount?: string | number | null;
+  method: string; forMonth: string | null; paidAt: string; courseName?: string | null;
+  lead: { fullName: string } | null;
+  createdBy: { fullName: string } | null;
+}
+
+function money(v: number | string) { return Number(v || 0).toLocaleString("ru-RU"); }
 const METHODS: Record<string, string> = { cash: "Naqd", card: "Karta", transfer: "O'tkazma" };
 
 export default function ReceiptPage() {
   const params = useParams();
   const id = params?.id as string;
-  const [p, setP] = useState<any>(null);
-  const [brand, setBrand] = useState<any>({ name: "Robocode CRM", logo: "" });
+  const [p, setP] = useState<Receipt | null>(null);
+  const [brand, setBrand] = useState<{ name: string; logo: string }>({ name: "Robocode CRM", logo: "" });
   const [err, setErr] = useState(false);
 
   useEffect(() => {
@@ -20,12 +27,12 @@ export default function ReceiptPage() {
     fetch("/api/branding").then(r => r.json()).then(setBrand).catch(() => {});
   }, [id]);
 
-  if (err) return <div className="p-10 text-center text-gray-400">To'lov topilmadi</div>;
+  if (err) return <div className="p-10 text-center text-gray-400">To&apos;lov topilmadi</div>;
   if (!p) return <div className="p-10 text-center text-gray-400">Yuklanmoqda...</div>;
 
   const receiptNo = (p.id || "").slice(-8).toUpperCase();
 
-  const row = (label: string, value: any) => (
+  const row = (label: string, value: ReactNode) => (
     <div className="flex justify-between gap-3 py-1.5 text-[13px]">
       <span className="text-gray-400">{label}</span>
       <span className="font-semibold text-gray-900 text-right">{value}</span>

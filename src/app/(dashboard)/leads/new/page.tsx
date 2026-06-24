@@ -57,6 +57,7 @@ export default function NewLeadPage() {
 
    
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- duplicate resolver type instances under Windows/pnpm resolution
     resolver: zodResolver(schema) as any,
     defaultValues: { timePreference: "FLEXIBLE", status: "NEW", source: "OTHER" },
   });
@@ -78,7 +79,7 @@ export default function NewLeadPage() {
       const res = await fetch(`/api/leads?search=${encodeURIComponent(phone)}&limit=1`);
       if (res.ok) {
         const data = await res.json();
-        const match = data.leads.find((l: any) => l.phone === phone || l.phone.replace(/\D/g,"") === phone.replace(/\D/g,""));
+        const match = data.leads.find((l: { id: string; phone: string }) => l.phone === phone || l.phone.replace(/\D/g,"") === phone.replace(/\D/g,""));
         setDuplicate(match ? { id: match.id } : null);
       }
     }, 600);
@@ -145,7 +146,7 @@ export default function NewLeadPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Yangi lid</h1>
-          <p className="text-sm text-gray-500">Potentsial o'quvchi ma'lumotlarini kiriting</p>
+          <p className="text-sm text-gray-500">Potentsial o&apos;quvchi ma&apos;lumotlarini kiriting</p>
         </div>
       </div>
 
@@ -155,14 +156,15 @@ export default function NewLeadPage() {
           <div className="flex-1">
             <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Bu telefon raqam allaqachon mavjud!</p>
           </div>
-          <Link href={`/leads/${duplicate.id}`} className="text-xs font-medium text-amber-700 underline">Ko'rish →</Link>
+          <Link href={`/leads/${duplicate.id}`} className="text-xs font-medium text-amber-700 underline">Ko&apos;rish →</Link>
         </div>
       )}
 
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- see resolver cast above */}
       <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
         {/* Basic info */}
         <Card>
-          <CardHeader><CardTitle>Asosiy ma'lumotlar</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Asosiy ma&apos;lumotlar</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="To'liq ism-familya *" {...register("fullName")} error={errors.fullName?.message} placeholder="Aziza Karimova"/>
@@ -267,7 +269,7 @@ export default function NewLeadPage() {
 
         <div className="flex justify-end gap-3">
           <Link href="/leads"><Button type="button" variant="outline">Bekor qilish</Button></Link>
-          <Button type="submit" loading={saving}>Lid qo'shish</Button>
+          <Button type="submit" loading={saving}>Lid qo&apos;shish</Button>
         </div>
       </form>
     </div>

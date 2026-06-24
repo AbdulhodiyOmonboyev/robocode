@@ -14,7 +14,7 @@ interface Income {
   createdBy: { fullName: string } | null;
 }
 
-function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+function money(v: number | string) { return Number(v || 0).toLocaleString("ru-RU"); }
 function ym(d: Date)   { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
 function todayStr() {
   const d = new Date();
@@ -37,7 +37,7 @@ const labelCls = "block text-[11px] font-medium text-gray-400 dark:text-gray-500
 export default function IncomesPage() {
   const { confirm, dialog } = useConfirm();
   const [incomes, setIncomes]   = useState<Income[]>([]);
-  const [summary, setSummary]   = useState<any>({ total: 0, count: 0 });
+  const [summary, setSummary]   = useState<{ total: number; count: number }>({ total: 0, count: 0 });
   const [month, setMonth]       = useState(ym(new Date()));
   const [loading, setLoading]   = useState(true);
   const [showAdd, setShowAdd]   = useState(false);

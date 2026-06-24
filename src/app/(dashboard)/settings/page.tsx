@@ -19,6 +19,10 @@ type Tab = "general" | "logo" | "paymentTypes" | "holidays" | "timeslots" | "tag
 
 interface TimeSlot { id: string; startTime: string; endTime: string; label: string; isActive: boolean; }
 interface Tag { id: string; name: string; color: string; }
+interface UserOption { id: string; fullName: string; username: string; }
+interface TelegramContact { chatId: string; name: string; username: string; }
+interface PaymentType { id: string; name: string; isActive: boolean; }
+interface Holiday { id: string; date: string; name: string; }
 
 const TAG_COLORS = ["#6366f1","#10b981","#f59e0b","#f43f5e","#06b6d4","#8b5cf6","#ec4899","#14b8a6","#f97316","#84cc16"];
 
@@ -34,9 +38,9 @@ export default function SettingsPage() {
   const [eskiz, setEskiz] = useState({ email: "", password: "", from: "" });
   const [smsTest, setSmsTest] = useState("");
   const [saving, setSaving] = useState(false);
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<UserOption[]>([]);
   const [chatIds, setChatIds] = useState<Record<string, string>>({});
-  const [contacts, setContacts] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<TelegramContact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [botUsername, setBotUsername] = useState("");
   const [webhookActive, setWebhookActive] = useState(false);
@@ -45,7 +49,7 @@ export default function SettingsPage() {
   const [testingQuick, setTestingQuick] = useState(false);
   const [logo, setLogo] = useState("");
   const [logoSaving, setLogoSaving] = useState(false);
-  const [paymentTypes, setPaymentTypes] = useState<any[]>([]);
+  const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
   const [newPaymentType, setNewPaymentType] = useState("");
   const { dark, toggleDark } = useDarkMode();
 
@@ -61,7 +65,7 @@ export default function SettingsPage() {
     if (res.ok) loadPaymentTypes(); else toast.error("Xatolik");
   };
 
-  const [holidays, setHolidays] = useState<any[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [newHoliday, setNewHoliday] = useState({ date: "", name: "" });
   const loadHolidays = () => fetch("/api/holidays").then(r=>r.json()).then(d=>setHolidays(Array.isArray(d)?d:[]));
   const addHoliday = async () => {
@@ -301,8 +305,8 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-white/10">
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">Qorong'i rejim</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Interfeys uchun qorong'i mavzuni yoqish</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Qorong&apos;i rejim</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Interfeys uchun qorong&apos;i mavzuni yoqish</p>
                   </div>
                   <button onClick={toggleDark} role="switch" aria-checked={dark}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition shrink-0 ${dark ? "bg-[#5E2CA5]" : "bg-gray-200 dark:bg-gray-700"}`}>
@@ -344,21 +348,21 @@ export default function SettingsPage() {
           {/* Payment types */}
           {tab === "paymentTypes" && (
             <Card className="rounded-2xl shadow-sm">
-              <CardHeader><CardTitle>To'lov turlari</CardTitle></CardHeader>
+              <CardHeader><CardTitle>To&apos;lov turlari</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-xs text-gray-500">Naqd / Karta / O'tkazma — asosiy turlar doim bor. Bu yerda qo'shimcha turlarni qo'shing (masalan: Click, Payme, Uzcard).</p>
+                <p className="text-xs text-gray-500">Naqd / Karta / O&apos;tkazma — asosiy turlar doim bor. Bu yerda qo&apos;shimcha turlarni qo&apos;shing (masalan: Click, Payme, Uzcard).</p>
                 <div className="flex flex-wrap gap-2">
-                  {paymentTypes.map((t:any)=>(
+                  {paymentTypes.map((t)=>(
                     <div key={t.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-[#5E2CA5]/10 text-[#5E2CA5]">
                       {t.name}
                       <button onClick={()=>removePaymentType(t.id)} className="ml-1 opacity-70 hover:opacity-100"><X className="w-3 h-3"/></button>
                     </div>
                   ))}
-                  {paymentTypes.length===0 && <p className="text-sm text-gray-400">Qo'shimcha tur yo'q</p>}
+                  {paymentTypes.length===0 && <p className="text-sm text-gray-400">Qo&apos;shimcha tur yo&apos;q</p>}
                 </div>
                 <div className="flex items-end gap-2 pt-2 border-t border-gray-100 dark:border-white/10">
                   <Input label="Yangi to'lov turi" value={newPaymentType} onChange={e=>setNewPaymentType(e.target.value)} placeholder="Click / Payme..." className={`flex-1 ${inputFocus}`}/>
-                  <Button onClick={addPaymentType} className={purpleBtn}><Plus className="w-4 h-4"/> Qo'shish</Button>
+                  <Button onClick={addPaymentType} className={purpleBtn}><Plus className="w-4 h-4"/> Qo&apos;shish</Button>
                 </div>
               </CardContent>
             </Card>
@@ -369,15 +373,15 @@ export default function SettingsPage() {
             <Card className="rounded-2xl shadow-sm">
               <CardHeader><CardTitle>Bayram kunlari</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-xs text-gray-500">Dars bo'lmaydigan kunlar (bayramlar, ta'til).</p>
+                <p className="text-xs text-gray-500">Dars bo&apos;lmaydigan kunlar (bayramlar, ta&apos;til).</p>
                 <div className="space-y-1.5">
-                  {holidays.map((h:any)=>(
+                  {holidays.map((h)=>(
                     <div key={h.id} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
                       <span className="text-gray-700 dark:text-gray-300"><b>{new Date(h.date).toLocaleDateString("ru-RU")}</b> — {h.name}</span>
                       <button onClick={()=>removeHoliday(h.id)} className="text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
                     </div>
                   ))}
-                  {holidays.length===0 && <p className="text-sm text-gray-400">Bayram kuni yo'q</p>}
+                  {holidays.length===0 && <p className="text-sm text-gray-400">Bayram kuni yo&apos;q</p>}
                 </div>
                 <div className="flex items-end gap-2 pt-2 border-t border-gray-100 dark:border-white/10">
                   <div>
@@ -420,7 +424,7 @@ export default function SettingsPage() {
                     <input type="time" value={newSlot.endTime} onChange={e=>setNewSlot(s=>({...s,endTime:e.target.value}))}
                       className={`w-full px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 outline-none ${inputFocus}`}/>
                   </div>
-                  <Button onClick={addSlot} className={purpleBtn}><Plus className="w-4 h-4"/> Qo'shish</Button>
+                  <Button onClick={addSlot} className={purpleBtn}><Plus className="w-4 h-4"/> Qo&apos;shish</Button>
                 </div>
               </CardContent>
             </Card>
@@ -438,7 +442,7 @@ export default function SettingsPage() {
                       <button onClick={()=>deleteTag(tag.id)} className="ml-1 opacity-70 hover:opacity-100"><X className="w-3 h-3"/></button>
                     </div>
                   ))}
-                  {tags.length === 0 && <p className="text-sm text-gray-400">Teglar yo'q</p>}
+                  {tags.length === 0 && <p className="text-sm text-gray-400">Teglar yo&apos;q</p>}
                 </div>
                 <div className="flex items-end gap-3 pt-2 border-t border-gray-100 dark:border-white/10">
                   <Input label="Teg nomi" value={newTag.name} onChange={e=>setNewTag(t=>({...t,name:e.target.value}))} placeholder="Muhim" className={`flex-1 ${inputFocus}`}/>
@@ -463,7 +467,7 @@ export default function SettingsPage() {
             <Card className="rounded-2xl shadow-sm">
               <CardHeader><CardTitle>SMS (Eskiz.uz)</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-xs text-gray-500">SMS yuborish uchun eskiz.uz dan ro'yxatdan o'ting va email/parolingizni kiriting. Sender nomi tasdiqlanmaguncha test uchun <b>4546</b> ishlaydi.</p>
+                <p className="text-xs text-gray-500">SMS yuborish uchun eskiz.uz dan ro&apos;yxatdan o&apos;ting va email/parolingizni kiriting. Sender nomi tasdiqlanmaguncha test uchun <b>4546</b> ishlaydi.</p>
                 <Input label="Eskiz email" value={eskiz.email} onChange={e=>setEskiz(s=>({...s,email:e.target.value}))} placeholder="email@example.com" className={inputFocus}/>
                 <Input label="Eskiz parol" type="password" value={eskiz.password} onChange={e=>setEskiz(s=>({...s,password:e.target.value}))} placeholder="••••••• (o'zgartirmasangiz bo'sh qoldiring)" className={inputFocus}/>
                 <Input label="Sender (from)" value={eskiz.from} onChange={e=>setEskiz(s=>({...s,from:e.target.value}))} placeholder="4546" className={inputFocus}/>
@@ -568,7 +572,7 @@ export default function SettingsPage() {
                   {webhookActive && <span className="text-green-600"> Ulangan hodimda yashil ✅ ko&apos;rinadi.</span>}
                 </p>
                 <div className="space-y-3">
-                  {users.map((u:any)=>(
+                  {users.map((u)=>(
                     <div key={u.id} className="flex items-center gap-2 p-3 rounded-xl border border-gray-200 dark:border-white/10">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -593,7 +597,7 @@ export default function SettingsPage() {
                     <Button size="sm" variant="outline" onClick={fetchContacts} loading={loadingContacts}>Botga yozganlarni ko&apos;rsatish</Button>
                     {contacts.length > 0 && (
                       <div className="mt-3 space-y-1.5">
-                        {contacts.map((c:any)=>(
+                        {contacts.map((c)=>(
                           <div key={c.chatId} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-lg">
                             <span className="text-gray-700 dark:text-gray-300">{c.name} {c.username && <span className="text-gray-400">{c.username}</span>}</span>
                             <code className="text-xs text-[#5E2CA5] font-mono select-all">{c.chatId}</code>
@@ -602,7 +606,7 @@ export default function SettingsPage() {
                       </div>
                     )}
                     <div className="space-y-2 mt-3">
-                      {users.map((u:any)=>(
+                      {users.map((u)=>(
                         <div key={u.id} className="flex items-end gap-2">
                           <div className="flex-1">
                             <label className="block text-xs text-gray-500 mb-1">{u.fullName}</label>

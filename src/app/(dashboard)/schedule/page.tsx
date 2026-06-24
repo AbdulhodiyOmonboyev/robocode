@@ -9,8 +9,12 @@ import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 const DAYS_UZ = ["Yak", "Du", "Se", "Ch", "Pa", "Ju", "Sh"];
 const DAYS_EN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
-interface Slot { id: string; label: string; startTime: string; }
-interface Lead { id: string; fullName: string; status: string; course: { name: string; color: string | null } | null; }
+interface Slot { id: string; label: string; startTime: string; isActive?: boolean; }
+interface Lead {
+  id: string; fullName: string; status: string;
+  timeSlotId: string | null; preferredDays: string | null;
+  course: { name: string; color: string | null } | null;
+}
 
 export default function SchedulePage() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -32,7 +36,7 @@ export default function SchedulePage() {
   // Count leads per slot per day-of-week
   const getLeadsForCell = (slotId: string, dayIndex: number): Lead[] => {
     const dayName = DAYS_EN[dayIndex];
-    return leads.filter((l: any) => {
+    return leads.filter((l) => {
       const hasSlot = l.timeSlotId === slotId;
       const hasDay = l.preferredDays?.includes(dayName);
       return hasSlot || hasDay;
@@ -54,7 +58,7 @@ export default function SchedulePage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Jadval</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Vaqt slotlari bo'yicha talablar</p>
+          <p className="text-sm text-gray-500 mt-0.5">Vaqt slotlari bo&apos;yicha talablar</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={()=>setWeekStart(d=>addDays(d,-7))} className="p-2 rounded-xl border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
@@ -92,7 +96,7 @@ export default function SchedulePage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {slots.filter(s=>(s as any).isActive !== false).map(slot => (
+                    {slots.filter(s=>s.isActive !== false).map(slot => (
                       <tr key={slot.id}>
                         <td className="px-4 py-3 text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">{slot.label}</td>
                         {weekDays.map((_, dayIdx) => {
@@ -143,7 +147,7 @@ export default function SchedulePage() {
             {!selectedCell ? (
               <p className="text-sm text-gray-400 text-center py-8">Jadvaldan katak tanlang</p>
             ) : cellLeads.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">Bu vaqtda lid yo'q</p>
+              <p className="text-sm text-gray-400 text-center py-8">Bu vaqtda lid yo&apos;q</p>
             ) : (
               <div className="space-y-2">
                 {cellLeads.map(l => (
