@@ -4,15 +4,16 @@ import { useState, useEffect } from "react";
 import { TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const BRAND = "#5E2CA5";
-
-function money(v: any) { return Number(v || 0).toLocaleString("ru-RU"); }
+function money(v: number) { return Number(v || 0).toLocaleString("ru-RU"); }
 function short(v: number) { return v >= 1000000 ? (v / 1000000).toFixed(1) + "M" : Math.round(v / 1000) + "k"; }
 
 const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap";
 
+interface MonthEntry { month: string; income: number; outflow: number; profit: number; }
+interface CashflowData { months: MonthEntry[]; totals: { income: number; outflow: number; profit: number }; }
+
 export default function CashflowPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<CashflowData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function CashflowPage() {
     );
   }
 
-  const max = Math.max(1, ...data.months.flatMap((m: any) => [m.income, m.outflow]));
+  const max = Math.max(1, ...data.months.flatMap((m) => [m.income, m.outflow]));
 
   // Month-over-month trend (last vs previous month)
   const trendOf = (key: "income" | "outflow" | "profit"): number | null => {
@@ -135,7 +136,7 @@ export default function CashflowPage() {
         </div>
 
         <div className="flex items-end justify-between gap-2 h-56">
-          {data.months.map((m: any) => (
+          {data.months.map((m) => (
             <div key={m.month} className="flex-1 flex flex-col items-center gap-2">
               <div className="w-full flex items-end justify-center gap-1.5" style={{ height: "176px" }}>
                 <div
@@ -174,7 +175,7 @@ export default function CashflowPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-white/5">
-              {data.months.map((m: any) => (
+              {data.months.map((m) => (
                 <tr key={m.month} className="hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors duration-100">
                   <td className="px-4 py-3 text-[13px] font-medium text-gray-900 dark:text-white">{m.month}</td>
                   <td className="px-4 py-3 text-right text-[13px] font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
