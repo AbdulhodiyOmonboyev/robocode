@@ -54,7 +54,7 @@ export default function LeaderboardPage() {
   const rest   = list.slice(3, 10);
 
   return (
-    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-6" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-5 sm:space-y-6" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">

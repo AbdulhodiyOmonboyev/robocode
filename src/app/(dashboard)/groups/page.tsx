@@ -105,7 +105,7 @@ export default function GroupsPage() {
   const toggleDay = (v: string) => setDays(arr => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
 
   return (
-    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
       {dialog}
 
       {/* Header */}

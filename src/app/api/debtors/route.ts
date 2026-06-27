@@ -4,8 +4,7 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-// Students (leads assigned to a group) who have NO payment for the given month,
-// enriched with their last payment date (across all months) and course/group info.
+// ENROLLED students whose (course price - sum of monthly payments) > 0
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,9 +17,11 @@ export async function GET(req: NextRequest) {
   }
 
   const students = await db.lead.findMany({
-    where: { groupId: { not: null }, isArchived: false },
+    where: { status: "ENROLLED", groupId: { not: null }, isArchived: false },
     select: {
-      id: true, fullName: true, phone: true,
+      id: true,
+      fullName: true,
+      phone: true,
       course: { select: { name: true, price: true, color: true } },
       group: { select: { id: true, name: true } },
     },
@@ -29,37 +30,47 @@ export async function GET(req: NextRequest) {
 
   const leadIds = students.map((s) => s.id);
 
-  const paidThisMonth = await db.payment.findMany({
-    where: { forMonth: month, leadId: { in: leadIds } },
-    select: { leadId: true },
-  });
-  const paidSet = new Set(paidThisMonth.map((p) => p.leadId));
-
-  const unpaid = students.filter((s) => !paidSet.has(s.id));
-  const unpaidIds = unpaid.map((s) => s.id);
-
-  // Last payment date per lead (any month), used to show "oxirgi to'lov sanasi"
-  const lastPayments = unpaidIds.length
+  // Sum payments per student for this month (handles partial payments)
+  const monthPayments = leadIds.length
     ? await db.payment.groupBy({
         by: ["leadId"],
-        where: { leadId: { in: unpaidIds } },
+        where: { forMonth: month, leadId: { in: leadIds } },
+        _sum: { amount: true },
+      })
+    : [];
+  const paidMap = new Map(monthPayments.map((p) => [p.leadId, Number(p._sum.amount ?? 0)]));
+
+  // Last payment date per student (any month)
+  const lastPayments = leadIds.length
+    ? await db.payment.groupBy({
+        by: ["leadId"],
+        where: { leadId: { in: leadIds } },
         _max: { paidAt: true },
       })
     : [];
   const lastPaymentMap = new Map(lastPayments.map((p) => [p.leadId, p._max.paidAt]));
 
-  const debtors = unpaid.map((s) => ({
-    id: s.id,
-    fullName: s.fullName,
-    phone: s.phone,
-    group: s.group?.name || null,
-    course: s.course?.name || null,
-    courseColor: s.course?.color || null,
-    expected: Number(s.course?.price || 0),
-    lastPaymentAt: lastPaymentMap.get(s.id) || null,
-  }));
+  const debtors = students
+    .map((s) => {
+      const required = Number(s.course?.price ?? 0);
+      const paid = paidMap.get(s.id) ?? 0;
+      const debt = required - paid;
+      return {
+        id: s.id,
+        fullName: s.fullName,
+        phone: s.phone,
+        group: s.group?.name ?? null,
+        course: s.course?.name ?? null,
+        courseColor: s.course?.color ?? null,
+        required,
+        paid,
+        debt,
+        lastPaymentAt: lastPaymentMap.get(s.id) ?? null,
+      };
+    })
+    .filter((s) => s.debt > 0);
 
-  const totalExpected = debtors.reduce((a, d) => a + d.expected, 0);
+  const totalDebt = debtors.reduce((a, d) => a + d.debt, 0);
 
-  return NextResponse.json({ month, debtors, totalExpected, count: debtors.length });
+  return NextResponse.json({ month, debtors, totalDebt, count: debtors.length });
 }

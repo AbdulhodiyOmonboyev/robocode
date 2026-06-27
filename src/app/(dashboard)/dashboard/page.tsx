@@ -55,7 +55,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6">
+      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-32 bg-white dark:bg-gray-900 rounded-2xl animate-pulse" />
@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
   return (
     <div
-      className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-6"
+      className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-5 sm:space-y-6"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
       {/* Header */}

@@ -22,7 +22,7 @@ export default function CashflowPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl h-24 animate-pulse" />)}
         </div>
@@ -32,7 +32,7 @@ export default function CashflowPage() {
   }
   if (!data || !data.months) {
     return (
-      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6">
+      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6">
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm py-20 text-center text-[13px] text-gray-400">
           Ma&apos;lumot yo&apos;q
         </div>
@@ -80,7 +80,7 @@ export default function CashflowPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Header */}
       <div>

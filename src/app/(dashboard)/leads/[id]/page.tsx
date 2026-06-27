@@ -196,7 +196,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6">
+      <div className="max-w-6xl mx-auto space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
       {dialog}
 
       {/* Profile card */}
@@ -541,5 +542,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
     </div>
+  </div>
   );
 }

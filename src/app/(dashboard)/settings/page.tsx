@@ -259,7 +259,8 @@ export default function SettingsPage() {
   const purpleBtn = "bg-[#5E2CA5] hover:bg-[#4e2488] text-white shadow-sm";
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
       {dialog}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sozlamalar</h1>
@@ -626,6 +627,7 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
 

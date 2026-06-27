@@ -137,7 +137,7 @@ export default function KanbanPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6" style={{ fontFamily: "'Inter', sans-serif" }}>
         <div className="flex gap-4 overflow-x-auto pb-4">
           {[1, 2, 3, 4, 5].map(s => (
             <div key={s} className="flex-shrink-0 w-72 h-[480px] bg-gray-100 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
@@ -148,7 +148,7 @@ export default function KanbanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">

@@ -69,7 +69,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-6">
+      <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profil</h1>
         <p className="text-sm text-gray-500 mt-0.5">Shaxsiy ma&apos;lumotlar va xavfsizlik sozlamalari</p>
@@ -152,5 +153,6 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
     </div>
+  </div>
   );
 }

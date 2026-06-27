@@ -3,9 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Search, GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn, getInitials, formatDate, formatPhone, phoneToTel } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
+import { getInitials, formatDate, formatPhone, phoneToTel } from "@/lib/utils";
 
 const BRAND = "#5E2CA5";
+const PAGE_SIZE = 20;
 
 interface Student {
   id: string; fullName: string; phone: string;
@@ -14,52 +16,93 @@ interface Student {
   group: { id: string; name: string } | null;
 }
 
+interface CourseOpt { id: string; name: string; color: string | null }
+interface GroupOpt { id: string; name: string; course: { id: string } | null }
+
 const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap";
+const selectCls = "px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition";
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [total, setTotal] = useState(0);
-  const [pages, setPages] = useState(1);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [serverTotal, setServerTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [courseId, setCourseId] = useState("");
+  const [groupId, setGroupId] = useState("");
+  const [courses, setCourses] = useState<CourseOpt[]>([]);
+  const [groups, setGroups] = useState<GroupOpt[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/courses").then(r => r.json()).then(d => setCourses(Array.isArray(d) ? d : []));
+    fetch("/api/groups").then(r => r.json()).then(d => setGroups(Array.isArray(d) ? d : []));
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ status: "ENROLLED", page: String(page), limit: "20" });
+    const params = new URLSearchParams({ status: "ENROLLED", page: String(page), limit: String(PAGE_SIZE) });
     if (search) params.set("search", search);
+    if (courseId) params.set("courseId", courseId);
+    // groupId isn't supported server-side — fetch a wide page and filter client-side
+    if (groupId) { params.set("page", "1"); params.set("limit", "1000"); }
     const res = await fetch(`/api/leads?${params}`);
     if (res.ok) {
       const data = await res.json();
-      setStudents(data.leads || []);
-      setTotal(data.total || 0);
-      setPages(data.pages || 1);
+      setAllStudents(data.leads || []);
+      setServerTotal(data.total || 0);
     }
     setLoading(false);
-  }, [search, page]);
+  }, [search, courseId, groupId, page]);
 
   useEffect(() => {
     const t = setTimeout(load, 300);
     return () => clearTimeout(t);
   }, [load]);
 
+  useEffect(() => { setPage(1); }, [search, courseId, groupId]);
+
+  const filtered = groupId ? allStudents.filter(s => s.group?.id === groupId) : allStudents;
+  const total = groupId ? filtered.length : serverTotal;
+  const pages = groupId ? Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)) : Math.max(1, Math.ceil(serverTotal / PAGE_SIZE));
+  const students = groupId ? filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) : filtered;
+
+  const visibleGroups = courseId ? groups.filter(g => g.course?.id === courseId) : groups;
+
   return (
-    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">O&apos;quvchilar</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Ro&apos;yxatga olingan o&apos;quvchilar</p>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Ism yoki telefon..."
-            className="pl-9 pr-4 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 w-60 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
-          />
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Ism yoki telefon..."
+              className="w-full pl-9 pr-4 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
+            />
+          </div>
+          <select
+            value={courseId}
+            onChange={e => { setCourseId(e.target.value); setGroupId(""); }}
+            className={selectCls}
+          >
+            <option value="">Barcha kurslar</option>
+            {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <select
+            value={groupId}
+            onChange={e => setGroupId(e.target.value)}
+            className={selectCls}
+          >
+            <option value="">Barcha guruhlar</option>
+            {visibleGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
         </div>
       </div>
 
@@ -77,15 +120,18 @@ export default function StudentsPage() {
       </div>
 
       {/* Table card */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="py-16 text-center text-[13px] text-gray-400 animate-pulse">Yuklanmoqda...</div>
-        ) : students.length === 0 ? (
-          <div className="py-16 text-center">
-            <GraduationCap className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-[13px] text-gray-400">O&apos;quvchi topilmadi</p>
-          </div>
-        ) : (
+      {loading ? (
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm py-16 text-center text-[13px] text-gray-400 animate-pulse">
+          Yuklanmoqda...
+        </div>
+      ) : students.length === 0 ? (
+        <EmptyState
+          icon={GraduationCap}
+          title="O'quvchi topilmadi"
+          description={search || courseId || groupId ? "Qidiruv yoki filtrlarni o'zgartirib ko'ring" : "Hali ro'yxatga olingan o'quvchi yo'q"}
+        />
+      ) : (
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -162,34 +208,34 @@ export default function StudentsPage() {
               </tbody>
             </table>
           </div>
-        )}
 
-        {/* Pagination */}
-        {pages > 1 && (
-          <div className="px-5 py-3 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
-            <span className="text-[13px] text-gray-400">
-              {total} ta natijadan {((page - 1) * 20) + 1}–{Math.min(page * 20, total)} ko&apos;rsatilmoqda
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setPage(p => p - 1)}
-                disabled={page <= 1}
-                className="p-2 rounded-xl border border-gray-200 dark:border-white/10 disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4 text-gray-500" />
-              </button>
-              <span className="text-[13px] text-gray-500 px-1">{page} / {pages}</span>
-              <button
-                onClick={() => setPage(p => p + 1)}
-                disabled={page >= pages}
-                className="p-2 rounded-xl border border-gray-200 dark:border-white/10 disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-              >
-                <ChevronRight className="w-4 h-4 text-gray-500" />
-              </button>
+          {/* Pagination */}
+          {pages > 1 && (
+            <div className="px-5 py-3 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
+              <span className="text-[13px] text-gray-400">
+                {total} ta natijadan {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, total)} ko&apos;rsatilmoqda
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page <= 1}
+                  className="p-2 rounded-xl border border-gray-200 dark:border-white/10 disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4 text-gray-500" />
+                </button>
+                <span className="text-[13px] text-gray-500 px-1">{page} / {pages}</span>
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page >= pages}
+                  className="p-2 rounded-xl border border-gray-200 dark:border-white/10 disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

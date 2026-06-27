@@ -110,7 +110,7 @@ export default function ExamsPage() {
   if (selected) return <ScoreEntry exam={selected} onBack={() => { setSelected(null); load(); }} dialog={dialog} />;
 
   return (
-    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
       {dialog}
 
       {/* Header */}
@@ -307,11 +307,11 @@ function ScoreEntry({ exam, onBack, dialog }: { exam: Exam; onBack: () => void; 
   const unscored = students.filter(s => s.score === null || s.score === undefined);
 
   return (
-    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-6 space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
       {dialog}
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}

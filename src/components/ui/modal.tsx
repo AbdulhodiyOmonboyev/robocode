@@ -22,7 +22,7 @@ export function Modal({ onClose, title, subtitle, children, footer, maxWidth = "
     >
       <div
         className={cn(
-          "bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto animate-modal-content",
+          "bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto animate-modal-content",
           maxWidth
         )}
         style={{ fontFamily: "'Inter', sans-serif" }}
