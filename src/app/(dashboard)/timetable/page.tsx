@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Download, LayoutGrid, DoorOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { WEEKDAYS } from "@/lib/constants";
@@ -11,6 +11,7 @@ const BRAND = "#5E2CA5";
 interface Group {
   id: string; name: string; days: string | null; timeFrom: string | null; timeTo: string | null;
   room: string | null; course: { name: string; color: string | null } | null; teacher: { fullName: string } | null;
+  _count?: { leads: number };
 }
 
 const GRID_DAYS = WEEKDAYS.filter((d) => d.value !== "Sun");
@@ -18,6 +19,19 @@ const GRID_DAYS = WEEKDAYS.filter((d) => d.value !== "Sun");
 const DAY_NAMES: Record<string, string> = {
   Mon: "Dushanba", Tue: "Seshanba", Wed: "Chorshanba", Thu: "Payshanba", Fri: "Juma", Sat: "Shanba", Sun: "Yakshanba",
 };
+
+const ODD_DAYS = ["Mon", "Wed", "Fri"];
+const EVEN_DAYS = ["Tue", "Thu", "Sat"];
+
+type DayTab = { key: string; label: string; days: string[] };
+
+const DAY_TABS: DayTab[] = [
+  { key: "odd", label: "Toq kunlar", days: ODD_DAYS },
+  { key: "even", label: "Juft kunlar", days: EVEN_DAYS },
+  ...GRID_DAYS.map((d) => ({ key: d.value, label: DAY_NAMES[d.value], days: [d.value] })),
+];
+
+type ViewMode = "group" | "room";
 
 function hexAlpha(hex: string, alpha: string) {
   return hex.startsWith("#") ? `${hex}${alpha}` : hex;
@@ -35,11 +49,39 @@ function getWeekRange(offset: number) {
   return `${fmt(monday)} – ${fmt(saturday)}`;
 }
 
+function groupDays(g: Group): string[] {
+  return (g.days || "").split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function lessonLabel(g: Group): string {
+  const parts = [g.course?.name, g.teacher?.fullName, `${g.timeFrom || ""}${g.timeTo ? `-${g.timeTo}` : ""}`];
+  const count = g._count?.leads ?? 0;
+  parts.push(`${count} o'quvchi`);
+  return `${g.name}: ${parts.filter(Boolean).join(", ")}`;
+}
+
+function csvEscape(cell: string): string {
+  return `"${cell.replace(/"/g, '""')}"`;
+}
+
+function downloadCSV(filename: string, rows: string[][]) {
+  const csv = "﻿" + rows.map((r) => r.map(csvEscape).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function TimetablePage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupFilter, setGroupFilter] = useState("");
   const [weekOffset, setWeekOffset] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>("group");
+  const [dayTab, setDayTab] = useState<string>("odd");
 
   useEffect(() => {
     fetch("/api/groups?limit=500").then((r) => r.json()).then((d) => { setGroups(Array.isArray(d?.groups) ? d.groups : []); setLoading(false); });
@@ -52,7 +94,7 @@ export default function TimetablePage() {
 
   const byDay = (dayVal: string) =>
     filteredGroups
-      .filter((g) => (g.days || "").split(",").map((s) => s.trim()).includes(dayVal))
+      .filter((g) => groupDays(g).includes(dayVal))
       .sort((a, b) => (a.timeFrom || "").localeCompare(b.timeFrom || ""));
 
   const timeSlots = useMemo(() => {
@@ -61,10 +103,43 @@ export default function TimetablePage() {
     return Array.from(set).sort();
   }, [filteredGroups]);
 
+  const rooms = useMemo(() => {
+    const set = new Set<string>();
+    filteredGroups.forEach((g) => { if (g.room) set.add(g.room); });
+    return Array.from(set).sort();
+  }, [filteredGroups]);
+
+  const activeDayTab = DAY_TABS.find((t) => t.key === dayTab) || DAY_TABS[0];
+
+  const byRoom = (room: string, time: string) =>
+    filteredGroups.filter(
+      (g) => g.room === room && g.timeFrom === time && groupDays(g).some((d) => activeDayTab.days.includes(d))
+    );
+
   const groupOptions = [
     { value: "", label: "Barcha guruhlar" },
     ...groups.map((g) => ({ value: g.id, label: g.name })),
   ];
+
+  const handleExport = () => {
+    if (viewMode === "group") {
+      const header = ["Vaqt", ...GRID_DAYS.map((d) => DAY_NAMES[d.value])];
+      const rowsCsv = timeSlots.map((time) => [
+        time,
+        ...GRID_DAYS.map((d) =>
+          byDay(d.value).filter((g) => g.timeFrom === time).map(lessonLabel).join(" | ")
+        ),
+      ]);
+      downloadCSV("dars-jadvali-guruh.csv", [header, ...rowsCsv]);
+    } else {
+      const header = ["Vaqt", ...rooms];
+      const rowsCsv = timeSlots.map((time) => [
+        time,
+        ...rooms.map((room) => byRoom(room, time).map(lessonLabel).join(" | ")),
+      ]);
+      downloadCSV(`dars-jadvali-xona-${activeDayTab.key}.csv`, [header, ...rowsCsv]);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -89,12 +164,34 @@ export default function TimetablePage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center rounded-xl bg-gray-100 dark:bg-white/5 p-1">
+            <button
+              onClick={() => setViewMode("group")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors"
+              style={viewMode === "group" ? { backgroundColor: BRAND, color: "#fff" } : { color: "#6b7280" }}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" /> Guruh
+            </button>
+            <button
+              onClick={() => setViewMode("room")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors"
+              style={viewMode === "room" ? { backgroundColor: BRAND, color: "#fff" } : { color: "#6b7280" }}
+            >
+              <DoorOpen className="w-3.5 h-3.5" /> Xona
+            </button>
+          </div>
           <Select
             value={groupFilter}
             onChange={(e) => setGroupFilter(e.target.value)}
             options={groupOptions}
             className="w-48"
           />
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150"
+          >
+            <Download className="w-4 h-4" /> Excelga eksport
+          </button>
           <button
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium text-white shadow-sm transition-colors duration-150"
             style={{ backgroundColor: BRAND }}
@@ -106,9 +203,28 @@ export default function TimetablePage() {
         </div>
       </div>
 
+      {viewMode === "room" && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {DAY_TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setDayTab(t.key)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+              style={
+                dayTab === t.key
+                  ? { backgroundColor: hexAlpha(BRAND, "17"), borderColor: BRAND, color: BRAND }
+                  : { borderColor: "transparent", color: "#6b7280" }
+              }
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <div className="text-center text-gray-400 py-20">Yuklanmoqda...</div>
-      ) : (
+      ) : viewMode === "group" ? (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse min-w-[840px]">
@@ -165,6 +281,78 @@ export default function TimetablePage() {
                                         {g.timeFrom}{g.timeTo ? `–${g.timeTo}` : ""}
                                       </p>
                                     )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ) : (
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse min-w-[840px]">
+              <thead>
+                <tr>
+                  <th className="w-32 p-3 text-left text-xs font-medium text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-white/5">
+                    Xona
+                  </th>
+                  {timeSlots.map((time) => (
+                    <th
+                      key={time}
+                      className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 border-b border-l border-gray-100 dark:border-white/5 uppercase tracking-wide whitespace-nowrap"
+                    >
+                      {time}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rooms.length === 0 || timeSlots.length === 0 ? (
+                  <tr>
+                    <td colSpan={timeSlots.length + 1} className="p-12 text-center text-sm text-gray-400">
+                      Xonalar topilmadi
+                    </td>
+                  </tr>
+                ) : (
+                  rooms.map((room) => (
+                    <tr key={room}>
+                      <td className="p-3 text-xs font-semibold text-gray-600 dark:text-gray-300 align-top border-b border-gray-100 dark:border-white/5 whitespace-nowrap">
+                        {room}
+                      </td>
+                      {timeSlots.map((time) => {
+                        const lessons = byRoom(room, time);
+                        return (
+                          <td
+                            key={time}
+                            className="p-2 align-top border-b border-l border-gray-100 dark:border-white/5"
+                          >
+                            <div className="space-y-1.5 min-w-[160px]">
+                              {lessons.map((g) => {
+                                const color = g.course?.color || "#6366f1";
+                                const count = g._count?.leads ?? 0;
+                                return (
+                                  <div
+                                    key={g.id}
+                                    className="rounded-lg px-2.5 py-1.5 text-xs"
+                                    style={{ backgroundColor: hexAlpha(color, "17"), borderLeft: `3px solid ${color}` }}
+                                  >
+                                    <p className="font-semibold truncate" style={{ color }}>
+                                      {g.course?.name || g.name}
+                                    </p>
+                                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                                      {g.teacher?.fullName || "—"}
+                                    </p>
+                                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                      {g.timeFrom}{g.timeTo ? `–${g.timeTo}` : ""} · {count} o&apos;quvchi
+                                    </p>
                                   </div>
                                 );
                               })}

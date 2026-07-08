@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Plus, Filter, Download, Phone, MessageCircle, Edit, Trash2,
-  LayoutGrid, ChevronLeft, ChevronRight, Search, X, Users,
+  LayoutGrid, ChevronLeft, ChevronRight, ChevronDown, Search, X, Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/ui/confirm";
@@ -208,17 +208,26 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* Stage filter chips */}
+      {/* Status/stage filter + toggles */}
       <div className="flex items-center gap-2 flex-wrap">
-        <button onClick={() => setFilter("stageId", "")} className={chipCls(!filters.stageId)}>
-          Barchasi
-          {!filters.stageId && <span className="ml-1.5 opacity-70 text-[11px]">{total}</span>}
-        </button>
-        {stages.map((s) => (
-          <button key={s.id} onClick={() => setFilter("stageId", filters.stageId === s.id ? "" : s.id)} className={chipCls(filters.stageId === s.id)}>
-            {s.name}
-          </button>
-        ))}
+        {stages.length > 0 && (
+          <div className="relative">
+            <select
+              value={filters.stageId}
+              onChange={e => setFilter("stageId", e.target.value)}
+              className={cn(
+                "pl-3.5 pr-8 py-1.5 rounded-full text-[13px] font-medium appearance-none cursor-pointer transition-colors duration-150",
+                filters.stageId
+                  ? "bg-[#5E2CA5] text-white"
+                  : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5"
+              )}
+            >
+              <option value="">Holat: Barchasi</option>
+              {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <ChevronDown className={cn("w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none", filters.stageId ? "text-white/80" : "text-gray-400")} />
+          </div>
+        )}
         <button onClick={() => setFilter("frozen", filters.frozen ? "" : "1")} className={chipCls(!!filters.frozen)}>
           ❄️ Muzlatilgan
         </button>
@@ -244,9 +253,13 @@ export default function LeadsPage() {
               <option value="unassigned">Tayinlanmagan</option>
               {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
             </select>
-            <div className="flex gap-2">
-              <input type="date" value={filters.dateFrom} onChange={e => setFilter("dateFrom", e.target.value)} className={inputCls} />
-              <input type="date" value={filters.dateTo} onChange={e => setFilter("dateTo", e.target.value)} className={inputCls} />
+            <div>
+              <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1.5">Sana oralig&apos;i: Dan – Gacha</label>
+              <div className="flex items-center gap-1.5">
+                <input type="date" value={filters.dateFrom} onChange={e => setFilter("dateFrom", e.target.value)} className={cn(inputCls, "min-w-0")} />
+                <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">–</span>
+                <input type="date" value={filters.dateTo} onChange={e => setFilter("dateTo", e.target.value)} className={cn(inputCls, "min-w-0")} />
+              </div>
             </div>
           </div>
           {(filters.courseId || filters.source || filters.assignedToId || filters.dateFrom || filters.dateTo) && (

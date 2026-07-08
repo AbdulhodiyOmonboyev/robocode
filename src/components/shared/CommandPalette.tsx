@@ -12,6 +12,19 @@ import {
 } from "lucide-react";
 import { cn, getInitials, formatPhone } from "@/lib/utils";
 
+interface GroupResult {
+  id: string;
+  name: string;
+  course?: { name: string } | null;
+  teacher?: { fullName: string } | null;
+}
+
+interface TeacherResult {
+  id: string;
+  fullName: string;
+  subject?: string;
+}
+
 const BRAND = "#5E2CA5";
 
 interface PageEntry { href: string; label: string; icon: LucideIcon; keywords?: string }
@@ -48,18 +61,22 @@ interface LeadResult {
   id: string;
   fullName: string;
   phone: string;
+  status: string;
   course?: { name: string } | null;
 }
 
+type EntityItem = { type: "lead" | "student" | "group" | "teacher"; key: string; href: string; label: string; sub: string };
 type ResultItem =
   | { type: "page"; key: string; href: string; label: string; icon: LucideIcon }
-  | { type: "lead"; key: string; href: string; label: string; sub: string; phone: string };
+  | EntityItem;
 
 export default function CommandPalette() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [leads, setLeads] = useState<LeadResult[]>([]);
+  const [groups, setGroups] = useState<GroupResult[]>([]);
+  const [teachers, setTeachers] = useState<TeacherResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -70,6 +87,13 @@ export default function CommandPalette() {
     setLeads([]);
     setActiveIndex(0);
   }, []);
+
+  // Lazily load groups + teachers once (small, mostly-static lists) on first open
+  useEffect(() => {
+    if (!open || groups.length || teachers.length) return;
+    fetch("/api/groups?limit=500").then((r) => r.json()).then((d) => setGroups(Array.isArray(d?.groups) ? d.groups : [])).catch(() => {});
+    fetch("/api/teachers").then((r) => r.json()).then((d) => setTeachers(Array.isArray(d) ? d : [])).catch(() => {});
+  }, [open, groups.length, teachers.length]);
 
   // Global Ctrl+K / Cmd+K shortcut + Escape
   useEffect(() => {
@@ -111,25 +135,57 @@ export default function CommandPalette() {
     return () => clearTimeout(t);
   }, [query, open]);
 
+  const q = query.trim().toLowerCase();
+
   const pageMatches = PAGES.filter((p) => {
-    if (!query.trim()) return true;
-    const q = query.toLowerCase();
+    if (!q) return true;
     return p.label.toLowerCase().includes(q) || p.keywords?.toLowerCase().includes(q);
-  }).slice(0, query.trim() ? 8 : 6);
+  }).slice(0, q ? 8 : 6);
 
-  const results: ResultItem[] = [
-    ...pageMatches.map((p) => ({ type: "page" as const, key: `page-${p.href}`, href: p.href, label: p.label, icon: p.icon })),
-    ...leads.map((l) => ({
-      type: "lead" as const,
-      key: `lead-${l.id}`,
-      href: `/leads/${l.id}`,
-      label: l.fullName,
-      sub: l.course?.name || formatPhone(l.phone),
-      phone: l.phone,
-    })),
-  ];
+  const leadMatches = leads.filter((l) => l.status !== "ENROLLED");
+  const studentMatches = leads.filter((l) => l.status === "ENROLLED");
 
-  useEffect(() => { setActiveIndex(0); }, [query, leads.length]);
+  const groupMatches = q
+    ? groups.filter((g) => g.name.toLowerCase().includes(q) || g.course?.name.toLowerCase().includes(q)).slice(0, 6)
+    : [];
+
+  const teacherMatches = q
+    ? teachers.filter((t) => t.fullName.toLowerCase().includes(q) || t.subject?.toLowerCase().includes(q)).slice(0, 6)
+    : [];
+
+  const pageItems: ResultItem[] = pageMatches.map((p) => ({ type: "page" as const, key: `page-${p.href}`, href: p.href, label: p.label, icon: p.icon }));
+  const leadItems: EntityItem[] = leadMatches.map((l) => ({
+    type: "lead" as const,
+    key: `lead-${l.id}`,
+    href: `/leads/${l.id}`,
+    label: l.fullName,
+    sub: l.course?.name || formatPhone(l.phone),
+  }));
+  const studentItems: EntityItem[] = studentMatches.map((l) => ({
+    type: "student" as const,
+    key: `student-${l.id}`,
+    href: `/leads/${l.id}`,
+    label: l.fullName,
+    sub: l.course?.name || formatPhone(l.phone),
+  }));
+  const groupItems: EntityItem[] = groupMatches.map((g) => ({
+    type: "group" as const,
+    key: `group-${g.id}`,
+    href: `/groups`,
+    label: g.name,
+    sub: g.course?.name || g.teacher?.fullName || "Guruh",
+  }));
+  const teacherItems: EntityItem[] = teacherMatches.map((t) => ({
+    type: "teacher" as const,
+    key: `teacher-${t.id}`,
+    href: `/teachers`,
+    label: t.fullName,
+    sub: t.subject || "O'qituvchi",
+  }));
+
+  const results: ResultItem[] = [...pageItems, ...leadItems, ...studentItems, ...groupItems, ...teacherItems];
+
+  useEffect(() => { setActiveIndex(0); }, [query, leads.length, groups.length, teachers.length]);
 
   const navigateTo = (href: string) => {
     router.push(href);
@@ -170,7 +226,7 @@ export default function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Sahifa yoki lid qidirish..."
+            placeholder="Lid, talaba, guruh, o'qituvchi yoki sahifa qidirish..."
             className="flex-1 text-[14px] bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400"
           />
           {searching && (
@@ -226,44 +282,65 @@ export default function CommandPalette() {
                 );
               })}
 
-              {leads.length > 0 && (
-                <p className="px-4 pt-3 pb-1 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-                  Lidlar
-                </p>
-              )}
-              {leads.map((l, i) => {
-                const idx = pageMatches.length + i;
-                const isActive = idx === activeIndex;
-                return (
-                  <button
-                    key={`lead-${l.id}`}
-                    onMouseEnter={() => setActiveIndex(idx)}
-                    onClick={() => navigateTo(`/leads/${l.id}`)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
-                      isActive ? "bg-[#5E2CA5]/8 dark:bg-[#5E2CA5]/15" : "hover:bg-gray-50 dark:hover:bg-white/5"
-                    )}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                      style={{ backgroundColor: BRAND }}
-                    >
-                      {getInitials(l.fullName)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className={cn(
-                        "text-[13px] font-medium truncate",
-                        isActive ? "text-[#5E2CA5] dark:text-purple-300" : "text-gray-900 dark:text-white"
-                      )}>
-                        {l.fullName}
+              {(() => {
+                const base = pageItems.length;
+                const sections: { title: string; items: EntityItem[]; offset: number }[] = [
+                  { title: "Lidlar", items: leadItems, offset: base },
+                  { title: "Talabalar", items: studentItems, offset: base + leadItems.length },
+                  { title: "Guruhlar", items: groupItems, offset: base + leadItems.length + studentItems.length },
+                  { title: "O'qituvchilar", items: teacherItems, offset: base + leadItems.length + studentItems.length + groupItems.length },
+                ];
+                return sections.map((section) =>
+                  section.items.length === 0 ? null : (
+                    <div key={section.title}>
+                      <p className="px-4 pt-3 pb-1 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+                        {section.title}
                       </p>
-                      <p className="text-[11px] text-gray-400 truncate">
-                        {l.course?.name || formatPhone(l.phone)}
-                      </p>
+                      {section.items.map((item, i) => {
+                        const idx = section.offset + i;
+                        const isActive = idx === activeIndex;
+                        const isPerson = item.type !== "group";
+                        return (
+                          <button
+                            key={item.key}
+                            onMouseEnter={() => setActiveIndex(idx)}
+                            onClick={() => navigateTo(item.href)}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                              isActive ? "bg-[#5E2CA5]/8 dark:bg-[#5E2CA5]/15" : "hover:bg-gray-50 dark:hover:bg-white/5"
+                            )}
+                          >
+                            {isPerson ? (
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                                style={{ backgroundColor: BRAND }}
+                              >
+                                {getInitials(item.label)}
+                              </div>
+                            ) : (
+                              <div className={cn(
+                                "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                                isActive ? "bg-[#5E2CA5] text-white" : "bg-gray-100 dark:bg-white/8 text-gray-500 dark:text-gray-400"
+                              )}>
+                                <GraduationCap className="w-4 h-4" />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className={cn(
+                                "text-[13px] font-medium truncate",
+                                isActive ? "text-[#5E2CA5] dark:text-purple-300" : "text-gray-900 dark:text-white"
+                              )}>
+                                {item.label}
+                              </p>
+                              <p className="text-[11px] text-gray-400 truncate">{item.sub}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
-                  </button>
+                  )
                 );
-              })}
+              })()}
             </>
           )}
         </div>

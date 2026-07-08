@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getInitials, formatDate, formatPhone, phoneToTel } from "@/lib/utils";
@@ -23,6 +24,7 @@ const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:tex
 const selectCls = "px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition";
 
 export default function StudentsPage() {
+  const router = useRouter();
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [serverTotal, setServerTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -146,7 +148,11 @@ export default function StudentsPage() {
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-white/5">
                 {students.map(s => (
-                  <tr key={s.id} className="hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors duration-100">
+                  <tr
+                    key={s.id}
+                    onClick={() => router.push(`/students/${s.id}`)}
+                    className="hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors duration-100 cursor-pointer"
+                  >
 
                     {/* O'quvchi + avatar */}
                     <td className="px-4 py-3">
@@ -158,7 +164,8 @@ export default function StudentsPage() {
                           {getInitials(s.fullName)}
                         </div>
                         <Link
-                          href={`/leads/${s.id}`}
+                          href={`/students/${s.id}`}
+                          onClick={e => e.stopPropagation()}
                           className="text-[13px] font-medium text-gray-900 dark:text-white hover:text-[#5E2CA5] transition-colors truncate"
                         >
                           {s.fullName}
@@ -168,7 +175,7 @@ export default function StudentsPage() {
 
                     {/* Telefon */}
                     <td className="px-4 py-3">
-                      <a href={phoneToTel(s.phone)} className="text-[13px] text-gray-500 dark:text-gray-400 font-mono hover:text-[#5E2CA5] transition-colors">
+                      <a href={phoneToTel(s.phone)} onClick={e => e.stopPropagation()} className="text-[13px] text-gray-500 dark:text-gray-400 font-mono hover:text-[#5E2CA5] transition-colors">
                         {formatPhone(s.phone)}
                       </a>
                     </td>
