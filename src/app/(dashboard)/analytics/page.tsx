@@ -36,7 +36,19 @@ export default function AnalyticsPage() {
     return data.monthly.slice(-n);
   }, [data, period]);
 
-  if (loading) return <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 flex items-center justify-center text-[13px] text-gray-400 animate-pulse">Yuklanmoqda...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
+      <div className="h-8 w-40 bg-white dark:bg-gray-900 rounded-xl animate-pulse" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-20 bg-white dark:bg-gray-900 rounded-2xl animate-pulse" />)}
+      </div>
+      <div className="h-64 bg-white dark:bg-gray-900 rounded-2xl animate-pulse" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="h-52 bg-white dark:bg-gray-900 rounded-2xl animate-pulse" />
+        <div className="h-52 bg-white dark:bg-gray-900 rounded-2xl animate-pulse" />
+      </div>
+    </div>
+  );
   if (!data) return <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 flex items-center justify-center text-[13px] text-gray-400">Ma&apos;lumot yo&apos;q</div>;
 
   const maxRev = Math.max(1, ...monthly.map((m) => m.revenue));

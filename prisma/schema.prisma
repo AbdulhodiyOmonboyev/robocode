@@ -186,6 +186,8 @@ model Lead {
   @@index([phone])
   @@index([assignedToId])
   @@index([createdAt])
+  @@index([courseId])
+  @@index([isArchived])
 }
 
 model Reminder {
@@ -215,6 +217,7 @@ model Reminder {
   @@index([remindAt])
   @@index([status])
   @@index([userId])
+  @@index([leadId])
 }
 
 model Activity {
@@ -360,6 +363,7 @@ model Attendance {
 
   @@unique([groupId, leadId, date])
   @@index([groupId, date])
+  @@index([leadId, date])
 }
 
 model Payment {
@@ -383,6 +387,7 @@ model Payment {
   @@index([leadId])
   @@index([paidAt])
   @@index([forMonth])
+  @@index([createdAt])
 }
 
 model Stage {

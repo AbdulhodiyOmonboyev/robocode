@@ -133,6 +133,19 @@ const statements: string[] = [
     CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
   )`,
   `CREATE INDEX IF NOT EXISTS "AuditLog_createdAt_idx" ON "AuditLog"("createdAt")`,
+
+  // ---- Part 5: performance indexes ----
+  `CREATE INDEX IF NOT EXISTS "Lead_status_idx" ON "Lead"("status")`,
+  `CREATE INDEX IF NOT EXISTS "Lead_createdAt_idx" ON "Lead"("createdAt")`,
+  `CREATE INDEX IF NOT EXISTS "Lead_phone_idx" ON "Lead"("phone")`,
+  `CREATE INDEX IF NOT EXISTS "Lead_assignedToId_idx" ON "Lead"("assignedToId")`,
+  `CREATE INDEX IF NOT EXISTS "Lead_courseId_idx" ON "Lead"("courseId")`,
+  `CREATE INDEX IF NOT EXISTS "Lead_isArchived_idx" ON "Lead"("isArchived")`,
+  `CREATE INDEX IF NOT EXISTS "Payment_leadId_idx" ON "Payment"("leadId")`,
+  `CREATE INDEX IF NOT EXISTS "Payment_createdAt_idx" ON "Payment"("createdAt")`,
+  `CREATE INDEX IF NOT EXISTS "Attendance_leadId_date_idx" ON "Attendance"("leadId","date")`,
+  `CREATE INDEX IF NOT EXISTS "Activity_leadId_idx" ON "Activity"("leadId")`,
+  `CREATE INDEX IF NOT EXISTS "Reminder_leadId_idx" ON "Reminder"("leadId")`,
 ];
 
 export async function POST() {

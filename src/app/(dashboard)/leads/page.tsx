@@ -58,6 +58,18 @@ export default function LeadsPage() {
     status: "", stageId: "", courseId: "", source: "", assignedToId: "",
     dateFrom: "", dateTo: "", timePreference: "", archived: "", frozen: "", page: 1,
   });
+  const [inputSearch, setInputSearch] = useState(searchParams.get("search") || "");
+
+  // Debounce search input → avoid fetching on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setFilters(f => {
+        if (f.search === inputSearch) return f;
+        return { ...f, search: inputSearch, page: 1 };
+      });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [inputSearch]);
 
   const loadLeads = useCallback(async () => {
     setLoading(true);
@@ -76,7 +88,7 @@ export default function LeadsPage() {
     fetch("/api/courses").then(r => r.json()).then(setCourses);
     fetch("/api/users").then(r => r.json()).then(setUsers);
     fetch("/api/stages").then(r => r.json()).then(setStages);
-    fetch("/api/groups").then(r => r.json()).then(setGroups);
+    fetch("/api/groups?limit=500").then(r => r.json()).then(d => setGroups(Array.isArray(d?.groups) ? d.groups : []));
   }, []);
 
   const assignToGroup = async () => {
@@ -96,7 +108,7 @@ export default function LeadsPage() {
     setShowGroupModal(false); setSelected(new Set());
     setNewGroup({ name: "", courseId: "", teacherId: "", timeFrom: "", timeTo: "", startDate: "" });
     setGroupDays([]); setSelectedGroupId("");
-    fetch("/api/groups").then(r => r.json()).then(setGroups);
+    fetch("/api/groups?limit=500").then(r => r.json()).then(d => setGroups(Array.isArray(d?.groups) ? d.groups : []));
     loadLeads(); setAssigning(false);
   };
 
@@ -168,8 +180,8 @@ export default function LeadsPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
-              value={filters.search}
-              onChange={e => setFilter("search", e.target.value)}
+              value={inputSearch}
+              onChange={e => setInputSearch(e.target.value)}
               placeholder="Ism yoki telefon..."
               className="pl-9 pr-4 py-2 text-[13px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl w-52 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 text-gray-900 dark:text-white placeholder-gray-400 transition"
             />
@@ -423,7 +435,7 @@ export default function LeadsPage() {
         {pages > 1 && (
           <div className="px-5 py-3 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
             <span className="text-[13px] text-gray-400">
-              {total} ta natijadan {((filters.page - 1) * 20) + 1}–{Math.min(filters.page * 20, total)} ko&apos;rsatilmoqda
+              {total} ta natijadan {((filters.page - 1) * 50) + 1}–{Math.min(filters.page * 50, total)} ko&apos;rsatilmoqda
             </span>
             <div className="flex items-center gap-1.5">
               <button

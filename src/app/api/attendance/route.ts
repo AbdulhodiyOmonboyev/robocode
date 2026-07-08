@@ -9,15 +9,36 @@ function toDate(s: string) {
   return new Date(s + "T00:00:00.000Z");
 }
 
-// GET ?groupId=&date=YYYY-MM-DD  -> students of the group + their status for that date
+// GET ?groupId=&month=YYYY-MM  -> monthly journal: { students, journal: { [date]: { [leadId]: status } } }
+// GET ?groupId=&date=YYYY-MM-DD -> students + their status for that single date
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const groupId = searchParams.get("groupId");
+  if (!groupId) return NextResponse.json({ error: "groupId kerak" }, { status: 400 });
+
+  const month = searchParams.get("month");
+  if (month) {
+    const [yr, mn] = month.split("-").map(Number);
+    const from = new Date(`${month}-01T00:00:00.000Z`);
+    const to = new Date(Date.UTC(yr, mn, 0, 23, 59, 59, 999));
+    const [students, records] = await Promise.all([
+      db.lead.findMany({ where: { groupId }, select: { id: true, fullName: true, phone: true }, orderBy: { fullName: "asc" } }),
+      db.attendance.findMany({ where: { groupId, date: { gte: from, lte: to } } }),
+    ]);
+    const journal: Record<string, Record<string, string>> = {};
+    for (const r of records) {
+      const key = r.date.toISOString().slice(0, 10);
+      if (!journal[key]) journal[key] = {};
+      journal[key][r.leadId] = r.status;
+    }
+    return NextResponse.json({ month, students, journal });
+  }
+
   const date = searchParams.get("date");
-  if (!groupId || !date) return NextResponse.json({ error: "groupId va date kerak" }, { status: 400 });
+  if (!date) return NextResponse.json({ error: "date yoki month kerak" }, { status: 400 });
 
   const [students, att] = await Promise.all([
     db.lead.findMany({ where: { groupId }, select: { id: true, fullName: true, phone: true }, orderBy: { fullName: "asc" } }),

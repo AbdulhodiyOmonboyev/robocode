@@ -27,35 +27,53 @@ export async function GET(req: NextRequest) {
   const month = searchParams.get("month"); // YYYY-MM
   const q = searchParams.get("q");
 
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "50");
+  const skip = (page - 1) * limit;
+
   const where: Prisma.PaymentWhereInput = {};
   if (leadId) where.leadId = leadId;
   if (groupId) where.groupId = groupId;
   if (month) where.forMonth = month;
   if (q) where.lead = { OR: [{ fullName: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }] };
 
-  const payments = await db.payment.findMany({
-    where,
-    orderBy: { paidAt: "desc" },
-    take: 300,
-    include: {
-      lead: { select: { id: true, fullName: true, phone: true } },
-      group: { select: { id: true, name: true } },
-      createdBy: { select: { id: true, fullName: true } },
-    },
-  });
-
-  // summary
   const now = new Date();
   const tz = 5 * 3600 * 1000;
   const t = new Date(now.getTime() + tz);
   const monthStr = `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}`;
-  const [allAgg, monthAgg] = await Promise.all([
+
+  const [payments, total, allAgg, monthAgg] = await Promise.all([
+    db.payment.findMany({
+      where,
+      orderBy: { paidAt: "desc" },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        amount: true,
+        discount: true,
+        currency: true,
+        method: true,
+        type: true,
+        forMonth: true,
+        note: true,
+        paidAt: true,
+        lead: { select: { id: true, fullName: true, phone: true } },
+        group: { select: { id: true, name: true } },
+        createdBy: { select: { id: true, fullName: true } },
+      },
+    }),
+    db.payment.count({ where }),
     db.payment.aggregate({ _sum: { amount: true }, _count: true, where }),
     db.payment.aggregate({ _sum: { amount: true }, where: { ...where, forMonth: month || monthStr } }),
   ]);
 
   return NextResponse.json({
     payments,
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit),
     summary: {
       total: Number(allAgg._sum.amount || 0),
       count: allAgg._count,

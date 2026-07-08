@@ -42,7 +42,7 @@ export default function TimetablePage() {
   const [weekOffset, setWeekOffset] = useState(0);
 
   useEffect(() => {
-    fetch("/api/groups").then((r) => r.json()).then((d) => { setGroups(Array.isArray(d) ? d : []); setLoading(false); });
+    fetch("/api/groups?limit=500").then((r) => r.json()).then((d) => { setGroups(Array.isArray(d?.groups) ? d.groups : []); setLoading(false); });
   }, []);
 
   const filteredGroups = useMemo(

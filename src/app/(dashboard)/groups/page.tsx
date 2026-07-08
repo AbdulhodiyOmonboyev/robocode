@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -44,6 +44,9 @@ interface UserOption { id: string; fullName: string; }
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [users, setUsers] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,15 +57,20 @@ export default function GroupsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [members, setMembers] = useState<Record<string, Member[]>>({});
 
-  const load = async () => {
+  const load = useCallback(async (p: number) => {
     setLoading(true);
-    const g = await fetch("/api/groups").then(r => r.json());
-    setGroups(Array.isArray(g) ? g : []);
+    const data = await fetch(`/api/groups?page=${p}&limit=50`).then(r => r.json());
+    setGroups(Array.isArray(data?.groups) ? data.groups : []);
+    setTotal(data?.total || 0);
+    setPages(data?.pages || 1);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
-    load();
+    load(page);
+  }, [load, page]);
+
+  useEffect(() => {
     fetch("/api/courses").then(r => r.json()).then(setCourses);
     fetch("/api/users").then(r => r.json()).then(setUsers);
   }, []);
@@ -79,7 +87,7 @@ export default function GroupsPage() {
       setShowCreate(false);
       setForm({ name: "", courseId: "", teacherId: "", timeFrom: "", timeTo: "", room: "", startDate: "" });
       setDays([]);
-      load();
+      page === 1 ? load(1) : setPage(1);
     } else toast.error("Yaratilmadi");
     setCreating(false);
   };
@@ -89,7 +97,7 @@ export default function GroupsPage() {
   const remove = async (id: string) => {
     if (!(await confirm({ title: "Guruhni o'chirish", message: "Bu guruhni o'chirasizmi? A'zolar guruhdan chiqariladi (lidlar o'chmaydi)." }))) return;
     const res = await fetch("/api/groups/" + id, { method: "DELETE" });
-    if (res.ok) { toast.success("Guruh o'chirildi"); load(); }
+    if (res.ok) { toast.success("Guruh o'chirildi"); load(page); }
     else toast.error("O'chirib bo'lmadi");
   };
 
@@ -113,7 +121,7 @@ export default function GroupsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Guruhlar</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
-            {loading ? "Yuklanmoqda..." : `${groups.length} ta guruh`}
+            {loading ? "Yuklanmoqda..." : `${total} ta guruh`}
           </p>
         </div>
         <button
@@ -284,6 +292,32 @@ export default function GroupsPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && pages > 1 && (
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm px-5 py-3 flex items-center justify-between">
+          <span className="text-[13px] text-gray-400">
+            {total} ta natijadan {((page - 1) * 50) + 1}–{Math.min(page * 50, total)} ko&apos;rsatilmoqda
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setPage(p => p - 1)}
+              disabled={page <= 1}
+              className="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 disabled:opacity-30 text-[13px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              Oldingi
+            </button>
+            <span className="text-[13px] text-gray-500 px-1">{page} / {pages}</span>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={page >= pages}
+              className="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 disabled:opacity-30 text-[13px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              Keyingi
+            </button>
+          </div>
         </div>
       )}
 

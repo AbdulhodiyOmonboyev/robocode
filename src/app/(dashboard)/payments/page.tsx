@@ -43,6 +43,9 @@ export default function PaymentsPage() {
   const [summary, setSummary] = useState<PaymentSummary>({ total: 0, count: 0, monthTotal: 0, month: "" });
   const [q, setQ] = useState("");
   const [month, setMonth] = useState("");
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [presetLead, setPresetLead] = useState<PresetLead | null>(null);
@@ -55,14 +58,20 @@ export default function PaymentsPage() {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (month) params.set("month", month);
+    params.set("page", String(page));
     const res = await fetch("/api/payments?" + params.toString());
     const data = await res.json();
     setPayments(data.payments || []);
     setSummary(data.summary || { total: 0, count: 0, monthTotal: 0 });
+    setTotal(data.total || 0);
+    setPages(data.pages || 1);
     setLoading(false);
-  }, [q, month]);
+  }, [q, month, page]);
 
   useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [load]);
+
+  const setFilterQ = (v: string) => { setQ(v); setPage(1); };
+  const setFilterMonth = (v: string) => { setMonth(v); setPage(1); };
 
   const loadDebtors = useCallback(async () => {
     const res = await fetch(`/api/payments/debtors?month=${debtMonth}`);
@@ -80,9 +89,16 @@ export default function PaymentsPage() {
     else toast.error("O'chirib bo'lmadi (faqat admin)");
   };
 
-  const exportPayments = () => {
-    if (!payments.length) { toast.error("Eksport qilish uchun to'lov yo'q"); return; }
-    exportToCsv("tolovlar", payments.map(p => ({
+  const exportPayments = async () => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (month) params.set("month", month);
+    params.set("limit", "100000");
+    const res = await fetch("/api/payments?" + params.toString());
+    const data = await res.json();
+    const all: Payment[] = data.payments || [];
+    if (!all.length) { toast.error("Eksport qilish uchun to'lov yo'q"); return; }
+    exportToCsv("tolovlar", all.map(p => ({
       "O'quvchi": p.lead?.fullName || "",
       "Telefon": p.lead?.phone || "",
       "Summa": p.amount,
@@ -190,17 +206,17 @@ export default function PaymentsPage() {
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
-                value={q} onChange={e => setQ(e.target.value)}
+                value={q} onChange={e => setFilterQ(e.target.value)}
                 placeholder="O'quvchi ismi yoki telefon..."
                 className="w-full pl-9 pr-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
               />
             </div>
             <input
-              type="month" value={month} onChange={e => setMonth(e.target.value)}
+              type="month" value={month} onChange={e => setFilterMonth(e.target.value)}
               className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
             />
             {month && (
-              <button onClick={() => setMonth("")} className="px-3 py-2 text-[13px] font-medium text-gray-500 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+              <button onClick={() => setFilterMonth("")} className="px-3 py-2 text-[13px] font-medium text-gray-500 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                 Tozalash
               </button>
             )}
@@ -316,6 +332,32 @@ export default function PaymentsPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {pages > 1 && (
+              <div className="px-5 py-3 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
+                <span className="text-[13px] text-gray-400">
+                  {total} ta natijadan {((page - 1) * 50) + 1}–{Math.min(page * 50, total)} ko&apos;rsatilmoqda
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setPage(p => p - 1)}
+                    disabled={page <= 1}
+                    className="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 disabled:opacity-30 text-[13px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    Oldingi
+                  </button>
+                  <span className="text-[13px] text-gray-500 px-1">{page} / {pages}</span>
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={page >= pages}
+                    className="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 disabled:opacity-30 text-[13px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    Keyingi
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}

@@ -50,8 +50,8 @@ export default function AttendancePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/groups").then(r => r.json()).then(d => {
-      const list = Array.isArray(d) ? d : [];
+    fetch("/api/groups?limit=500").then(r => r.json()).then(d => {
+      const list = Array.isArray(d?.groups) ? d.groups : [];
       setGroups(list);
       if (list.length && !groupId) setGroupId(list[0].id);
     });

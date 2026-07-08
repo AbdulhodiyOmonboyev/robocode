@@ -9,7 +9,7 @@ function isDark() {
 }
 
 export function useDarkMode() {
-  const [dark, setDark] = useState(isDark);
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     setDark(isDark());

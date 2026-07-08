@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
 
   const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const limit = parseInt(searchParams.get("limit") || "50");
   const skip = (page - 1) * limit;
 
   const search = searchParams.get("search") || "";
@@ -94,15 +94,24 @@ export async function GET(req: NextRequest) {
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
-      include: {
+      select: {
+        id: true,
+        fullName: true,
+        phone: true,
+        email: true,
+        status: true,
+        source: true,
+        createdAt: true,
+        lastContactedAt: true,
+        enrolledAt: true,
+        stageId: true,
+        timeSlotId: true,
+        preferredDays: true,
         course: { select: { id: true, name: true, color: true } },
         timeSlot: { select: { id: true, label: true } },
         stage: { select: { id: true, name: true, color: true } },
         group: { select: { id: true, name: true } },
         assignedTo: { select: { id: true, fullName: true } },
-        createdBy: { select: { id: true, fullName: true } },
-        tags: { select: { id: true, name: true, color: true } },
-        _count: { select: { reminders: true } },
       },
     }),
     db.lead.count({ where }),

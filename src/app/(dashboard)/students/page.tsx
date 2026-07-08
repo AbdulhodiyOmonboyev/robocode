@@ -35,7 +35,7 @@ export default function StudentsPage() {
 
   useEffect(() => {
     fetch("/api/courses").then(r => r.json()).then(d => setCourses(Array.isArray(d) ? d : []));
-    fetch("/api/groups").then(r => r.json()).then(d => setGroups(Array.isArray(d) ? d : []));
+    fetch("/api/groups?limit=500").then(r => r.json()).then(d => setGroups(Array.isArray(d?.groups) ? d.groups : []));
   }, []);
 
   const load = useCallback(async () => {

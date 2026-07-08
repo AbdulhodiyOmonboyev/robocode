@@ -14,19 +14,36 @@ const createSchema = z.object({
   startDate: z.string().optional().nullable(),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const groups = await db.group.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      course: { select: { id: true, name: true, color: true } },
-      teacher: { select: { id: true, fullName: true } },
-      _count: { select: { leads: true } },
-    },
-  });
-  return NextResponse.json(groups);
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "50");
+  const skip = (page - 1) * limit;
+
+  const [groups, total] = await Promise.all([
+    db.group.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        room: true,
+        days: true,
+        timeFrom: true,
+        timeTo: true,
+        course: { select: { id: true, name: true, color: true } },
+        teacher: { select: { id: true, fullName: true } },
+        _count: { select: { leads: true } },
+      },
+    }),
+    db.group.count(),
+  ]);
+
+  return NextResponse.json({ groups, total, page, limit, pages: Math.ceil(total / limit) });
 }
 
 export async function POST(req: NextRequest) {

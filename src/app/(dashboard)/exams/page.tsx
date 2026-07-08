@@ -89,7 +89,7 @@ export default function ExamsPage() {
   }, []);
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    fetch("/api/groups").then(r => r.json()).then(d => setGroups(Array.isArray(d) ? d : []));
+    fetch("/api/groups?limit=500").then(r => r.json()).then(d => setGroups(Array.isArray(d?.groups) ? d.groups : []));
   }, []);
 
   const create = async () => {

@@ -2,8 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Download, TrendingUp, Users, DollarSign, GraduationCap } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import dynamic from "next/dynamic";
 import { LEAD_SOURCE_LABELS } from "@/lib/constants";
+
+const ReportsChart = dynamic(() => import("./ReportsChart"), {
+  ssr: false,
+  loading: () => <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm h-72 animate-pulse" />,
+});
 import { cn, formatCurrency } from "@/lib/utils";
 
 const BRAND = "#5E2CA5";
@@ -161,22 +166,8 @@ export default function ReportsPage() {
           {/* ── Row 1: Course bar chart (purple) + Lead sources progress bars ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-            {/* Left: purple bar chart */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5">
-              <h2 className="text-[14px] font-semibold text-gray-900 dark:text-white mb-4">Kurslar bo&apos;yicha lidlar</h2>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={data.courseStats.map((c) => ({ name: c.course?.name || "Noma'lum", count: c.count }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f5" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={{ stroke: "#f1f1f5" }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 12, border: "1px solid #f1f1f5", fontSize: 12 }}
-                    cursor={{ fill: BRAND, fillOpacity: 0.06 }}
-                  />
-                  <Bar dataKey="count" fill={BRAND} radius={[8, 8, 0, 0]} maxBarSize={36} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {/* Left: purple bar chart (lazy-loaded) */}
+            <ReportsChart courseStats={data.courseStats} />
 
             {/* Right: lead sources as progress bars */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5">
