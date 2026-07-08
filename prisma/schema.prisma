@@ -51,6 +51,12 @@ enum ReminderStatus {
   CANCELLED
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
 model User {
   id           String   @id @default(cuid())
   fullName     String
@@ -84,6 +90,9 @@ model User {
   salaryRecordsCreated SalaryRecord[] @relation("SalaryCreatedBy")
   examsCreated    Exam[]    @relation("ExamCreatedBy")
   coinTxCreated   CoinTx[]  @relation("CoinCreatedBy")
+  staffAttendances StaffAttendance[] @relation("StaffAttendanceUser")
+  tasksAssigned    Task[]   @relation("TaskAssignedTo")
+  tasksCreated     Task[]   @relation("TaskCreatedBy")
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -243,6 +252,7 @@ model Tag {
   name  String @unique
   color String @default("#3B82F6")
   leads Lead[]
+  tasks Task[]
 }
 
 model Setting {
@@ -444,4 +454,39 @@ model SalaryRecord {
   createdAt   DateTime @default(now())
 
   @@index([month])
+}
+
+model StaffAttendance {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation("StaffAttendanceUser", fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime  @db.Date
+  checkIn   DateTime?
+  checkOut  DateTime?
+  status    String    @default("absent")
+  note      String?
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@index([date])
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  title        String
+  description  String?
+  status       TaskStatus @default(TODO)
+  type         String?
+  assignedToId String?
+  assignedTo   User?      @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  createdById  String?
+  createdBy    User?      @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  dueDate      DateTime?
+  tags         Tag[]
+  createdAt    DateTime   @default(now())
+
+  @@index([assignedToId])
+  @@index([status])
+  @@index([dueDate])
 }

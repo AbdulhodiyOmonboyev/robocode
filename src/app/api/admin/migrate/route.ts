@@ -146,6 +146,51 @@ const statements: string[] = [
   `CREATE INDEX IF NOT EXISTS "Attendance_leadId_date_idx" ON "Attendance"("leadId","date")`,
   `CREATE INDEX IF NOT EXISTS "Activity_leadId_idx" ON "Activity"("leadId")`,
   `CREATE INDEX IF NOT EXISTS "Reminder_leadId_idx" ON "Reminder"("leadId")`,
+
+  // ---- Part 6: StaffAttendance, Task ----
+  `CREATE TABLE IF NOT EXISTS "StaffAttendance" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "date" DATE NOT NULL,
+    "checkIn" TIMESTAMP(3),
+    "checkOut" TIMESTAMP(3),
+    "status" TEXT NOT NULL DEFAULT 'absent',
+    "note" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "StaffAttendance_pkey" PRIMARY KEY ("id")
+  )`,
+  `DO $$ BEGIN ALTER TABLE "StaffAttendance" ADD CONSTRAINT "StaffAttendance_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "StaffAttendance_userId_date_key" ON "StaffAttendance"("userId","date")`,
+  `CREATE INDEX IF NOT EXISTS "StaffAttendance_userId_date_idx" ON "StaffAttendance"("userId","date")`,
+  `CREATE INDEX IF NOT EXISTS "StaffAttendance_date_idx" ON "StaffAttendance"("date")`,
+
+  `DO $$ BEGIN CREATE TYPE "TaskStatus" AS ENUM ('TODO', 'IN_PROGRESS', 'DONE'); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS "Task" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "status" "TaskStatus" NOT NULL DEFAULT 'TODO',
+    "type" TEXT,
+    "assignedToId" TEXT,
+    "createdById" TEXT,
+    "dueDate" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
+  )`,
+  `DO $$ BEGIN ALTER TABLE "Task" ADD CONSTRAINT "Task_assignedToId_fkey" FOREIGN KEY ("assignedToId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "Task" ADD CONSTRAINT "Task_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "Task_assignedToId_idx" ON "Task"("assignedToId")`,
+  `CREATE INDEX IF NOT EXISTS "Task_status_idx" ON "Task"("status")`,
+  `CREATE INDEX IF NOT EXISTS "Task_dueDate_idx" ON "Task"("dueDate")`,
+
+  `CREATE TABLE IF NOT EXISTS "_TagToTask" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL,
+    CONSTRAINT "_TagToTask_AB_pkey" PRIMARY KEY ("A", "B")
+  )`,
+  `CREATE INDEX IF NOT EXISTS "_TagToTask_B_index" ON "_TagToTask"("B")`,
+  `DO $$ BEGIN ALTER TABLE "_TagToTask" ADD CONSTRAINT "_TagToTask_A_fkey" FOREIGN KEY ("A") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "_TagToTask" ADD CONSTRAINT "_TagToTask_B_fkey" FOREIGN KEY ("B") REFERENCES "Task"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
 ];
 
 export async function POST() {

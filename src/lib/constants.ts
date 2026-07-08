@@ -62,6 +62,23 @@ export const DEFAULT_TIME_SLOTS = [
   { startTime: "18:30", endTime: "20:00", label: "18:30 - 20:00" },
 ];
 
+// Staff attendance: check-in after this time (+ grace) is marked "late"
+export const STAFF_WORK_START = "09:00";
+export const STAFF_LATE_GRACE_MINUTES = 15;
+
+export const TASK_TYPE_LABELS: Record<string, string> = {
+  call: "Qo'ng'iroq",
+  meeting: "Uchrashuv",
+  admin: "Ma'muriy",
+  other: "Boshqa",
+};
+
+export const TASK_STATUS_LABELS: Record<string, string> = {
+  TODO: "Bajarilmagan",
+  IN_PROGRESS: "Jarayonda",
+  DONE: "Bajarilgan",
+};
+
 export const KANBAN_COLUMNS: LeadStatus[] = [
   "NEW",
   "CONTACTED",

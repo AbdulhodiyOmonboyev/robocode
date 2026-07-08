@@ -35,6 +35,8 @@ import {
   FileBarChart,
   AlertCircle,
   Gift,
+  UserCheck,
+  ListTodo,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -94,6 +96,8 @@ const navEntries: NavEntry[] = [
     ],
   },
   { type: "item", href: "/reminders", label: "Eslatmalar", icon: Bell },
+  { type: "item", href: "/staff-attendance", label: "Xodimlar davomati", icon: UserCheck },
+  { type: "item", href: "/tasks", label: "Vazifalar", icon: ListTodo },
   {
     type: "group",
     label: "Sozlamalar",
