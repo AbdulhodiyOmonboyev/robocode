@@ -3,6 +3,7 @@ import type { NextAuthConfig } from "next-auth";
 const PUBLIC_PATHS = ["/login", "/api/auth"];
 
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   pages: { signIn: "/login" },
   session: { strategy: "jwt" },
   callbacks: {
