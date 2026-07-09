@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Moon, Sun, Search, Plus, Menu, LogOut, Settings } from "lucide-react";
+import { Moon, Sun, Search, Plus, Menu, LogOut, Settings, Sparkles } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -42,6 +42,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/settings": "Sozlamalar",
   "/users": "Hodimlar",
   "/logs": "Jurnallar",
+  "/changelog": "Yangilanishlar",
 };
 
 function getPageTitle(pathname: string): string {
@@ -116,6 +117,15 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             />
           </div>
         </form>
+
+        {/* Yangi versiya badge */}
+        <Link
+          href="/changelog"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold text-[#5E2CA5] dark:text-purple-300 bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 hover:bg-[#5E2CA5]/15 dark:hover:bg-[#5E2CA5]/25 transition-colors flex-shrink-0"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          Yangi versiya
+        </Link>
 
         {/* Quick add lead */}
         <Link
