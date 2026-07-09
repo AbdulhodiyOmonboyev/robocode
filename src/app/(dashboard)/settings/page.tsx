@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, type ChangeEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   Plus, Trash2, ToggleLeft, ToggleRight, Save,
   SlidersHorizontal, Image as ImageIcon, CreditCard, CalendarDays,
   Clock, Tag as TagIcon, MessageSquare, Send, Users as UsersIcon,
-  Bot, CheckCircle2, XCircle, Webhook, Building2, Pencil,
+  Bot, CheckCircle2, XCircle, Webhook, Building2, Pencil, Link2,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,8 +28,12 @@ interface Branch { id: string; name: string; address: string | null; phone: stri
 
 const TAG_COLORS = ["#6366f1","#10b981","#f59e0b","#f43f5e","#06b6d4","#8b5cf6","#ec4899","#14b8a6","#f97316","#84cc16"];
 
+const VALID_TABS: Tab[] = ["general", "logo", "paymentTypes", "holidays", "timeslots", "tags", "sms", "telegram", "users", "branches"];
+
 export default function SettingsPage() {
-  const [tab, setTab] = useState<Tab>("general");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [tab, setTab] = useState<Tab>((tabParam && (VALID_TABS as string[]).includes(tabParam) ? tabParam : "general") as Tab);
   const { confirm, dialog } = useConfirm();
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -95,6 +100,17 @@ export default function SettingsPage() {
     if (!(await confirm({ title: "Filialni o'chirish", message: "Bu filialni o'chirasizmi? Unga bog'langan ma'lumotlar filialsiz qoladi." }))) return;
     const res = await fetch(`/api/branches/${id}`, { method: "DELETE" });
     if (res.ok) { toast.success("O'chirildi"); loadBranches(); } else toast.error("Xatolik");
+  };
+  const adoptOrphans = async (b: Branch) => {
+    if (!(await confirm({
+      title: "Filialsiz yozuvlarni biriktirish",
+      message: `Filialga bog'lanmagan barcha lid, guruh, hodim, to'lov, xarajat va daromadlar "${b.name}" filialiga biriktiriladi. Davom etasizmi?`,
+    }))) return;
+    const res = await fetch(`/api/branches/${b.id}/adopt-orphans`, { method: "POST" });
+    if (res.ok) {
+      const d = await res.json();
+      toast.success(d.total > 0 ? `${d.total} ta yozuv "${b.name}" filialiga biriktirildi` : "Filialsiz yozuv topilmadi");
+    } else toast.error("Xatolik");
   };
 
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -409,6 +425,9 @@ export default function SettingsPage() {
                             )}
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
+                            <button onClick={()=>adoptOrphans(b)} className="text-gray-400 hover:text-[#5E2CA5] transition" title="Filialsiz yozuvlarni ushbu filialga biriktirish">
+                              <Link2 className="w-4 h-4"/>
+                            </button>
                             <button onClick={()=>toggleBranch(b)} className="text-gray-400 hover:text-[#5E2CA5] transition" title={b.isActive ? "Faol" : "Nofaol"}>
                               {b.isActive ? <ToggleRight className="w-5 h-5"/> : <ToggleLeft className="w-5 h-5"/>}
                             </button>

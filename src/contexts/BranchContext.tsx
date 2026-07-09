@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 
 export interface Branch {
   id: string;
@@ -37,9 +38,11 @@ function writeCookie(name: string, value: string | null) {
 }
 
 export function BranchProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [branchId, setBranchIdState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const autoCreateAttempted = useRef(false);
 
   useEffect(() => {
     setBranchIdState(readCookie(COOKIE_KEY));
@@ -49,6 +52,25 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // First run with no branches yet: seed a default "Asosiy filial" so the
+  // multi-branch UI isn't empty. Only admins can create branches server-side.
+  useEffect(() => {
+    if (loading || branches.length > 0 || autoCreateAttempted.current) return;
+    if (status !== "authenticated") return;
+    const role = session?.user?.role;
+    if (role !== "SUPER_ADMIN" && role !== "ADMIN") return;
+
+    autoCreateAttempted.current = true;
+    fetch("/api/branches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Asosiy filial" }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => { if (b) setBranches((prev) => (prev.length ? prev : [b])); })
+      .catch(() => {});
+  }, [loading, branches.length, status, session?.user?.role]);
 
   const setBranchId = useCallback((id: string | null) => {
     setBranchIdState(id);

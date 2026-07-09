@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { ChevronDown, Building2 } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Building2, Plus } from "lucide-react";
 import { useBranch } from "@/contexts/BranchContext";
 
 interface SessionUser {
@@ -26,7 +27,19 @@ export default function BranchSwitcher() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  if (loading || branches.length === 0) return null;
+  if (loading) return null;
+
+  if (branches.length === 0) {
+    if (!isSuperAdmin && user?.role !== "ADMIN") return null;
+    return (
+      <Link
+        href="/settings?tab=branches"
+        className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors flex-shrink-0"
+      >
+        <Plus className="w-3.5 h-3.5" /> Filial qo&apos;shish
+      </Link>
+    );
+  }
 
   const activeBranch = branches.find((b) => b.id === branchId);
   const label = activeBranch ? activeBranch.name : "Barcha filiallar";

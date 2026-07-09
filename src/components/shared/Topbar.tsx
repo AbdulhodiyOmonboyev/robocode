@@ -44,6 +44,12 @@ const PAGE_TITLES: Record<string, string> = {
   "/users": "Hodimlar",
   "/logs": "Jurnallar",
   "/changelog": "Yangilanishlar",
+  "/staff-attendance": "Xodimlar davomati",
+  "/tasks": "Vazifalar",
+  "/financial-report": "Moliyaviy hisobot",
+  "/schedule": "Jadval",
+  "/profile": "Profil",
+  "/unauthorized": "Ruxsat yo'q",
 };
 
 function getPageTitle(pathname: string): string {
