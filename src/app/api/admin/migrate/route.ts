@@ -191,6 +191,45 @@ const statements: string[] = [
   `CREATE INDEX IF NOT EXISTS "_TagToTask_B_index" ON "_TagToTask"("B")`,
   `DO $$ BEGIN ALTER TABLE "_TagToTask" ADD CONSTRAINT "_TagToTask_A_fkey" FOREIGN KEY ("A") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
   `DO $$ BEGIN ALTER TABLE "_TagToTask" ADD CONSTRAINT "_TagToTask_B_fkey" FOREIGN KEY ("B") REFERENCES "Task"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+
+  // ---- Part 4: Multi-branch support ----
+  `CREATE TABLE IF NOT EXISTS "Branch" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "address" TEXT,
+    "phone" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Branch_pkey" PRIMARY KEY ("id")
+  )`,
+
+  `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "branchId" TEXT`,
+  `DO $$ BEGIN ALTER TABLE "Lead" ADD CONSTRAINT "Lead_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "Lead_branchId_idx" ON "Lead"("branchId")`,
+
+  `ALTER TABLE "Group" ADD COLUMN IF NOT EXISTS "branchId" TEXT`,
+  `DO $$ BEGIN ALTER TABLE "Group" ADD CONSTRAINT "Group_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "Group_branchId_idx" ON "Group"("branchId")`,
+
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "branchId" TEXT`,
+  `DO $$ BEGIN ALTER TABLE "User" ADD CONSTRAINT "User_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "User_branchId_idx" ON "User"("branchId")`,
+
+  `ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "branchId" TEXT`,
+  `DO $$ BEGIN ALTER TABLE "Payment" ADD CONSTRAINT "Payment_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "Payment_branchId_idx" ON "Payment"("branchId")`,
+
+  `ALTER TABLE "Expense" ADD COLUMN IF NOT EXISTS "branchId" TEXT`,
+  `DO $$ BEGIN ALTER TABLE "Expense" ADD CONSTRAINT "Expense_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "Expense_branchId_idx" ON "Expense"("branchId")`,
+
+  `ALTER TABLE "Income" ADD COLUMN IF NOT EXISTS "branchId" TEXT`,
+  `DO $$ BEGIN ALTER TABLE "Income" ADD CONSTRAINT "Income_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "Income_branchId_idx" ON "Income"("branchId")`,
+
+  `ALTER TABLE "Course" ADD COLUMN IF NOT EXISTS "branchId" TEXT`,
+  `DO $$ BEGIN ALTER TABLE "Course" ADD CONSTRAINT "Course_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE INDEX IF NOT EXISTS "Course_branchId_idx" ON "Course"("branchId")`,
 ];
 
 export async function POST() {

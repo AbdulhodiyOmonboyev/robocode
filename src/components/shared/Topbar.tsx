@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getInitials } from "@/lib/utils";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import NotificationBell from "@/components/shared/NotificationBell";
+import BranchSwitcher from "@/components/shared/BranchSwitcher";
 
 interface SessionUser {
   fullName?: string;
@@ -101,6 +102,8 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       <h1 className="text-[15px] sm:text-[17px] font-bold text-gray-900 dark:text-white truncate flex-shrink-0">
         {pageTitle}
       </h1>
+
+      <BranchSwitcher />
 
       {/* Right-side cluster */}
       <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">

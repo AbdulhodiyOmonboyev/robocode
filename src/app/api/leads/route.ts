@@ -27,6 +27,7 @@ const createSchema = z.object({
   trialDate: z.string().optional().nullable(),
   reminderAt: z.string().optional().nullable(),
   reminderTitle: z.string().optional(),
+  branchId: z.string().optional().nullable(),
 });
 
 export async function GET(req: NextRequest) {
@@ -72,6 +73,8 @@ export async function GET(req: NextRequest) {
   const stageId = searchParams.get("stageId") || "";
   if (stageId) where.stageId = stageId;
   if (courseId) where.courseId = courseId;
+  const branchId = searchParams.get("branchId") || "";
+  if (branchId) where.branchId = branchId;
   if (source) where.source = source as Prisma.EnumLeadSourceFilter["equals"];
   if (timePreference) where.timePreference = timePreference as Prisma.EnumTimePreferenceFilter["equals"];
 
@@ -135,7 +138,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "duplicate", message: "Bu telefon raqam allaqachon mavjud", leadId: existing.id }, { status: 409 });
   }
 
-  const { reminderAt, reminderTitle, trialDate, age, courseId, timeSlotId, assignedToId, stageId, ...rest } = parsed.data;
+  const { reminderAt, reminderTitle, trialDate, age, courseId, timeSlotId, assignedToId, stageId, branchId, ...rest } = parsed.data;
 
   // Default to the first stage if none chosen
   let finalStageId = stageId || null;
@@ -152,6 +155,7 @@ export async function POST(req: NextRequest) {
       timeSlotId: timeSlotId || null,
       assignedToId: assignedToId || null,
       stageId: finalStageId,
+      branchId: branchId || null,
       trialDate: trialDate ? new Date(trialDate) : null,
       createdById: user.id,
     },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import type { Prisma } from "@/generated/prisma/client";
 
 const createSchema = z.object({
   name: z.string().min(1, "Nom kiriting"),
@@ -12,6 +13,7 @@ const createSchema = z.object({
   timeTo: z.string().optional().nullable(),
   room: z.string().optional().nullable(),
   startDate: z.string().optional().nullable(),
+  branchId: z.string().optional().nullable(),
 });
 
 export async function GET(req: NextRequest) {
@@ -23,8 +25,13 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "50");
   const skip = (page - 1) * limit;
 
+  const where: Prisma.GroupWhereInput = {};
+  const branchId = searchParams.get("branchId") || "";
+  if (branchId) where.branchId = branchId;
+
   const [groups, total] = await Promise.all([
     db.group.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
@@ -40,7 +47,7 @@ export async function GET(req: NextRequest) {
         _count: { select: { leads: true } },
       },
     }),
-    db.group.count(),
+    db.group.count({ where }),
   ]);
 
   return NextResponse.json({ groups, total, page, limit, pages: Math.ceil(total / limit) });
@@ -65,6 +72,7 @@ export async function POST(req: NextRequest) {
       timeTo: d.timeTo || null,
       room: d.room || null,
       startDate: d.startDate ? new Date(d.startDate) : null,
+      branchId: d.branchId || null,
     },
   });
   return NextResponse.json(group, { status: 201 });

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { useBranch } from "@/contexts/BranchContext";
 
 interface Income {
   id: string; amount: string; source: string; note: string | null;
@@ -44,16 +45,20 @@ export default function IncomesPage() {
   const [form, setForm] = useState({ amount: "", source: "", note: "", method: "cash", receivedAt: todayStr() });
   const [saving, setSaving]     = useState(false);
 
+  const { branchId } = useBranch();
+
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/incomes?month=${month}`);
+    const params = new URLSearchParams({ month });
+    if (branchId) params.set("branchId", branchId);
+    const res = await fetch(`/api/incomes?${params}`);
     if (res.ok) {
       const d = await res.json();
       setIncomes(d.incomes || []);
       setSummary(d.summary || { total: 0, count: 0 });
     }
     setLoading(false);
-  }, [month]);
+  }, [month, branchId]);
   useEffect(() => { load(); }, [load]);
 
   const save = async () => {

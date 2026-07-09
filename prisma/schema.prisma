@@ -57,6 +57,23 @@ enum TaskStatus {
   DONE
 }
 
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  leads    Lead[]
+  groups   Group[]
+  users    User[]
+  payments Payment[]
+  expenses Expense[]
+  incomes  Income[]
+  courses  Course[]
+}
+
 model User {
   id           String   @id @default(cuid())
   fullName     String
@@ -76,6 +93,9 @@ model User {
   canManageUsers   Boolean @default(false)
   canViewReports   Boolean @default(false)
   canExportData    Boolean @default(false)
+
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
 
   leads        Lead[]     @relation("AssignedTo")
   createdLeads Lead[]     @relation("CreatedBy")
@@ -97,6 +117,8 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   lastLoginAt DateTime?
+
+  @@index([branchId])
 }
 
 model Course {
@@ -110,12 +132,17 @@ model Course {
   isActive       Boolean @default(true)
   color          String?
 
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
+
   leads  Lead[]
   groups Group[]
   exams  Exam[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([branchId])
 }
 
 model TimeSlot {
@@ -163,6 +190,9 @@ model Lead {
   groupId String?
   group   Group?  @relation(fields: [groupId], references: [id])
 
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
+
   status        LeadStatus @default(NEW)
   source        LeadSource @default(OTHER)
   sourceDetails String?
@@ -197,6 +227,7 @@ model Lead {
   @@index([createdAt])
   @@index([courseId])
   @@index([isArchived])
+  @@index([branchId])
 }
 
 model Reminder {
@@ -349,12 +380,16 @@ model Group {
   startDate DateTime?
   isActive  Boolean   @default(true)
   isArchived Boolean  @default(false)
+  branchId  String?
+  branch    Branch?   @relation(fields: [branchId], references: [id])
   leads     Lead[]
   payments  Payment[]
   attendances Attendance[]
   exams     Exam[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([branchId])
 }
 
 model Attendance {
@@ -392,12 +427,15 @@ model Payment {
   paidAt      DateTime @default(now())
   createdById String
   createdBy   User     @relation("PaymentCreatedBy", fields: [createdById], references: [id])
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id])
   createdAt   DateTime @default(now())
 
   @@index([leadId])
   @@index([paidAt])
   @@index([forMonth])
   @@index([createdAt])
+  @@index([branchId])
 }
 
 model Stage {
@@ -422,9 +460,12 @@ model Expense {
   spentAt     DateTime @default(now())
   createdById String
   createdBy   User     @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id])
   createdAt   DateTime @default(now())
 
   @@index([spentAt])
+  @@index([branchId])
 }
 
 model Income {
@@ -435,9 +476,12 @@ model Income {
   receivedAt  DateTime @default(now())
   createdById String
   createdBy   User     @relation("IncomeCreatedBy", fields: [createdById], references: [id])
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id])
   createdAt   DateTime @default(now())
 
   @@index([receivedAt])
+  @@index([branchId])
 }
 
 model SalaryRecord {

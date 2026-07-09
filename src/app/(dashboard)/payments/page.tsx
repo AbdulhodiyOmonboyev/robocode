@@ -11,6 +11,7 @@ import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui
 import { EmptyState } from "@/components/ui/empty-state";
 import { exportToCsv } from "@/lib/export";
 import { cn } from "@/lib/utils";
+import { useBranch } from "@/contexts/BranchContext";
 
 interface Payment {
   id: string; amount: string; discount?: string | null; currency: string;
@@ -53,11 +54,14 @@ export default function PaymentsPage() {
   const [debtors, setDebtors] = useState<DebtorsData>({ debtors: [], totalExpected: 0, month: "" });
   const [debtMonth, setDebtMonth] = useState(ym(new Date()));
 
+  const { branchId } = useBranch();
+
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (month) params.set("month", month);
+    if (branchId) params.set("branchId", branchId);
     params.set("page", String(page));
     const res = await fetch("/api/payments?" + params.toString());
     const data = await res.json();
@@ -66,7 +70,7 @@ export default function PaymentsPage() {
     setTotal(data.total || 0);
     setPages(data.pages || 1);
     setLoading(false);
-  }, [q, month, page]);
+  }, [q, month, page, branchId]);
 
   useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [load]);
 

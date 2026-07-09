@@ -6,7 +6,7 @@ import {
   Plus, Trash2, ToggleLeft, ToggleRight, Save,
   SlidersHorizontal, Image as ImageIcon, CreditCard, CalendarDays,
   Clock, Tag as TagIcon, MessageSquare, Send, Users as UsersIcon,
-  Bot, CheckCircle2, XCircle, Webhook,
+  Bot, CheckCircle2, XCircle, Webhook, Building2, Pencil,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { useConfirm } from "@/components/ui/confirm";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { cn } from "@/lib/utils";
 
-type Tab = "general" | "logo" | "paymentTypes" | "holidays" | "timeslots" | "tags" | "sms" | "telegram" | "users";
+type Tab = "general" | "logo" | "paymentTypes" | "holidays" | "timeslots" | "tags" | "sms" | "telegram" | "users" | "branches";
 
 interface TimeSlot { id: string; startTime: string; endTime: string; label: string; isActive: boolean; }
 interface Tag { id: string; name: string; color: string; }
@@ -23,6 +23,7 @@ interface UserOption { id: string; fullName: string; username: string; }
 interface TelegramContact { chatId: string; name: string; username: string; }
 interface PaymentType { id: string; name: string; isActive: boolean; }
 interface Holiday { id: string; date: string; name: string; }
+interface Branch { id: string; name: string; address: string | null; phone: string | null; isActive: boolean; }
 
 const TAG_COLORS = ["#6366f1","#10b981","#f59e0b","#f43f5e","#06b6d4","#8b5cf6","#ec4899","#14b8a6","#f97316","#84cc16"];
 
@@ -63,6 +64,37 @@ export default function SettingsPage() {
     if (!(await confirm({ title: "To'lov turini o'chirish", message: "Bu to'lov turini o'chirasizmi?" }))) return;
     const res = await fetch(`/api/payment-types/${id}`, { method: "DELETE" });
     if (res.ok) loadPaymentTypes(); else toast.error("Xatolik");
+  };
+
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [newBranch, setNewBranch] = useState({ name: "", address: "", phone: "" });
+  const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
+  const [editBranch, setEditBranch] = useState({ name: "", address: "", phone: "" });
+
+  const loadBranches = () => fetch("/api/branches").then(r=>r.json()).then(d=>setBranches(Array.isArray(d)?d:[]));
+  const addBranch = async () => {
+    if (!newBranch.name.trim()) { toast.error("Filial nomini kiriting"); return; }
+    const res = await fetch("/api/branches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newBranch) });
+    if (res.ok) { setNewBranch({ name: "", address: "", phone: "" }); toast.success("Filial qo'shildi"); loadBranches(); }
+    else toast.error("Xatolik");
+  };
+  const startEditBranch = (b: Branch) => {
+    setEditingBranchId(b.id);
+    setEditBranch({ name: b.name, address: b.address || "", phone: b.phone || "" });
+  };
+  const saveEditBranch = async (id: string) => {
+    if (!editBranch.name.trim()) { toast.error("Filial nomini kiriting"); return; }
+    const res = await fetch(`/api/branches/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editBranch) });
+    if (res.ok) { setEditingBranchId(null); toast.success("Saqlandi"); loadBranches(); } else toast.error("Xatolik");
+  };
+  const toggleBranch = async (b: Branch) => {
+    const res = await fetch(`/api/branches/${b.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !b.isActive }) });
+    if (res.ok) loadBranches(); else toast.error("Xatolik");
+  };
+  const removeBranch = async (id: string) => {
+    if (!(await confirm({ title: "Filialni o'chirish", message: "Bu filialni o'chirasizmi? Unga bog'langan ma'lumotlar filialsiz qoladi." }))) return;
+    const res = await fetch(`/api/branches/${id}`, { method: "DELETE" });
+    if (res.ok) { toast.success("O'chirildi"); loadBranches(); } else toast.error("Xatolik");
   };
 
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -114,7 +146,7 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    loadSlots(); loadTags(); loadTgSettings(); loadBotInfo(); loadPaymentTypes(); loadHolidays();
+    loadSlots(); loadTags(); loadTgSettings(); loadBotInfo(); loadPaymentTypes(); loadHolidays(); loadBranches();
     fetch("/api/users").then(r=>r.json()).then(setUsers);
   }, []);
 
@@ -246,6 +278,7 @@ export default function SettingsPage() {
   const tabs: { key: Tab; label: string; icon: typeof SlidersHorizontal }[] = [
     { key: "general", label: "Umumiy", icon: SlidersHorizontal },
     { key: "logo", label: "Logo", icon: ImageIcon },
+    { key: "branches", label: "Filiallar", icon: Building2 },
     { key: "paymentTypes", label: "To'lov turlari", icon: CreditCard },
     { key: "holidays", label: "Bayram kunlari", icon: CalendarDays },
     { key: "timeslots", label: "Vaqt slotlari", icon: Clock },
@@ -342,6 +375,60 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <Button onClick={saveLogo} loading={logoSaving} className={purpleBtn}><Save className="w-4 h-4"/> Logoni saqlash</Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Branches */}
+          {tab === "branches" && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader><CardTitle>Filiallar</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-gray-500">O&apos;quv markazining filiallari. Yuqori paneldagi filial dropdown&apos;i shu ro&apos;yxatdan olinadi.</p>
+                <div className="space-y-2">
+                  {branches.map((b) => (
+                    <div key={b.id} className={`p-3 rounded-xl border ${b.isActive ? "border-gray-200 dark:border-white/10" : "border-gray-100 dark:border-white/10 opacity-50"}`}>
+                      {editingBranchId === b.id ? (
+                        <div className="space-y-2">
+                          <Input label="Nomi" value={editBranch.name} onChange={e=>setEditBranch(s=>({...s,name:e.target.value}))} className={inputFocus}/>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input label="Manzil" value={editBranch.address} onChange={e=>setEditBranch(s=>({...s,address:e.target.value}))} className={inputFocus}/>
+                            <Input label="Telefon" value={editBranch.phone} onChange={e=>setEditBranch(s=>({...s,phone:e.target.value}))} className={inputFocus}/>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={()=>saveEditBranch(b.id)} className={purpleBtn}>Saqlash</Button>
+                            <Button size="sm" variant="outline" onClick={()=>setEditingBranchId(null)}>Bekor qilish</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{b.name}</p>
+                            {(b.address || b.phone) && (
+                              <p className="text-xs text-gray-500 truncate">{[b.address, b.phone].filter(Boolean).join(" · ")}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button onClick={()=>toggleBranch(b)} className="text-gray-400 hover:text-[#5E2CA5] transition" title={b.isActive ? "Faol" : "Nofaol"}>
+                              {b.isActive ? <ToggleRight className="w-5 h-5"/> : <ToggleLeft className="w-5 h-5"/>}
+                            </button>
+                            <button onClick={()=>startEditBranch(b)} className="text-gray-400 hover:text-[#5E2CA5] transition"><Pencil className="w-4 h-4"/></button>
+                            <button onClick={()=>removeBranch(b.id)} className="text-gray-400 hover:text-red-600 transition"><Trash2 className="w-4 h-4"/></button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {branches.length === 0 && <p className="text-sm text-gray-400">Filial yo&apos;q</p>}
+                </div>
+                <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-white/10">
+                  <Input label="Yangi filial nomi" value={newBranch.name} onChange={e=>setNewBranch(s=>({...s,name:e.target.value}))} placeholder="Chilonzor filiali" className={inputFocus}/>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input label="Manzil" value={newBranch.address} onChange={e=>setNewBranch(s=>({...s,address:e.target.value}))} className={inputFocus}/>
+                    <Input label="Telefon" value={newBranch.phone} onChange={e=>setNewBranch(s=>({...s,phone:e.target.value}))} className={inputFocus}/>
+                  </div>
+                  <Button onClick={addBranch} className={purpleBtn}><Plus className="w-4 h-4"/> Qo&apos;shish</Button>
+                </div>
               </CardContent>
             </Card>
           )}

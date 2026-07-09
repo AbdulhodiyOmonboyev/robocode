@@ -26,9 +26,10 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const month = searchParams.get("month") || currentMonth();
   const { start, end } = monthRange(month);
+  const branchId = searchParams.get("branchId");
 
   const incomes = await db.income.findMany({
-    where: { receivedAt: { gte: start, lt: end } },
+    where: { receivedAt: { gte: start, lt: end }, ...(branchId ? { branchId } : {}) },
     orderBy: { receivedAt: "desc" },
     include: { createdBy: { select: { fullName: true } } },
   });
@@ -42,6 +43,7 @@ const schema = z.object({
   source: z.string().min(1, "Manba kiriting"),
   note: z.string().optional().nullable(),
   receivedAt: z.string().optional().nullable(),
+  branchId: z.string().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest) {
       note: d.note || null,
       receivedAt: d.receivedAt ? new Date(d.receivedAt) : new Date(),
       createdById: user.id,
+      branchId: d.branchId || null,
     },
   });
   return NextResponse.json(income, { status: 201 });

@@ -12,6 +12,7 @@ import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui
 import { EmptyState } from "@/components/ui/empty-state";
 import { WEEKDAYS } from "@/lib/constants";
 import { cn, formatPhone, getInitials } from "@/lib/utils";
+import { useBranch } from "@/contexts/BranchContext";
 
 const BRAND = "#5E2CA5";
 const dayLabel = (v: string) => WEEKDAYS.find(d => d.value === v)?.label || v;
@@ -57,14 +58,18 @@ export default function GroupsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [members, setMembers] = useState<Record<string, Member[]>>({});
 
+  const { branchId } = useBranch();
+
   const load = useCallback(async (p: number) => {
     setLoading(true);
-    const data = await fetch(`/api/groups?page=${p}&limit=50`).then(r => r.json());
+    const params = new URLSearchParams({ page: String(p), limit: "50" });
+    if (branchId) params.set("branchId", branchId);
+    const data = await fetch(`/api/groups?${params}`).then(r => r.json());
     setGroups(Array.isArray(data?.groups) ? data.groups : []);
     setTotal(data?.total || 0);
     setPages(data?.pages || 1);
     setLoading(false);
-  }, []);
+  }, [branchId]);
 
   useEffect(() => {
     load(page);
