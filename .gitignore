@@ -42,6 +42,9 @@ next-env.d.ts
 
 /src/generated/prisma
 
+# run skill screenshots (generated, not tracked)
+/.claude/skills/run-crm-oquv-markaz/shots/
+
 # vaqtinchalik test/ishga tushirish fayllari (o'chirsa bo'ladi)
 test-db.cjs
 run-test.bat
