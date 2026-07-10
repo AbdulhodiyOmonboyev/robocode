@@ -37,6 +37,11 @@ function hexAlpha(hex: string, alpha: string) {
   return hex.startsWith("#") ? `${hex}${alpha}` : hex;
 }
 
+const UZ_MONTHS = [
+  "yanvar", "fevral", "mart", "aprel", "may", "iyun",
+  "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr",
+];
+
 function getWeekRange(offset: number) {
   const now = new Date();
   const day = now.getDay();
@@ -45,7 +50,10 @@ function getWeekRange(offset: number) {
   monday.setDate(now.getDate() + mondayOffset);
   const saturday = new Date(monday);
   saturday.setDate(monday.getDate() + 5);
-  const fmt = (d: Date) => d.toLocaleDateString("uz-UZ", { day: "numeric", month: "long" });
+  // Deterministic formatting (no Intl/locale data) — toLocaleDateString("uz-UZ", ...)
+  // renders differently between Node's SSR ICU data and the browser's, which caused
+  // a hydration mismatch that wiped the <html class="dark"> the theme toggle sets.
+  const fmt = (d: Date) => `${d.getDate()}-${UZ_MONTHS[d.getMonth()]}`;
   return `${fmt(monday)} – ${fmt(saturday)}`;
 }
 
@@ -167,15 +175,17 @@ export default function TimetablePage() {
           <div className="flex items-center rounded-xl bg-gray-100 dark:bg-white/5 p-1">
             <button
               onClick={() => setViewMode("group")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors"
-              style={viewMode === "group" ? { backgroundColor: BRAND, color: "#fff" } : { color: "#6b7280" }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
+                viewMode === "group" ? "bg-[#5E2CA5] text-white" : "text-gray-500 dark:text-gray-400"
+              }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" /> Guruh
             </button>
             <button
               onClick={() => setViewMode("room")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors"
-              style={viewMode === "room" ? { backgroundColor: BRAND, color: "#fff" } : { color: "#6b7280" }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
+                viewMode === "room" ? "bg-[#5E2CA5] text-white" : "text-gray-500 dark:text-gray-400"
+              }`}
             >
               <DoorOpen className="w-3.5 h-3.5" /> Xona
             </button>
@@ -209,12 +219,11 @@ export default function TimetablePage() {
             <button
               key={t.key}
               onClick={() => setDayTab(t.key)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
-              style={
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                 dayTab === t.key
-                  ? { backgroundColor: hexAlpha(BRAND, "17"), borderColor: BRAND, color: BRAND }
-                  : { borderColor: "transparent", color: "#6b7280" }
-              }
+                  ? "bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 border-[#5E2CA5] text-[#5E2CA5]"
+                  : "border-transparent text-gray-500 dark:text-gray-400"
+              }`}
             >
               {t.label}
             </button>
