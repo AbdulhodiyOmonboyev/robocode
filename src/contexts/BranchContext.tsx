@@ -16,6 +16,7 @@ interface BranchContextValue {
   branchId: string | null;
   setBranchId: (id: string | null) => void;
   loading: boolean;
+  multiBranchEnabled: boolean;
 }
 
 const BranchContext = createContext<BranchContextValue | null>(null);
@@ -42,14 +43,19 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [branchId, setBranchIdState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [multiBranchEnabled, setMultiBranchEnabled] = useState(true);
   const autoCreateAttempted = useRef(false);
 
   useEffect(() => {
     setBranchIdState(readCookie(COOKIE_KEY));
-    fetch("/api/branches")
-      .then((r) => r.json())
-      .then((d) => setBranches(Array.isArray(d) ? d : []))
-      .catch(() => {})
+    Promise.all([
+      fetch("/api/branches").then((r) => r.json()).catch(() => []),
+      fetch("/api/settings?prefix=multi_branch_enabled").then((r) => r.json()).catch(() => ({})),
+    ])
+      .then(([branchesData, settingsData]) => {
+        setBranches(Array.isArray(branchesData) ? branchesData : []);
+        setMultiBranchEnabled(settingsData?.multi_branch_enabled !== "false");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -78,7 +84,7 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <BranchContext.Provider value={{ branches, branchId, setBranchId, loading }}>
+    <BranchContext.Provider value={{ branches, branchId, setBranchId, loading, multiBranchEnabled }}>
       {children}
     </BranchContext.Provider>
   );

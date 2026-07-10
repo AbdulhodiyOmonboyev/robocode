@@ -12,7 +12,7 @@ interface SessionUser {
 
 export default function BranchSwitcher() {
   const { data: session } = useSession();
-  const { branches, branchId, setBranchId, loading } = useBranch();
+  const { branches, branchId, setBranchId, loading, multiBranchEnabled } = useBranch();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -27,9 +27,11 @@ export default function BranchSwitcher() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  if (loading) return null;
+  if (loading || !multiBranchEnabled) return null;
 
-  if (branches.length === 0) {
+  const activeBranches = branches.filter((b) => b.isActive);
+
+  if (activeBranches.length === 0) {
     if (!isSuperAdmin && user?.role !== "ADMIN") return null;
     return (
       <Link
@@ -41,7 +43,7 @@ export default function BranchSwitcher() {
     );
   }
 
-  const activeBranch = branches.find((b) => b.id === branchId);
+  const activeBranch = activeBranches.find((b) => b.id === branchId);
   const label = activeBranch ? activeBranch.name : "Barcha filiallar";
 
   return (
@@ -69,7 +71,7 @@ export default function BranchSwitcher() {
               Barcha filiallar
             </button>
           )}
-          {branches.map((b) => (
+          {activeBranches.map((b) => (
             <button
               key={b.id}
               onClick={() => { setBranchId(b.id); setOpen(false); }}

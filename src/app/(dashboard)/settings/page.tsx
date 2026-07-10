@@ -58,6 +58,8 @@ export default function SettingsPage() {
   const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
   const [newPaymentType, setNewPaymentType] = useState("");
   const { dark, toggleDark } = useDarkMode();
+  const [multiBranchEnabled, setMultiBranchEnabled] = useState(true);
+  const [savingMultiBranch, setSavingMultiBranch] = useState(false);
 
   const loadPaymentTypes = () => fetch("/api/payment-types").then(r=>r.json()).then(d=>setPaymentTypes(Array.isArray(d)?d:[]));
   const addPaymentType = async () => {
@@ -151,6 +153,7 @@ export default function SettingsPage() {
     setEskiz({ email: s["eskiz_email"] || "", password: "", from: s["eskiz_from"] || "" });
     if (s["center_name"]) setCenterName(s["center_name"]);
     if (s["brand_logo"]) setLogo(s["brand_logo"]);
+    setMultiBranchEnabled(s["multi_branch_enabled"] !== "false");
     const cids: Record<string,string> = {};
     Object.entries(s).forEach(([k,v]) => { if (k.startsWith("telegram_chat_id_")) cids[k.replace("telegram_chat_id_","")] = v as string; });
     setChatIds(cids);
@@ -226,6 +229,15 @@ export default function SettingsPage() {
     await saveSetting("center_name", centerName);
     setSaving(false);
     toast.success("Saqlandi");
+  };
+
+  const toggleMultiBranch = async () => {
+    const next = !multiBranchEnabled;
+    setSavingMultiBranch(true);
+    const ok = await saveSetting("multi_branch_enabled", String(next));
+    setSavingMultiBranch(false);
+    if (ok) { setMultiBranchEnabled(next); toast.success(next ? "Ko'p filial rejimi yoqildi" : "Ko'p filial rejimi o'chirildi"); }
+    else toast.error("Xatolik");
   };
 
   const onLogoFile = (e: ChangeEvent<HTMLInputElement>) => {
@@ -361,6 +373,16 @@ export default function SettingsPage() {
                   <button onClick={toggleDark} role="switch" aria-checked={dark}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition shrink-0 ${dark ? "bg-[#5E2CA5]" : "bg-gray-200 dark:bg-gray-700"}`}>
                     <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${dark ? "translate-x-5" : "translate-x-0.5"}`}/>
+                  </button>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-white/10">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Ko&apos;p filial rejimi</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Yoqilganda yuqori paneldagi filial almashtirgichda faqat faol filiallar chiqadi. O&apos;chirilganda sayt bitta markaz kabi ishlaydi.</p>
+                  </div>
+                  <button onClick={toggleMultiBranch} disabled={savingMultiBranch} role="switch" aria-checked={multiBranchEnabled}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition shrink-0 ${multiBranchEnabled ? "bg-[#5E2CA5]" : "bg-gray-200 dark:bg-gray-700"}`}>
+                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${multiBranchEnabled ? "translate-x-5" : "translate-x-0.5"}`}/>
                   </button>
                 </div>
                 <Button onClick={saveGeneral} loading={saving} className={purpleBtn}><Save className="w-4 h-4"/> Saqlash</Button>
