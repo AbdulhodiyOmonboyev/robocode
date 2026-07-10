@@ -9,6 +9,7 @@ const updateSchema = z.object({
   fullName: z.string().min(2).optional(),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
+  avatarUrl: z.string().optional(),
   role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR"]).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(8).optional(),
@@ -36,9 +37,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { password, oldPassword, email, role, isActive, canManageLeads, canManageCourses, canManageUsers, canViewReports, canExportData, ...rest } = parsed.data;
+  const { password, oldPassword, email, avatarUrl, role, isActive, canManageLeads, canManageCourses, canManageUsers, canViewReports, canExportData, ...rest } = parsed.data;
   const updateData: Prisma.UserUpdateInput = { ...rest };
   if (email !== undefined) updateData.email = email || null;
+  if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl || null;
 
   // Only admins may change role, active status, and permissions
   if (isAdmin) {
@@ -69,7 +71,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     where: { id },
     data: updateData,
     select: {
-      id: true, fullName: true, username: true, email: true, role: true, isActive: true,
+      id: true, fullName: true, username: true, email: true, avatarUrl: true, role: true, isActive: true,
       canManageLeads: true, canManageCourses: true, canManageUsers: true,
       canViewReports: true, canExportData: true,
     },

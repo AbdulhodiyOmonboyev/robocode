@@ -32,20 +32,21 @@ export async function GET(req: NextRequest) {
   const where: Prisma.ReminderWhereInput = { userId: user.id };
   if (status) where.status = status as ReminderStatus;
 
-  const reminders = await db.reminder.findMany({
-    where,
-    orderBy: { remindAt: "asc" },
-    take: limit,
-    include: {
-      lead: { select: { id: true, fullName: true, phone: true } },
-      user: { select: { fullName: true } },
-    },
-  });
-
-  // Counts for bell badge
-  const totalToday = await db.reminder.count({
-    where: { userId: user.id, status: "PENDING", remindAt: { gte: todayStart, lte: todayEnd } },
-  });
+  const [reminders, totalToday] = await Promise.all([
+    db.reminder.findMany({
+      where,
+      orderBy: { remindAt: "asc" },
+      take: limit,
+      include: {
+        lead: { select: { id: true, fullName: true, phone: true } },
+        user: { select: { fullName: true } },
+      },
+    }),
+    // Counts for bell badge
+    db.reminder.count({
+      where: { userId: user.id, status: "PENDING", remindAt: { gte: todayStart, lte: todayEnd } },
+    }),
+  ]);
 
   const overdue = reminders.filter(r => r.status === "PENDING" && new Date(r.remindAt) < todayStart);
   const today = reminders.filter(r => r.status === "PENDING" && new Date(r.remindAt) >= todayStart && new Date(r.remindAt) <= todayEnd);

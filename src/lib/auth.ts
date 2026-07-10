@@ -28,7 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await db.user.findUnique({
           where: { username },
           select: {
-            id: true, fullName: true, username: true, email: true,
+            id: true, fullName: true, username: true, email: true, avatarUrl: true,
             passwordHash: true, role: true, isActive: true,
             canManageLeads: true, canManageCourses: true,
             canManageUsers: true, canViewReports: true, canExportData: true,
@@ -52,6 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           username: user.username,
           fullName: user.fullName,
+          avatarUrl: user.avatarUrl,
           canManageLeads: user.canManageLeads,
           canManageCourses: user.canManageCourses,
           canManageUsers: user.canManageUsers,

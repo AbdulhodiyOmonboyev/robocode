@@ -14,7 +14,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
 import { cn, formatDate, formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
-import { useBranch } from "@/contexts/BranchContext";
 
 interface Lead {
   id: string; fullName: string; phone: string; email: string | null;
@@ -73,20 +72,17 @@ export default function LeadsPage() {
     return () => clearTimeout(t);
   }, [inputSearch]);
 
-  const { branchId } = useBranch();
-
   const loadLeads = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, String(v)); });
-    if (branchId) params.set("branchId", branchId);
     const res = await fetch(`/api/leads?${params}`);
     if (res.ok) {
       const data = await res.json();
       setLeads(data.leads); setTotal(data.total); setPages(data.pages);
     }
     setLoading(false);
-  }, [filters, branchId]);
+  }, [filters]);
 
   useEffect(() => { loadLeads(); }, [loadLeads]);
   useEffect(() => {

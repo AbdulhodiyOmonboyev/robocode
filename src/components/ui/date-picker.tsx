@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import {
   addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
@@ -19,17 +19,26 @@ const POPUP_WIDTH = 280;
 
 type FakeEvent = { target: { value: string } };
 
-function usePopupPosition(open: boolean, triggerRef: RefObject<HTMLElement | null>) {
+function usePopupPosition(
+  open: boolean,
+  triggerRef: RefObject<HTMLElement | null>,
+  popupRef: RefObject<HTMLElement | null>
+) {
   const [pos, setPos] = useState({ top: 0, left: 0 });
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the position is corrected before the
+  // browser paints — otherwise the popup flashes at (0,0) for one frame.
+  useLayoutEffect(() => {
     if (!open) return;
     const update = () => {
       const el = triggerRef.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
+      const popupHeight = popupRef.current?.offsetHeight ?? 320;
+      const spaceBelow = window.innerHeight - r.bottom;
+      const flipAbove = spaceBelow < popupHeight + 12 && r.top > popupHeight + 12;
       setPos({
-        top: r.bottom + 8,
-        left: Math.min(r.left, window.innerWidth - POPUP_WIDTH - 12),
+        top: flipAbove ? Math.max(8, r.top - popupHeight - 8) : r.bottom + 8,
+        left: Math.min(Math.max(r.left, 12), window.innerWidth - POPUP_WIDTH - 12),
       });
     };
     update();
@@ -39,7 +48,7 @@ function usePopupPosition(open: boolean, triggerRef: RefObject<HTMLElement | nul
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
     };
-  }, [open, triggerRef]);
+  }, [open, triggerRef, popupRef]);
   return pos;
 }
 
@@ -114,7 +123,7 @@ export function DatePicker({ value, onChange, className, placeholder = "Sana tan
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const pos = usePopupPosition(open, triggerRef);
+  const pos = usePopupPosition(open, triggerRef, popupRef);
   useCloseOnOutside(open, [triggerRef, popupRef], () => setOpen(false));
 
   const days = useMemo(() => {
@@ -235,7 +244,7 @@ export function MonthPicker({ value, onChange, className, placeholder = "Oy tanl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const pos = usePopupPosition(open, triggerRef);
+  const pos = usePopupPosition(open, triggerRef, popupRef);
   useCloseOnOutside(open, [triggerRef, popupRef], () => setOpen(false));
 
   function select(monthIdx: number) {

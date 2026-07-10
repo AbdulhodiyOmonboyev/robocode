@@ -7,6 +7,7 @@ declare module "next-auth" {
     role: Role;
     username: string;
     fullName: string;
+    avatarUrl?: string | null;
     canManageLeads: boolean;
     canManageCourses: boolean;
     canManageUsers: boolean;
@@ -27,6 +28,7 @@ declare module "next-auth/jwt" {
     role: Role;
     username: string;
     fullName: string;
+    avatarUrl?: string | null;
     canManageLeads: boolean;
     canManageCourses: boolean;
     canManageUsers: boolean;

@@ -15,7 +15,6 @@ const createSchema = z.object({
   groupId: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
   paidAt: z.string().optional().nullable(),
-  branchId: z.string().optional().nullable(),
 });
 
 export async function GET(req: NextRequest) {
@@ -32,13 +31,10 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "50");
   const skip = (page - 1) * limit;
 
-  const branchId = searchParams.get("branchId");
-
   const where: Prisma.PaymentWhereInput = {};
   if (leadId) where.leadId = leadId;
   if (groupId) where.groupId = groupId;
   if (month) where.forMonth = month;
-  if (branchId) where.branchId = branchId;
   if (q) where.lead = { OR: [{ fullName: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }] };
 
   const now = new Date();
@@ -109,7 +105,6 @@ export async function POST(req: NextRequest) {
       note: d.note || null,
       paidAt: d.paidAt ? new Date(d.paidAt) : new Date(),
       createdById: user.id,
-      branchId: d.branchId || null,
     },
     include: { lead: { select: { id: true, fullName: true } } },
   });

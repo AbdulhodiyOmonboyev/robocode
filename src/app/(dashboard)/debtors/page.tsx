@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { AlertCircle, Bell, Users2 } from "lucide-react";
 import { cn, getInitials, formatPhone, phoneToTel } from "@/lib/utils";
+import { MonthPicker } from "@/components/ui/date-picker";
 
 const BRAND = "#5E2CA5";
 
@@ -32,7 +33,8 @@ export default function DebtorsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/debtors?month=${month}`);
+    const params = new URLSearchParams({ month });
+    const res = await fetch(`/api/debtors?${params.toString()}`);
     if (res.ok) {
       const d = await res.json();
       setDebtors(d.debtors ?? []);
@@ -70,11 +72,10 @@ export default function DebtorsPage() {
             To&apos;lovi kechikkan ro&apos;yxatga olingan o&apos;quvchilar
           </p>
         </div>
-        <input
-          type="month"
+        <MonthPicker
           value={month}
           onChange={e => setMonth(e.target.value)}
-          className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
+          className="px-3 py-2 text-[13px]"
         />
       </div>
 

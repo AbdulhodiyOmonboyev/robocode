@@ -13,7 +13,6 @@ const createSchema = z.object({
   timeTo: z.string().optional().nullable(),
   room: z.string().optional().nullable(),
   startDate: z.string().optional().nullable(),
-  branchId: z.string().optional().nullable(),
 });
 
 export async function GET(req: NextRequest) {
@@ -26,8 +25,6 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit;
 
   const where: Prisma.GroupWhereInput = {};
-  const branchId = searchParams.get("branchId") || "";
-  if (branchId) where.branchId = branchId;
 
   const [groups, total] = await Promise.all([
     db.group.findMany({
@@ -72,7 +69,6 @@ export async function POST(req: NextRequest) {
       timeTo: d.timeTo || null,
       room: d.room || null,
       startDate: d.startDate ? new Date(d.startDate) : null,
-      branchId: d.branchId || null,
     },
   });
   return NextResponse.json(group, { status: 201 });

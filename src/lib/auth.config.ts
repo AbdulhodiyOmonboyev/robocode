@@ -17,17 +17,23 @@ export const authConfig: NextAuthConfig = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id as string;
         token.role = user.role;
         token.fullName = user.fullName;
+        token.avatarUrl = user.avatarUrl ?? null;
         token.username = user.username;
         token.canManageLeads = user.canManageLeads;
         token.canManageCourses = user.canManageCourses;
         token.canManageUsers = user.canManageUsers;
         token.canViewReports = user.canViewReports;
         token.canExportData = user.canExportData;
+      }
+      // Client called useSession().update(partial) — e.g. after saving name/avatar on the profile page
+      if (trigger === "update" && session) {
+        if (typeof session.fullName === "string") token.fullName = session.fullName;
+        if ("avatarUrl" in session) token.avatarUrl = session.avatarUrl;
       }
       return token;
     },
@@ -36,6 +42,7 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.fullName = token.fullName;
+        session.user.avatarUrl = token.avatarUrl ?? null;
         session.user.username = token.username;
         session.user.canManageLeads = token.canManageLeads;
         session.user.canManageCourses = token.canManageCourses;

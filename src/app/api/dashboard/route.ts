@@ -40,7 +40,7 @@ export async function GET() {
     frozen,
     stageGroups,
     sourceDistribution,
-    leadsByDay,
+    leadsInLast30Days,
     topCourses,
     recentLeads,
     recentActivities,
@@ -78,14 +78,10 @@ export async function GET() {
     db.lead.count({ where: { frozenAt: { not: null }, isArchived: false } }),
     db.lead.groupBy({ by: ["stageId"], _count: { id: true } }),
     db.lead.groupBy({ by: ["source"], _count: { id: true } }),
-    Promise.all(
-      Array.from({ length: 30 }, (_, i) => {
-        const day = subDays(now, 29 - i);
-        return db.lead
-          .count({ where: { createdAt: { gte: startOfDay(day), lte: endOfDay(day) } } })
-          .then(count => ({ date: format(day, "MM/dd"), count }));
-      })
-    ),
+    db.lead.findMany({
+      where: { createdAt: { gte: startOfDay(subDays(now, 29)), lte: todayEnd } },
+      select: { createdAt: true },
+    }),
     db.lead.groupBy({
       by: ["courseId"],
       _count: { id: true },
@@ -112,6 +108,17 @@ export async function GET() {
     }),
   ]);
 
+  // Bucket the single 30-day lead fetch into per-day counts (was 30 separate COUNT queries)
+  const leadsByDay = Array.from({ length: 30 }, (_, i) => {
+    const day = subDays(now, 29 - i);
+    const dayStart = startOfDay(day);
+    const dayEnd = endOfDay(day);
+    const count = leadsInLast30Days.filter(
+      l => l.createdAt >= dayStart && l.createdAt <= dayEnd
+    ).length;
+    return { date: format(day, "MM/dd"), count };
+  });
+
   // Debtors: enrolled leads who haven't paid this month
   const paidThisMonth = paidThisMonthRecords.length;
   const paidLastMonth = paidLastMonthRecords.length;
@@ -120,14 +127,16 @@ export async function GET() {
 
   const debtorWhere: Prisma.LeadWhereInput = { status: "ENROLLED", isArchived: false };
   if (paidLeadIdsThisMonth.length > 0) debtorWhere.id = { notIn: paidLeadIdsThisMonth };
-  const debtors = await db.lead.count({ where: debtorWhere });
 
-  // Course details for topCourses
   const courseIds = topCourses.map(c => c.courseId).filter(Boolean) as string[];
-  const courses = await db.course.findMany({
-    where: { id: { in: courseIds } },
-    select: { id: true, name: true, color: true },
-  });
+
+  const [debtors, courses] = await Promise.all([
+    db.lead.count({ where: debtorWhere }),
+    db.course.findMany({
+      where: { id: { in: courseIds } },
+      select: { id: true, name: true, color: true },
+    }),
+  ]);
   const courseMap = Object.fromEntries(courses.map(c => [c.id, c]));
 
   // Stage distribution

@@ -140,6 +140,7 @@ interface SessionUser {
   fullName?: string;
   name?: string;
   role?: string;
+  avatarUrl?: string | null;
 }
 
 const ICON = "w-[18px] h-[18px] flex-shrink-0";
@@ -371,10 +372,15 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }: Side
               collapsed && "flex-initial justify-center"
             )}
           >
-            <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 flex items-center justify-center">
-              <span className="text-xs font-semibold text-[#5E2CA5] dark:text-purple-400">
-                {user ? getInitials(user.fullName ?? user.name ?? "U") : "U"}
-              </span>
+            <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 flex items-center justify-center overflow-hidden">
+              {user?.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xs font-semibold text-[#5E2CA5] dark:text-purple-400">
+                  {user ? getInitials(user.fullName ?? user.name ?? "U") : "U"}
+                </span>
+              )}
             </div>
             {!collapsed && (
               <div className="min-w-0 flex-1">

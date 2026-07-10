@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Moon, Sun, Search, Plus, Menu, LogOut, Settings, Sparkles } from "lucide-react";
+import { Moon, Sun, Search, Plus, Menu, LogOut, Settings, Sparkles, CalendarRange } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { getInitials } from "@/lib/utils";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import NotificationBell from "@/components/shared/NotificationBell";
-import BranchSwitcher from "@/components/shared/BranchSwitcher";
 
 interface SessionUser {
   fullName?: string;
   name?: string;
   role?: string;
+  avatarUrl?: string | null;
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -109,12 +109,9 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         {pageTitle}
       </h1>
 
-      <BranchSwitcher />
-
-      {/* Right-side cluster */}
-      <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
-        {/* Search */}
-        <form onSubmit={handleSearch} className="hidden sm:block w-48 lg:w-64">
+      {/* Search — centered in the space between title and right cluster */}
+      <div className="hidden sm:flex flex-1 justify-center px-4">
+        <form onSubmit={handleSearch} className="w-full max-w-xs lg:max-w-sm">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -126,7 +123,10 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             />
           </div>
         </form>
+      </div>
 
+      {/* Right-side cluster */}
+      <div className="flex items-center gap-1.5 sm:gap-2 ml-auto sm:ml-0">
         {/* Yangi versiya badge */}
         <Link
           href="/changelog"
@@ -152,6 +152,16 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
           <Plus className="w-4 h-4" />
         </Link>
 
+        {/* Dars jadvali */}
+        <Link
+          href="/timetable"
+          className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors flex-shrink-0"
+          title="Dars jadvali"
+          aria-label="Dars jadvali"
+        >
+          <CalendarRange className="w-5 h-5" />
+        </Link>
+
         {/* Dark mode toggle */}
         <button
           onClick={toggleDark}
@@ -173,10 +183,15 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             onClick={() => setUserMenuOpen((o) => !o)}
             className="flex items-center gap-2 p-1 pr-1.5 sm:pr-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 flex items-center justify-center flex-shrink-0">
-              <span className="text-[11px] font-semibold text-[#5E2CA5] dark:text-purple-300">
-                {user ? getInitials(user.fullName ?? user.name ?? "U") : "U"}
-              </span>
+            <div className="w-8 h-8 rounded-full bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {user?.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[11px] font-semibold text-[#5E2CA5] dark:text-purple-300">
+                  {user ? getInitials(user.fullName ?? user.name ?? "U") : "U"}
+                </span>
+              )}
             </div>
             <div className="hidden sm:block text-left min-w-0">
               <p className="text-[12px] font-medium text-gray-900 dark:text-white leading-tight truncate max-w-[110px]">

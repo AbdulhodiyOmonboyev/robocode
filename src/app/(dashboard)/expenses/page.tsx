@@ -9,7 +9,6 @@ import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { exportToCsv } from "@/lib/export";
 import { cn } from "@/lib/utils";
-import { useBranch } from "@/contexts/BranchContext";
 
 interface Expense {
   id: string; amount: string; category: string; note: string | null;
@@ -51,12 +50,9 @@ export default function ExpensesPage() {
   const [form, setForm] = useState({ amount: "", category: "", note: "", method: "cash", spentAt: todayStr() });
   const [saving, setSaving]     = useState(false);
 
-  const { branchId } = useBranch();
-
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ month });
-    if (branchId) params.set("branchId", branchId);
     const res = await fetch(`/api/expenses?${params}`);
     if (res.ok) {
       const d = await res.json();
@@ -64,7 +60,7 @@ export default function ExpensesPage() {
       setSummary(d.summary || { total: 0, count: 0 });
     }
     setLoading(false);
-  }, [month, branchId]);
+  }, [month]);
   useEffect(() => { load(); }, [load]);
 
   const save = async () => {

@@ -29,10 +29,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const month = searchParams.get("month") || currentMonth();
   const { start, end } = monthRange(month);
-  const branchId = searchParams.get("branchId");
 
   const expenses = await db.expense.findMany({
-    where: { spentAt: { gte: start, lt: end }, ...(branchId ? { branchId } : {}) },
+    where: { spentAt: { gte: start, lt: end } },
     orderBy: { spentAt: "desc" },
     include: { createdBy: { select: { fullName: true } } },
   });
@@ -46,7 +45,6 @@ const schema = z.object({
   category: z.string().min(1, "Kategoriya kiriting"),
   note: z.string().optional().nullable(),
   spentAt: z.string().optional().nullable(),
-  branchId: z.string().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -67,7 +65,6 @@ export async function POST(req: NextRequest) {
       note: d.note || null,
       spentAt: d.spentAt ? new Date(d.spentAt) : new Date(),
       createdById: user.id,
-      branchId: d.branchId || null,
     },
   });
   return NextResponse.json(expense, { status: 201 });

@@ -6,12 +6,12 @@ import {
   Plus, Trash2, X, Search, Wallet, CalendarDays, AlertCircle, Receipt, Download,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { MonthPicker } from "@/components/ui/date-picker";
 import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { exportToCsv } from "@/lib/export";
 import { cn } from "@/lib/utils";
-import { useBranch } from "@/contexts/BranchContext";
 
 interface Payment {
   id: string; amount: string; discount?: string | null; currency: string;
@@ -26,8 +26,8 @@ const METHODS: Record<string, string> = { cash: "Naqd", card: "Karta", transfer:
 const BRAND = "#5E2CA5";
 
 interface PaymentSummary { total: number; count: number; monthTotal: number; month: string; }
-interface Debtor { id: string; fullName: string; phone: string; group: string | null; course: string | null; expected: number; }
-interface DebtorsData { debtors: Debtor[]; totalExpected: number; month: string; }
+interface Debtor { id: string; fullName: string; phone: string; group: string | null; course: string | null; required: number; paid: number; debt: number; }
+interface DebtorsData { debtors: Debtor[]; totalDebt: number; count: number; month: string; }
 interface PresetLead { id: string; fullName: string; phone: string; group?: { id: string } | null; }
 interface PaymentType { id: string; name: string; isActive: boolean; }
 
@@ -51,17 +51,14 @@ export default function PaymentsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [presetLead, setPresetLead] = useState<PresetLead | null>(null);
   const [view, setView] = useState<"payments" | "debtors">("payments");
-  const [debtors, setDebtors] = useState<DebtorsData>({ debtors: [], totalExpected: 0, month: "" });
+  const [debtors, setDebtors] = useState<DebtorsData>({ debtors: [], totalDebt: 0, count: 0, month: "" });
   const [debtMonth, setDebtMonth] = useState(ym(new Date()));
-
-  const { branchId } = useBranch();
 
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (month) params.set("month", month);
-    if (branchId) params.set("branchId", branchId);
     params.set("page", String(page));
     const res = await fetch("/api/payments?" + params.toString());
     const data = await res.json();
@@ -70,7 +67,7 @@ export default function PaymentsPage() {
     setTotal(data.total || 0);
     setPages(data.pages || 1);
     setLoading(false);
-  }, [q, month, page, branchId]);
+  }, [q, month, page]);
 
   useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [load]);
 
@@ -78,7 +75,8 @@ export default function PaymentsPage() {
   const setFilterMonth = (v: string) => { setMonth(v); setPage(1); };
 
   const loadDebtors = useCallback(async () => {
-    const res = await fetch(`/api/payments/debtors?month=${debtMonth}`);
+    const params = new URLSearchParams({ month: debtMonth });
+    const res = await fetch(`/api/debtors?${params.toString()}`);
     setDebtors(await res.json());
   }, [debtMonth]);
 
@@ -132,8 +130,8 @@ export default function PaymentsPage() {
     },
     {
       label: "Qarzdorlar",
-      value: `${debtors.debtors?.length || 0} ta`,
-      sub: debtors.totalExpected ? `${money(debtors.totalExpected)} so'm kutilmoqda` : undefined,
+      value: `${debtors.count || 0} ta`,
+      sub: debtors.totalDebt ? `${money(debtors.totalDebt)} so'm qarz` : undefined,
       icon: AlertCircle,
       chip: "bg-red-500/10 text-red-600",
     },
@@ -215,9 +213,9 @@ export default function PaymentsPage() {
                 className="w-full pl-9 pr-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
               />
             </div>
-            <input
-              type="month" value={month} onChange={e => setFilterMonth(e.target.value)}
-              className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
+            <MonthPicker
+              value={month} onChange={e => setFilterMonth(e.target.value)}
+              className="px-3 py-2 text-[13px]"
             />
             {month && (
               <button onClick={() => setFilterMonth("")} className="px-3 py-2 text-[13px] font-medium text-gray-500 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
@@ -370,14 +368,14 @@ export default function PaymentsPage() {
       {view === "debtors" && (
         <div className="space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
-            <input
-              type="month" value={debtMonth} onChange={e => setDebtMonth(e.target.value)}
-              className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 transition"
+            <MonthPicker
+              value={debtMonth} onChange={e => setDebtMonth(e.target.value)}
+              className="px-3 py-2 text-[13px]"
             />
             {(debtors.debtors?.length > 0) && (
               <p className="text-[13px] text-gray-500">
-                <span className="font-semibold text-gray-900 dark:text-white">{debtors.debtors.length}</span> qarzdor ·{" "}
-                kutilayotgan: <span className="font-semibold text-red-600">{money(debtors.totalExpected)} so&apos;m</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{debtors.count}</span> qarzdor ·{" "}
+                qarz: <span className="font-semibold text-red-600">{money(debtors.totalDebt)} so&apos;m</span>
               </p>
             )}
           </div>
@@ -390,7 +388,7 @@ export default function PaymentsPage() {
                     <th className={TH}>O&apos;quvchi</th>
                     <th className={TH}>Guruh</th>
                     <th className={TH}>Kurs</th>
-                    <th className={cn(TH, "text-right")}>Oylik</th>
+                    <th className={cn(TH, "text-right")}>Qarz</th>
                     <th className={TH}>Holat</th>
                     <th className={TH}></th>
                   </tr>
@@ -420,7 +418,7 @@ export default function PaymentsPage() {
                       <td className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400">{d.group || "—"}</td>
                       <td className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400">{d.course || "—"}</td>
                       <td className="px-4 py-3 text-right">
-                        <span className="text-[14px] font-bold text-red-600 whitespace-nowrap">{money(d.expected)} so&apos;m</span>
+                        <span className="text-[14px] font-bold text-red-600 whitespace-nowrap">{money(d.debt)} so&apos;m</span>
                       </td>
                       {/* Holat: Qarz */}
                       <td className="px-4 py-3">
@@ -558,7 +556,7 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: Preset
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>Qaysi oy uchun</label>
-            <input type="month" value={forMonth} onChange={e => setForMonth(e.target.value)} className={fieldCls} />
+            <MonthPicker value={forMonth} onChange={e => setForMonth(e.target.value)} className={fieldCls} />
           </div>
           <div>
             <label className={labelCls}>Usul</label>
