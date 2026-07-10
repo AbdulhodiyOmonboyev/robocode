@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Moon, Sun, Search, Plus, Menu, LogOut, Settings, Sparkles, CalendarRange } from "lucide-react";
+import { Moon, Sun, Search, Plus, Menu, LogOut, Settings, CalendarRange } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -92,7 +92,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   return (
     <header
-      className="h-16 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-gray-900 flex items-center px-3 sm:px-4 gap-2 sm:gap-4"
+      className="h-16 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-gray-900 flex items-center px-3 sm:px-5 gap-3 sm:gap-5"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
       {/* Hamburger (mobile) */}
@@ -126,16 +126,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
 
       {/* Right-side cluster */}
-      <div className="flex items-center gap-1.5 sm:gap-2 ml-auto sm:ml-0">
-        {/* Yangi versiya badge */}
-        <Link
-          href="/changelog"
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold text-[#5E2CA5] dark:text-purple-300 bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 hover:bg-[#5E2CA5]/15 dark:hover:bg-[#5E2CA5]/25 transition-colors flex-shrink-0"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          Yangi versiya
-        </Link>
-
+      <div className="flex items-center gap-2 sm:gap-3 ml-auto sm:ml-0">
         {/* Quick add lead */}
         <Link
           href="/leads/new"
@@ -155,11 +146,11 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* Dars jadvali */}
         <Link
           href="/timetable"
-          className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors flex-shrink-0"
+          className="p-2.5 rounded-xl text-gray-500 hover:bg-[#5E2CA5]/10 hover:text-[#5E2CA5] dark:hover:bg-[#5E2CA5]/20 dark:hover:text-purple-300 transition-colors flex-shrink-0"
           title="Dars jadvali"
           aria-label="Dars jadvali"
         >
-          <CalendarRange className="w-5 h-5" />
+          <CalendarRange className="w-[22px] h-[22px]" />
         </Link>
 
         {/* Dark mode toggle */}
