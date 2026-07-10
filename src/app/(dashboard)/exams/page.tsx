@@ -7,6 +7,7 @@ import {
   Calendar, Users, TrendingUp,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn, getInitials } from "@/lib/utils";
@@ -260,7 +261,7 @@ export default function ExamsPage() {
             </div>
             <div>
               <label className={labelCls}>Sana</label>
-              <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={fieldCls} />
+              <DatePicker value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={fieldCls} />
             </div>
         </Modal>
       )}

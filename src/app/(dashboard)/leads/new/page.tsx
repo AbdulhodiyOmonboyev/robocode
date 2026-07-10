@@ -10,6 +10,7 @@ import { ArrowLeft, Phone, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -243,7 +244,7 @@ export default function NewLeadPage() {
               </div>
               <div>
                 <label className={labelCls}>Sinov darsi sanasi</label>
-                <input type="date" {...register("trialDate")} className={fieldCls} />
+                <DatePicker value={watch("trialDate") || ""} onChange={e => setValue("trialDate", e.target.value)} className={fieldCls} />
               </div>
               <div>
                 <label className={labelCls}>Mas&apos;ul menejer</label>

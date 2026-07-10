@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DatePicker } from "@/components/ui/date-picker";
 import { LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
 import { cn, formatDate, formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
 import { useBranch } from "@/contexts/BranchContext";
@@ -260,9 +261,9 @@ export default function LeadsPage() {
             <div>
               <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1.5">Sana oralig&apos;i: Dan – Gacha</label>
               <div className="flex items-center gap-1.5">
-                <input type="date" value={filters.dateFrom} onChange={e => setFilter("dateFrom", e.target.value)} className={cn(inputCls, "min-w-0")} />
+                <DatePicker value={filters.dateFrom} onChange={e => setFilter("dateFrom", e.target.value)} className={cn(inputCls, "min-w-0")} />
                 <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">–</span>
-                <input type="date" value={filters.dateTo} onChange={e => setFilter("dateTo", e.target.value)} className={cn(inputCls, "min-w-0")} />
+                <DatePicker value={filters.dateTo} onChange={e => setFilter("dateTo", e.target.value)} className={cn(inputCls, "min-w-0")} />
               </div>
             </div>
           </div>
@@ -538,7 +539,7 @@ export default function LeadsPage() {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1.5">Boshlanish sanasi</label>
-                  <input type="date" value={newGroup.startDate} onChange={e => setNewGroup(g => ({ ...g, startDate: e.target.value }))} className={inputCls} />
+                  <DatePicker value={newGroup.startDate} onChange={e => setNewGroup(g => ({ ...g, startDate: e.target.value }))} className={inputCls} />
                 </div>
               </div>
             )}

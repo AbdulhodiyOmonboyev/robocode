@@ -5,6 +5,7 @@ import { Download, Printer, Wallet, TrendingDown, Banknote, TrendingUp, AlertCir
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useDarkMode } from "@/hooks/useDarkMode";
+import { MonthPicker } from "@/components/ui/date-picker";
 
 const BRAND = "#5E2CA5";
 
@@ -77,9 +78,9 @@ export default function FinancialReportPage() {
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5 capitalize">{monthLabel(month)}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap print:hidden">
-          <input
-            type="month" value={month} onChange={e => setMonth(e.target.value)}
-            className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
+          <MonthPicker
+            value={month} onChange={e => setMonth(e.target.value)}
+            className="px-3 py-2 text-[13px]"
           />
           <button
             onClick={exportCSV}

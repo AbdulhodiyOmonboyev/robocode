@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, PlusCircle, Sparkles, Hash } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DatePicker, MonthPicker } from "@/components/ui/date-picker";
 import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
@@ -124,9 +125,9 @@ export default function IncomesPage() {
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">{month} · kurs to&apos;lovidan tashqari</p>
         </div>
         <div className="flex items-center gap-2">
-          <input
-            type="month" value={month} onChange={e => setMonth(e.target.value)}
-            className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 transition"
+          <MonthPicker
+            value={month} onChange={e => setMonth(e.target.value)}
+            className="px-3 py-2 text-[13px]"
           />
           <button
             onClick={() => setShowAdd(true)}
@@ -280,7 +281,7 @@ export default function IncomesPage() {
               </div>
               <div>
                 <label className={labelCls}>Sana</label>
-                <input type="date" value={form.receivedAt}
+                <DatePicker value={form.receivedAt}
                   onChange={e => setForm(f => ({ ...f, receivedAt: e.target.value }))}
                   className={fieldCls} />
               </div>

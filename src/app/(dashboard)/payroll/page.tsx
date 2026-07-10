@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Wallet, CheckCircle2, Hourglass, Users2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { MonthPicker } from "@/components/ui/date-picker";
 import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
@@ -78,9 +79,9 @@ export default function PayrollPage() {
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Xodimlar oyligi va bonuslari</p>
         </div>
         <div className="flex items-center gap-2">
-          <input
-            type="month" value={month} onChange={e => setMonth(e.target.value)}
-            className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
+          <MonthPicker
+            value={month} onChange={e => setMonth(e.target.value)}
+            className="px-3 py-2 text-[13px]"
           />
           <button
             onClick={() => setShowAdd(true)}

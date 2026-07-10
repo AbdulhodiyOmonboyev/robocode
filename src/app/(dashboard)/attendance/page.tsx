@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Save, Check } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
+import { MonthPicker } from "@/components/ui/date-picker";
 
 interface Student { leadId: string; fullName: string; phone: string; status: string | null; }
 
@@ -179,8 +180,7 @@ export default function AttendancePage() {
             {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
 
-          <input
-            type="month"
+          <MonthPicker
             value={month}
             onChange={e => setMonth(e.target.value)}
             className={selectCls}

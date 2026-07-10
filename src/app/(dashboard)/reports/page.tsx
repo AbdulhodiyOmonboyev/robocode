@@ -10,6 +10,7 @@ const ReportsChart = dynamic(() => import("./ReportsChart"), {
   loading: () => <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm h-72 animate-pulse" />,
 });
 import { cn, formatCurrency } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const BRAND = "#5E2CA5";
 
@@ -64,14 +65,14 @@ export default function ReportsPage() {
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Statistika va analitika</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <input
-            type="date" value={from} onChange={e => setFrom(e.target.value)}
-            className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
+          <DatePicker
+            value={from} onChange={e => setFrom(e.target.value)}
+            className="px-3 py-2 text-[13px]"
           />
           <span className="text-gray-300">—</span>
-          <input
-            type="date" value={to} onChange={e => setTo(e.target.value)}
-            className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
+          <DatePicker
+            value={to} onChange={e => setTo(e.target.value)}
+            className="px-3 py-2 text-[13px]"
           />
           <button
             onClick={exportCSV}

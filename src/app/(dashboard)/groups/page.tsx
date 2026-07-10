@@ -10,6 +10,7 @@ import {
 import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DatePicker } from "@/components/ui/date-picker";
 import { WEEKDAYS } from "@/lib/constants";
 import { cn, formatPhone, getInitials } from "@/lib/utils";
 import { useBranch } from "@/contexts/BranchContext";
@@ -401,7 +402,7 @@ export default function GroupsPage() {
               </div>
               <div>
                 <label className={labelCls}>Boshlanish sanasi</label>
-                <input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} className={fieldCls} />
+                <DatePicker value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} className={fieldCls} />
               </div>
               <div>
                 <label className={labelCls}>Xona</label>

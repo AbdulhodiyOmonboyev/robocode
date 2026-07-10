@@ -9,6 +9,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton, modalFieldCls, modalLabelCls } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DatePicker } from "@/components/ui/date-picker";
 import { TASK_TYPE_LABELS } from "@/lib/constants";
 import { cn, formatDate } from "@/lib/utils";
 
@@ -380,7 +381,7 @@ export default function TasksPage() {
             </div>
             <div>
               <label className={modalLabelCls}>Muddat</label>
-              <input type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} className={modalFieldCls} />
+              <DatePicker value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} className={modalFieldCls} />
             </div>
           </div>
 

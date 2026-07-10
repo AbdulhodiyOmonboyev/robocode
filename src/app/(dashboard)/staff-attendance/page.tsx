@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Users2, CheckCircle2, Clock, XCircle, Activity, LogIn, LogOut } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/permissions";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const BRAND = "#5E2CA5";
 
@@ -112,11 +113,10 @@ export default function StaffAttendancePage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Xodimlar davomati</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Kelish-ketish vaqtlarini nazorat qilish</p>
         </div>
-        <input
-          type="date"
+        <DatePicker
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="px-3 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
+          className="px-3 py-2 text-[13px]"
         />
       </div>
 
