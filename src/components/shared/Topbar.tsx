@@ -5,7 +5,7 @@ import { Moon, Sun, Search, Plus, Menu, LogOut, Settings, CalendarRange } from "
 import { useRouter, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { getInitials } from "@/lib/utils";
+import { cn, getInitials, formatPhone } from "@/lib/utils";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import NotificationBell from "@/components/shared/NotificationBell";
 
@@ -14,6 +14,13 @@ interface SessionUser {
   name?: string;
   role?: string;
   avatarUrl?: string | null;
+}
+
+interface LeadSearchResult {
+  id: string;
+  fullName: string;
+  phone: string;
+  status: string;
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -66,6 +73,12 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { data: session } = useSession();
   const { dark, toggleDark } = useDarkMode();
   const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<LeadSearchResult[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -77,16 +90,72 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
       }
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
     };
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (search.trim()) {
-      router.push(`/leads?search=${encodeURIComponent(search.trim())}`);
-      setSearch("");
+  // Live, debounced search across leads + students (by name or phone)
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/leads?search=${encodeURIComponent(q)}&limit=8`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.leads || []);
+          setSearchOpen(true);
+        }
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => { setActiveIndex(0); }, [searchResults]);
+
+  const goToLead = (id: string) => {
+    router.push(`/leads/${id}`);
+    setSearch("");
+    setSearchResults([]);
+    setSearchOpen(false);
+  };
+
+  const onSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      setSearchOpen(false);
+      searchInputRef.current?.blur();
+      return;
+    }
+    if (!searchOpen || searchResults.length === 0) {
+      if (e.key === "Enter" && search.trim()) {
+        e.preventDefault();
+        router.push(`/leads?search=${encodeURIComponent(search.trim())}`);
+        setSearch("");
+        setSearchOpen(false);
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(i + 1, searchResults.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const item = searchResults[activeIndex];
+      if (item) goToLead(item.id);
     }
   };
 
@@ -111,18 +180,74 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
       {/* Search — centered in the space between title and right cluster */}
       <div className="hidden sm:flex flex-1 justify-center px-4">
-        <form onSubmit={handleSearch} className="w-full max-w-xs lg:max-w-sm">
+        <div className="relative w-full max-w-xs lg:max-w-sm" ref={searchBoxRef}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
+              ref={searchInputRef}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={onSearchKeyDown}
+              onFocus={() => { if (searchResults.length) setSearchOpen(true); }}
               type="text"
               placeholder="Qidirish..."
-              className="w-full pl-9 pr-4 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
+              className="w-full pl-9 pr-8 py-2 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
             />
+            {searching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-gray-200 dark:border-white/10 border-t-[#5E2CA5] rounded-full animate-spin" />
+            )}
           </div>
-        </form>
+
+          {searchOpen && search.trim().length >= 2 && (
+            <div className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 z-50 overflow-hidden py-1.5 max-h-96 overflow-y-auto">
+              {searchResults.length === 0 ? (
+                <p className="px-4 py-6 text-center text-[13px] text-gray-400">
+                  {searching ? "Qidirilmoqda..." : "Hech narsa topilmadi"}
+                </p>
+              ) : (
+                searchResults.map((lead, idx) => {
+                  const isActive = idx === activeIndex;
+                  const isStudent = lead.status === "ENROLLED";
+                  return (
+                    <button
+                      key={lead.id}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                      onClick={() => goToLead(lead.id)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                        isActive ? "bg-[#5E2CA5]/8 dark:bg-[#5E2CA5]/15" : "hover:bg-gray-50 dark:hover:bg-white/5"
+                      )}
+                    >
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                        style={{ backgroundColor: "#5E2CA5" }}
+                      >
+                        {getInitials(lead.fullName)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={cn(
+                          "text-[13px] font-medium truncate",
+                          isActive ? "text-[#5E2CA5] dark:text-purple-300" : "text-gray-900 dark:text-white"
+                        )}>
+                          {lead.fullName}
+                        </p>
+                        <p className="text-[11px] text-gray-400 truncate">{formatPhone(lead.phone)}</p>
+                      </div>
+                      <span className={cn(
+                        "flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                        isStudent
+                          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                          : "bg-[#5E2CA5]/10 text-[#5E2CA5] dark:bg-[#5E2CA5]/20 dark:text-purple-300"
+                      )}>
+                        {isStudent ? "Talaba" : "Lid"}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Right-side cluster */}
