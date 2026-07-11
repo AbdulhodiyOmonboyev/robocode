@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { User, Phone, BookOpen, Clock, MessageSquare, Users, Check } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 export default function ApplyPage() {
   const [cfg, setCfg] = useState<{ courses: { id: string; name: string }[]; name: string; logo: string }>({ courses: [], name: "Robocode CRM", logo: "" });
@@ -73,7 +74,7 @@ export default function ApplyPage() {
               </div>
               <div>
                 <label className={label}><Phone className="w-3.5 h-3.5 text-gray-400" /> Telefon raqam *</label>
-                <input className={inp} type="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} placeholder="+998 90 123 45 67" />
+                <PhoneInput value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} size="lg" />
               </div>
               {cfg.courses.length > 0 && (
                 <div>
@@ -98,7 +99,7 @@ export default function ApplyPage() {
                   <label className={label}><Users className="w-3.5 h-3.5 text-gray-400" /> Sizni kim tavsiya qildi? <span className="text-gray-400 font-normal">(ixtiyoriy)</span></label>
                   <div className="space-y-2">
                     <input className={inp} value={form.referrerName} onChange={(e) => setForm((f) => ({ ...f, referrerName: e.target.value }))} placeholder="Tavsiya qilgan kishi ismi" />
-                    <input className={inp} value={form.referrerPhone} onChange={(e) => setForm((f) => ({ ...f, referrerPhone: e.target.value }))} placeholder="Uning telefoni" />
+                    <PhoneInput value={form.referrerPhone} onChange={(e) => setForm((f) => ({ ...f, referrerPhone: e.target.value }))} size="lg" />
                   </div>
                 </div>
               </div>

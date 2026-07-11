@@ -6,11 +6,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Phone, AlertTriangle } from "lucide-react";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -80,7 +81,7 @@ export default function NewLeadPage() {
   }, []);
 
   useEffect(() => {
-    if (!phone || phone.length < 9) { setDuplicate(null); return; }
+    if (!phone || phone.replace(/\D/g, "").length < 9) { setDuplicate(null); return; }
     const timer = setTimeout(async () => {
       const res = await fetch(`/api/leads?search=${encodeURIComponent(phone)}&limit=1`);
       if (res.ok) {
@@ -184,11 +185,7 @@ export default function NewLeadPage() {
               </div>
               <div>
                 <label className={labelCls}>Telefon raqam *</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input {...register("phone")} type="tel" placeholder="+998 90 123 45 67"
-                    className={cn(fieldCls, "pl-9")} />
-                </div>
+                <PhoneInput value={watch("phone") || ""} onChange={e => setValue("phone", e.target.value)} />
                 {errors.phone && <p className="mt-1 text-[11px] text-red-500">{errors.phone.message}</p>}
               </div>
             </div>
@@ -196,7 +193,7 @@ export default function NewLeadPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Qo&apos;shimcha raqam</label>
-                <input {...register("phoneSecondary")} placeholder="+998 91 ..." className={fieldCls} />
+                <PhoneInput value={watch("phoneSecondary") || ""} onChange={e => setValue("phoneSecondary", e.target.value)} />
               </div>
               <div>
                 <label className={labelCls}>Yoshi</label>
@@ -212,7 +209,7 @@ export default function NewLeadPage() {
               </div>
               <div>
                 <label className={labelCls}>Ota-ona telefoni</label>
-                <input {...register("parentPhone")} placeholder="+998 90 ..." className={fieldCls} />
+                <PhoneInput value={watch("parentPhone") || ""} onChange={e => setValue("parentPhone", e.target.value)} />
               </div>
             </div>
           </div>

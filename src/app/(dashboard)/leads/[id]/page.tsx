@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { useConfirm } from "@/components/ui/confirm";
 import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_SOURCE_LABELS } from "@/lib/constants";
 import { formatDate, formatDateTime, formatRelativeTime, formatPhone, phoneToTel, phoneToTelegram, phoneToWhatsapp, formatCurrency, getInitials } from "@/lib/utils";
@@ -309,7 +310,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 ].map(([label, field, value]) => (
                   <div key={label as string} className="flex items-center justify-between gap-3">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wide flex-shrink-0">{label}</span>
-                    {editing && field ? (
+                    {editing && field === "parentPhone" ? (
+                      <PhoneInput
+                        value={(editData.parentPhone as string) || ""}
+                        onChange={e=>setEditData((d)=>({...d, parentPhone: e.target.value}))}
+                        className="w-44"
+                      />
+                    ) : editing && field ? (
                       <input value={(editData[field as string] as string) || ""} onChange={e=>setEditData((d)=>({...d,[field as string]:e.target.value}))}
                         className="block w-32 px-2 py-1.5 text-sm border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#5E2CA5] outline-none text-right"/>
                     ) : (

@@ -12,6 +12,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useConfirm } from "@/components/ui/confirm";
 import { useDarkMode } from "@/hooks/useDarkMode";
@@ -482,8 +483,7 @@ export default function SettingsPage() {
                 <div className="pt-3 border-t border-gray-100 dark:border-white/10">
                   <label className="block text-xs text-gray-500 mb-1">Test SMS yuborish</label>
                   <div className="flex items-end gap-2">
-                    <input value={smsTest} onChange={e=>setSmsTest(e.target.value)} placeholder="+998 90 123 45 67"
-                      className={`flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 ${inputFocus}`}/>
+                    <PhoneInput value={smsTest} onChange={e=>setSmsTest(e.target.value)} className="flex-1" />
                     <Button size="sm" variant="outline" onClick={testSms}>Test</Button>
                   </div>
                 </div>

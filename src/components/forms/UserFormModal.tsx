@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 
 const schema = z.object({
@@ -59,6 +60,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
   const {
     register,
     handleSubmit,
+    watch,
     setValue,
     formState: { errors },
   } = useForm<FormData>({
@@ -132,7 +134,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Email" type="email" {...register("email")} error={errors.email?.message} placeholder="aziz@example.com" />
-            <Input label="Telefon" {...register("phone")} placeholder="+998901234567" />
+            <PhoneInput label="Telefon" value={watch("phone") || ""} onChange={e => setValue("phone", e.target.value)} />
           </div>
 
           {/* Password */}
