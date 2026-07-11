@@ -2,7 +2,7 @@
 
 import { Clock } from "lucide-react";
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { LEAD_SOURCE_LABELS } from "@/lib/constants";
@@ -44,35 +44,7 @@ export default function DashboardCharts({ data }: { data: DashboardData }) {
 
   return (
     <>
-      {/* Row 1: Area chart */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Lidlar dinamikasi</h2>
-            <p className="text-xs text-gray-400 mt-0.5">So&apos;nggi 30 kun</p>
-          </div>
-        </div>
-        <ResponsiveContainer width="100%" height={320}>
-          <AreaChart data={data.leadsByDay} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="brandGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={BRAND} stopOpacity={0.15} />
-                <stop offset="95%" stopColor={BRAND} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-            <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-            <Tooltip
-              contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", fontSize: 12 }}
-              cursor={{ stroke: BRAND, strokeWidth: 1, strokeDasharray: "4 4" }}
-            />
-            <Area type="monotone" dataKey="count" name="Lidlar" stroke={BRAND} strokeWidth={2} fill="url(#brandGrad)" dot={false} activeDot={{ r: 4, fill: BRAND }} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Row 2: Sources + Stages + Courses */}
+      {/* Row 1: Sources + Stages + Courses */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-6">
           <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Manbalar</h2>
