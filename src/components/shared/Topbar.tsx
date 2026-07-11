@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Moon, Sun, Search, Plus, Menu, LogOut, Settings, CalendarRange } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { cn, getInitials, formatPhone } from "@/lib/utils";
@@ -23,53 +23,8 @@ interface LeadSearchResult {
   status: string;
 }
 
-const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/leads/kanban": "Kanban",
-  "/leads/new": "Yangi lid",
-  "/leads": "Lidlar",
-  "/students": "O'quvchilar",
-  "/groups": "Guruhlar",
-  "/teachers": "O'qituvchilar",
-  "/attendance": "Davomat",
-  "/timetable": "Dars jadvali",
-  "/exams": "Imtihonlar",
-  "/leaderboard": "Reyting",
-  "/courses": "Kurslar",
-  "/payments": "To'lovlar",
-  "/debtors": "Qarzdorlar",
-  "/bonuses": "Bonuslar",
-  "/incomes": "Qo'shimcha daromad",
-  "/payroll": "Ish haqi",
-  "/expenses": "Xarajatlar",
-  "/cashflow": "Pul oqimi",
-  "/reports": "Hisobotlar",
-  "/analytics": "Analitika",
-  "/teacher-report": "O'qituvchi hisoboti",
-  "/reminders": "Eslatmalar",
-  "/settings": "Sozlamalar",
-  "/users": "Hodimlar",
-  "/logs": "Jurnallar",
-  "/changelog": "Yangilanishlar",
-  "/staff-attendance": "Xodimlar davomati",
-  "/tasks": "Vazifalar",
-  "/financial-report": "Moliyaviy hisobot",
-  "/schedule": "Jadval",
-  "/profile": "Profil",
-  "/unauthorized": "Ruxsat yo'q",
-};
-
-function getPageTitle(pathname: string): string {
-  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
-  const match = Object.keys(PAGE_TITLES)
-    .filter((p) => pathname.startsWith(p))
-    .sort((a, b) => b.length - a.length)[0];
-  return match ? PAGE_TITLES[match] : "Dashboard";
-}
-
 export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter();
-  const pathname = usePathname();
   const { data: session } = useSession();
   const { dark, toggleDark } = useDarkMode();
   const [search, setSearch] = useState("");
@@ -83,7 +38,6 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const user = session?.user as SessionUser | undefined;
-  const pageTitle = getPageTitle(pathname);
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -176,12 +130,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* Page title (left) */}
-      <h1 className="text-[15px] sm:text-[17px] font-bold text-gray-900 dark:text-white truncate flex-shrink-0">
-        {pageTitle}
-      </h1>
-
-      {/* Search — centered in the space between title and right cluster */}
+      {/* Search — centered in the space between hamburger and right cluster */}
       <div className="hidden sm:flex flex-1 justify-center px-4">
         <div className="relative w-full max-w-xs lg:max-w-sm" ref={searchBoxRef}>
           <div className="relative">
