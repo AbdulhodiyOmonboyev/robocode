@@ -61,11 +61,38 @@ export async function GET(req: NextRequest) {
   }
 
   if (search) {
-    where.OR = [
-      { fullName: { contains: search, mode: "insensitive" } },
-      { phone: { contains: search } },
-      { email: { contains: search, mode: "insensitive" } },
+    const trimmed = search.trim();
+    const tokens = trimmed.split(/\s+/).filter(Boolean);
+    const digitsOnly = trimmed.replace(/\D/g, "");
+
+    const orConditions: Prisma.LeadWhereInput[] = [
+      { fullName: { contains: trimmed, mode: "insensitive" } },
+      { phone: { contains: trimmed } },
+      { email: { contains: trimmed, mode: "insensitive" } },
     ];
+
+    // Multiple words: match a lead whose name contains every word, regardless
+    // of order (e.g. "Vali Alisher" still finds "Alisher Valiyev").
+    if (tokens.length > 1) {
+      orConditions.push({
+        AND: tokens.map((t) => ({ fullName: { contains: t, mode: "insensitive" as const } })),
+      });
+    }
+
+    // Phone numbers are stored/typed with varying formatting (+998, spaces,
+    // dashes) — compare digits only so "901234567" matches "+998 90 123 45 67".
+    if (digitsOnly.length >= 3) {
+      const phoneMatches = await db.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "Lead"
+        WHERE regexp_replace(phone, '\\D', '', 'g') LIKE ${"%" + digitsOnly + "%"}
+           OR regexp_replace(COALESCE("phoneSecondary", ''), '\\D', '', 'g') LIKE ${"%" + digitsOnly + "%"}
+      `;
+      if (phoneMatches.length) {
+        orConditions.push({ id: { in: phoneMatches.map((m) => m.id) } });
+      }
+    }
+
+    where.OR = orConditions;
   }
 
   if (status) where.status = status as Prisma.EnumLeadStatusFilter["equals"];
