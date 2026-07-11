@@ -331,9 +331,8 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }: Side
           />
           <div className={cn("min-w-0 flex-1", collapsed && "lg:hidden")}>
             <p className="font-semibold text-gray-900 dark:text-white text-sm leading-tight truncate">
-              Robocode CRM
+              Robocode IT Academy
             </p>
-            <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">Lidlar tizimi</p>
           </div>
           {/* Mobile close */}
           <button

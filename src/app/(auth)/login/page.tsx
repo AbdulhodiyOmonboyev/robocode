@@ -73,7 +73,7 @@ export default function LoginPage() {
                 <span className="text-white text-2xl font-bold">R</span>
               )}
             </div>
-            <h1 className="text-[19px] font-bold text-gray-900 dark:text-white">Robocode CRM</h1>
+            <h1 className="text-[19px] font-bold text-gray-900 dark:text-white">Robocode IT Academy</h1>
             <p className="text-[13px] text-gray-400 dark:text-gray-500 mt-1">Tizimga kirish</p>
           </div>
 
@@ -170,7 +170,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-[12px] text-gray-400 dark:text-gray-500 mt-6">
-          © {new Date().getFullYear()} Robocode CRM
+          © {new Date().getFullYear()} Robocode IT Academy
         </p>
       </div>
     </div>

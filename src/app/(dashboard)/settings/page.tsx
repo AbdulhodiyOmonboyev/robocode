@@ -204,12 +204,6 @@ export default function SettingsPage() {
     ok ? toast.success("Logo saqlandi! Sahifani yangilang.") : toast.error("Saqlab bo'lmadi");
   };
 
-  const removeLogo = async () => {
-    setLogo("");
-    const ok = await saveSetting("brand_logo", "");
-    ok ? toast.success("Standart logoga qaytarildi") : toast.error("Xatolik");
-  };
-
   const addSlot = async () => {
     if (!newSlot.startTime || !newSlot.endTime) { toast.error("Vaqtlarni kiriting"); return; }
     const label = `${newSlot.startTime} - ${newSlot.endTime}`;
@@ -344,7 +338,6 @@ export default function SettingsPage() {
                         Rasm yuklash
                         <input type="file" accept="image/*" onChange={onLogoFile} className="hidden" />
                       </label>
-                      {logo && <Button size="sm" variant="outline" onClick={removeLogo}>Standart</Button>}
                     </div>
                   </div>
                 </div>
