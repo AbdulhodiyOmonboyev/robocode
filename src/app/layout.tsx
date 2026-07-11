@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   title: "Robocode IT Academy",
   description: "Andijondagi №1 IT Academy uchun boshqaruv tizimi (CRM)",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/api/branding/logo",
+    apple: "/api/branding/logo",
+  },
 };
 
 export const viewport: Viewport = {

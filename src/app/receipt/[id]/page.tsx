@@ -60,7 +60,7 @@ export default function ReceiptPage() {
         <div className="text-center mb-5">
           <div className="inline-flex w-16 h-16 rounded-full bg-[#5E2CA5] items-center justify-center mb-3 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={brand.logo || "/icon.svg"} alt="" className="w-full h-full object-contain" />
+            <img src={brand.logo || "/api/branding/logo"} alt="" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-[17px] font-bold text-gray-900">{brand.name}</h1>
           <p className="text-[11px] font-semibold text-[#5E2CA5] tracking-widest mt-1">TO&apos;LOV CHEKI</p>

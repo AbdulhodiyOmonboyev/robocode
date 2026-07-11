@@ -328,7 +328,7 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0 w-20 h-20 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={logo || "/icon.svg"} alt="Logo" className="w-full h-full object-contain" />
+                    <img src={logo || "/api/branding/logo"} alt="Logo" className="w-full h-full object-contain" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Sayt logosi</p>

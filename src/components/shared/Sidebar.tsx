@@ -325,7 +325,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }: Side
         )}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={logo || "/icon.svg"}
+            src={logo || "/api/branding/logo"}
             alt="Logo"
             className="w-8 h-8 rounded-xl object-contain flex-shrink-0"
           />

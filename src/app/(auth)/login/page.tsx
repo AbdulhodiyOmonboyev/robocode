@@ -67,7 +67,7 @@ export default function LoginPage() {
           <div className="text-center mb-7">
             <div className="inline-flex w-16 h-16 rounded-full bg-[#5E2CA5] items-center justify-center mb-4 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logo || "/icon.svg"} alt="" className="w-full h-full object-contain" />
+              <img src={logo || "/api/branding/logo"} alt="" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-[19px] font-bold text-gray-900 dark:text-white">Robocode IT Academy</h1>
             <p className="text-[13px] text-gray-400 dark:text-gray-500 mt-1">Tizimga kirish</p>

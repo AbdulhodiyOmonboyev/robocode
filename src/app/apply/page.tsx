@@ -40,7 +40,7 @@ export default function ApplyPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={cfg.logo || "/icon.svg"} alt={cfg.name} className="inline-block w-16 h-16 rounded-2xl mb-3 shadow-lg object-contain bg-white" />
+          <img src={cfg.logo || "/api/branding/logo"} alt={cfg.name} className="inline-block w-16 h-16 rounded-2xl mb-3 shadow-lg object-contain bg-white" />
           <h1 className="text-2xl font-bold text-gray-900">{cfg.name}</h1>
           <p className="text-gray-500 mt-1 text-sm">Kursga yozilish uchun ariza qoldiring</p>
         </div>
