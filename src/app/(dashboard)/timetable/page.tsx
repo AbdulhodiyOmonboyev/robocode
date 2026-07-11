@@ -14,6 +14,10 @@ interface Group {
   _count?: { leads: number };
 }
 
+interface TimeSlotSetting {
+  id: string; startTime: string; endTime: string; label: string; isActive: boolean;
+}
+
 const GRID_DAYS = WEEKDAYS.filter((d) => d.value !== "Sun");
 
 const DAY_NAMES: Record<string, string> = {
@@ -90,9 +94,16 @@ export default function TimetablePage() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>("group");
   const [dayTab, setDayTab] = useState<string>("odd");
+  const [standardTimes, setStandardTimes] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/groups?limit=500").then((r) => r.json()).then((d) => { setGroups(Array.isArray(d?.groups) ? d.groups : []); setLoading(false); });
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/timeslots").then((r) => r.json()).then((d) => {
+      if (Array.isArray(d)) setStandardTimes(d.filter((s: TimeSlotSetting) => s.isActive).map((s: TimeSlotSetting) => s.startTime));
+    }).catch(() => {});
   }, []);
 
   const filteredGroups = useMemo(
@@ -106,10 +117,10 @@ export default function TimetablePage() {
       .sort((a, b) => (a.timeFrom || "").localeCompare(b.timeFrom || ""));
 
   const timeSlots = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(standardTimes);
     filteredGroups.forEach((g) => { if (g.timeFrom) set.add(g.timeFrom); });
     return Array.from(set).sort();
-  }, [filteredGroups]);
+  }, [filteredGroups, standardTimes]);
 
   const rooms = useMemo(() => {
     const set = new Set<string>();
@@ -151,8 +162,8 @@ export default function TimetablePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="shrink-0">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Dars jadvali</h1>
           <div className="flex items-center gap-1 mt-1">
             <button
@@ -171,8 +182,8 @@ export default function TimetablePage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center rounded-xl bg-gray-100 dark:bg-white/5 p-1">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-xl bg-gray-100 dark:bg-white/5 p-1 shrink-0">
             <button
               onClick={() => setViewMode("group")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
@@ -190,20 +201,21 @@ export default function TimetablePage() {
               <DoorOpen className="w-3.5 h-3.5" /> Xona
             </button>
           </div>
-          <Select
-            value={groupFilter}
-            onChange={(e) => setGroupFilter(e.target.value)}
-            options={groupOptions}
-            className="w-48"
-          />
+          <div className="w-48 shrink-0">
+            <Select
+              value={groupFilter}
+              onChange={(e) => setGroupFilter(e.target.value)}
+              options={groupOptions}
+            />
+          </div>
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150 shrink-0"
           >
             <Download className="w-4 h-4" /> Excelga eksport
           </button>
           <button
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium text-white shadow-sm transition-colors duration-150"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium text-white shadow-sm transition-colors duration-150 shrink-0"
             style={{ backgroundColor: BRAND }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#4a2280")}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BRAND)}
