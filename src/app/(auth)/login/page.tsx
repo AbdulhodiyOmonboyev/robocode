@@ -166,7 +166,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-[12px] text-gray-400 dark:text-gray-500 mt-6">
-          © {new Date().getFullYear()} Robocode IT Academy
+          © 2018 Robocode IT Academy
         </p>
       </div>
     </div>

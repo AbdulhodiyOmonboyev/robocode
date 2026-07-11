@@ -2,6 +2,11 @@ import type { NextAuthConfig } from "next-auth";
 
 const PUBLIC_PATHS = ["/login", "/api/auth"];
 
+// Avatarni faqat kichik URL bo'lsa sessiyaga qo'shamiz.
+// base64 (data:) rasm cookie'ni shishirib "REQUEST_HEADER_TOO_LARGE" (494) beradi.
+const safeAvatar = (v: unknown): string | null =>
+  typeof v === "string" && !v.startsWith("data:") && v.length < 512 ? v : null;
+
 export const authConfig: NextAuthConfig = {
   trustHost: true,
   pages: { signIn: "/login" },
@@ -22,7 +27,7 @@ export const authConfig: NextAuthConfig = {
         token.id = user.id as string;
         token.role = user.role;
         token.fullName = user.fullName;
-        token.avatarUrl = user.avatarUrl ?? null;
+        token.avatarUrl = safeAvatar(user.avatarUrl);
         token.username = user.username;
         token.canManageLeads = user.canManageLeads;
         token.canManageCourses = user.canManageCourses;
@@ -33,7 +38,7 @@ export const authConfig: NextAuthConfig = {
       // Client called useSession().update(partial) — e.g. after saving name/avatar on the profile page
       if (trigger === "update" && session) {
         if (typeof session.fullName === "string") token.fullName = session.fullName;
-        if ("avatarUrl" in session) token.avatarUrl = session.avatarUrl;
+        if ("avatarUrl" in session) token.avatarUrl = safeAvatar(session.avatarUrl);
       }
       return token;
     },
