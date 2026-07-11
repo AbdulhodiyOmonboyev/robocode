@@ -60,52 +60,6 @@ export default function LoginPage() {
       className="relative min-h-screen bg-[#08070d] flex items-center justify-center p-4 overflow-hidden"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
-      <div className="aurora-blob aurora-blob-1" />
-      <div className="aurora-blob aurora-blob-2" />
-      <div className="aurora-blob aurora-blob-3" />
-      <style jsx>{`
-        .aurora-blob {
-          position: absolute;
-          width: 420px;
-          height: 420px;
-          border-radius: 9999px;
-          filter: blur(70px);
-          opacity: 0.5;
-          pointer-events: none;
-          z-index: 0;
-          will-change: transform;
-        }
-        .aurora-blob-1 {
-          top: -140px;
-          left: -120px;
-          background: #7c3aed;
-          animation: aurora-float-1 16s ease-in-out infinite;
-        }
-        .aurora-blob-2 {
-          bottom: -160px;
-          right: -100px;
-          background: #c026d3;
-          animation: aurora-float-2 18s ease-in-out infinite;
-        }
-        .aurora-blob-3 {
-          top: 35%;
-          right: 8%;
-          background: #4f46e5;
-          animation: aurora-float-3 14s ease-in-out infinite;
-        }
-        @keyframes aurora-float-1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(70px, 50px) scale(1.15); }
-        }
-        @keyframes aurora-float-2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-60px, -40px) scale(1.1); }
-        }
-        @keyframes aurora-float-3 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-45px, 55px) scale(1.2); }
-        }
-      `}</style>
       <div className="relative z-10 w-full max-w-md">
         {/* Card */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8">
