@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowUpRight, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -11,11 +10,6 @@ import { formatRelativeTime } from "@/lib/utils";
 
 const BRAND = "#5E2CA5";
 
-interface RecentLead {
-  id: string; fullName: string;
-  course: { name: string } | null;
-  stage: { name: string; color: string } | null;
-}
 interface RecentActivity {
   id: string; action: string; createdAt: string;
   user: { fullName: string } | null;
@@ -27,7 +21,6 @@ interface DashboardData {
   sourceDistribution: { source: string; count: number }[];
   leadsByDay: { date: string; count: number }[];
   topCourses: { courseId: string; course: { name: string; color: string } | null; count: number }[];
-  recentLeads: RecentLead[];
   recentActivities: RecentActivity[];
 }
 
@@ -51,66 +44,32 @@ export default function DashboardCharts({ data }: { data: DashboardData }) {
 
   return (
     <>
-      {/* Row 1: Area chart + Recent leads */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Lidlar dinamikasi</h2>
-              <p className="text-xs text-gray-400 mt-0.5">So&apos;nggi 30 kun</p>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={data.leadsByDay} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="brandGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={BRAND} stopOpacity={0.15} />
-                  <stop offset="95%" stopColor={BRAND} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", fontSize: 12 }}
-                cursor={{ stroke: BRAND, strokeWidth: 1, strokeDasharray: "4 4" }}
-              />
-              <Area type="monotone" dataKey="count" name="Lidlar" stroke={BRAND} strokeWidth={2} fill="url(#brandGrad)" dot={false} activeDot={{ r: 4, fill: BRAND }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm flex flex-col">
-          <div className="flex items-center justify-between px-5 pt-5 pb-3">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white">So&apos;nggi lidlar</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Oxirgi qo&apos;shilganlar</p>
-            </div>
-            <Link href="/leads" className="text-[11px] font-medium text-[#5E2CA5] hover:underline flex items-center gap-0.5">
-              Barchasi <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="flex-1 overflow-y-auto divide-y divide-gray-50 dark:divide-white/5">
-            {data.recentLeads.slice(0, 8).map(lead => (
-              <Link key={lead.id} href={`/leads/${lead.id}`}
-                className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150"
-              >
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-semibold" style={{ backgroundColor: BRAND }}>
-                  {getInitial(lead.fullName)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-gray-900 dark:text-white truncate">{lead.fullName}</p>
-                  <p className="text-[11px] text-gray-400 truncate">{lead.course?.name ?? "Kurs tanlanmagan"}</p>
-                </div>
-                {lead.stage && (
-                  <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: lead.stage.color }}>
-                    {lead.stage.name}
-                  </span>
-                )}
-              </Link>
-            ))}
+      {/* Row 1: Area chart */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Lidlar dinamikasi</h2>
+            <p className="text-xs text-gray-400 mt-0.5">So&apos;nggi 30 kun</p>
           </div>
         </div>
+        <ResponsiveContainer width="100%" height={320}>
+          <AreaChart data={data.leadsByDay} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="brandGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={BRAND} stopOpacity={0.15} />
+                <stop offset="95%" stopColor={BRAND} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", fontSize: 12 }}
+              cursor={{ stroke: BRAND, strokeWidth: 1, strokeDasharray: "4 4" }}
+            />
+            <Area type="monotone" dataKey="count" name="Lidlar" stroke={BRAND} strokeWidth={2} fill="url(#brandGrad)" dot={false} activeDot={{ r: 4, fill: BRAND }} />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Row 2: Sources + Stages + Courses */}
