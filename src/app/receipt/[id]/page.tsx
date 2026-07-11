@@ -59,12 +59,8 @@ export default function ReceiptPage() {
       <div id="receipt" className="bg-white w-[340px] p-7 rounded-2xl shadow-lg print:shadow-none print:w-full print:max-w-[340px]">
         <div className="text-center mb-5">
           <div className="inline-flex w-16 h-16 rounded-full bg-[#5E2CA5] items-center justify-center mb-3 overflow-hidden">
-            {brand.logo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={brand.logo} alt="" className="w-full h-full object-contain" />
-            ) : (
-              <span className="text-white text-xl font-bold">{(brand.name || "R").charAt(0)}</span>
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={brand.logo || "/icon.svg"} alt="" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-[17px] font-bold text-gray-900">{brand.name}</h1>
           <p className="text-[11px] font-semibold text-[#5E2CA5] tracking-widest mt-1">TO&apos;LOV CHEKI</p>
