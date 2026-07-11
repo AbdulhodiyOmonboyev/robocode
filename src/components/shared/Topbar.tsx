@@ -107,19 +107,22 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       return;
     }
     setSearching(true);
+    const controller = new AbortController();
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/leads?search=${encodeURIComponent(q)}&limit=8`);
+        const res = await fetch(`/api/leads?search=${encodeURIComponent(q)}&limit=8`, { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
           setSearchResults(data.leads || []);
           setSearchOpen(true);
         }
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") throw err;
       } finally {
         setSearching(false);
       }
-    }, 300);
-    return () => clearTimeout(t);
+    }, 150);
+    return () => { clearTimeout(t); controller.abort(); };
   }, [search]);
 
   useEffect(() => { setActiveIndex(0); }, [searchResults]);

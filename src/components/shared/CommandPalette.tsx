@@ -121,18 +121,21 @@ export default function CommandPalette() {
   useEffect(() => {
     if (!open || query.trim().length < 2) { setLeads([]); return; }
     setSearching(true);
+    const controller = new AbortController();
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/leads?search=${encodeURIComponent(query.trim())}&limit=6`);
+        const res = await fetch(`/api/leads?search=${encodeURIComponent(query.trim())}&limit=6`, { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
           setLeads(data.leads || []);
         }
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") throw err;
       } finally {
         setSearching(false);
       }
-    }, 300);
-    return () => clearTimeout(t);
+    }, 150);
+    return () => { clearTimeout(t); controller.abort(); };
   }, [query, open]);
 
   const q = query.trim().toLowerCase();
