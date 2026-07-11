@@ -21,7 +21,6 @@ import {
   UserCog,
   Pin,
   Wallet,
-  ClipboardCheck,
   TrendingUp,
   Presentation,
   CalendarRange,
@@ -65,7 +64,6 @@ const navEntries: NavEntry[] = [
     label: "O'quv jarayoni",
     icon: BookOpen,
     children: [
-      { href: "/attendance", label: "Davomat", icon: ClipboardCheck },
       { href: "/timetable", label: "Dars jadvali", icon: CalendarRange },
       { href: "/exams", label: "Imtihonlar", icon: ClipboardList },
       { href: "/leaderboard", label: "Reyting", icon: Trophy },
