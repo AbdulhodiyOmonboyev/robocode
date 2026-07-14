@@ -169,7 +169,13 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }: Side
   const user = session?.user as SessionUser | undefined;
 
   const toggle = (key: string) =>
-    setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+    setOpenGroups((prev) => {
+      if (prev[key]) return { ...prev, [key]: false };
+      const next: Record<string, boolean> = {};
+      for (const k of Object.keys(prev)) next[k] = false;
+      next[key] = true;
+      return next;
+    });
 
   const chevronStyle = (open: boolean): React.CSSProperties => ({
     transform: open ? "rotate(0deg)" : "rotate(-90deg)",

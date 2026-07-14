@@ -162,21 +162,21 @@ export default function TimetablePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-[#F5F6FA] dark:bg-gray-950 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5" style={{ fontFamily: "'Inter', sans-serif" }}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="shrink-0">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Dars jadvali</h1>
-          <div className="flex items-center gap-1 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight">Dars jadvali</h1>
+          <div className="flex items-center gap-1 mt-2.5">
             <button
               onClick={() => setWeekOffset((w) => w - 1)}
-              className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              className="p-1 -ml-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors shrink-0"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-sm text-gray-500 dark:text-gray-400">{getWeekRange(weekOffset)}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{getWeekRange(weekOffset)}</span>
             <button
               onClick={() => setWeekOffset((w) => w + 1)}
-              className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors shrink-0"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
