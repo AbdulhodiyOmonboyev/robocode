@@ -12,11 +12,15 @@
   --color-gray-50: #f5f6fa;
   --color-gray-950: #0f1117;
   /* brand color, also exposed as Tailwind utilities (bg-brand, text-brand, border-brand, ...) */
+
+
   --color-brand: var(--brand);
+
+
 }
 
 :root {
-  --brand: #5e2ca5;
+  --brand: #5e2ca6;
   --background: #f5f6fa;
   --foreground: #111827;
   --card: #ffffff;
