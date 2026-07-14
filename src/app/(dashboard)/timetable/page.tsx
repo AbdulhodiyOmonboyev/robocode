@@ -129,6 +129,7 @@ export default function TimetablePage() {
   }, [filteredGroups]);
 
   const activeDayTab = DAY_TABS.find((t) => t.key === dayTab) || DAY_TABS[0];
+  const groupGridDays = GRID_DAYS.filter((d) => activeDayTab.days.includes(d.value));
 
   const byRoom = (room: string, time: string) =>
     filteredGroups.filter(
@@ -142,14 +143,14 @@ export default function TimetablePage() {
 
   const handleExport = () => {
     if (viewMode === "group") {
-      const header = ["Vaqt", ...GRID_DAYS.map((d) => DAY_NAMES[d.value])];
+      const header = ["Vaqt", ...groupGridDays.map((d) => DAY_NAMES[d.value])];
       const rowsCsv = timeSlots.map((time) => [
         time,
-        ...GRID_DAYS.map((d) =>
+        ...groupGridDays.map((d) =>
           byDay(d.value).filter((g) => g.timeFrom === time).map(lessonLabel).join(" | ")
         ),
       ]);
-      downloadCSV("dars-jadvali-guruh.csv", [header, ...rowsCsv]);
+      downloadCSV(`dars-jadvali-guruh-${activeDayTab.key}.csv`, [header, ...rowsCsv]);
     } else {
       const header = ["Vaqt", ...rooms];
       const rowsCsv = timeSlots.map((time) => [
@@ -225,23 +226,21 @@ export default function TimetablePage() {
         </div>
       </div>
 
-      {viewMode === "room" && (
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {DAY_TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setDayTab(t.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                dayTab === t.key
-                  ? "bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 border-[#5E2CA5] text-[#5E2CA5]"
-                  : "border-transparent text-gray-500 dark:text-gray-400"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {DAY_TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setDayTab(t.key)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              dayTab === t.key
+                ? "bg-[#5E2CA5]/10 dark:bg-[#5E2CA5]/20 border-[#5E2CA5] text-[#5E2CA5]"
+                : "border-transparent text-gray-500 dark:text-gray-400"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <div className="text-center text-gray-400 py-20">Yuklanmoqda...</div>
@@ -254,7 +253,7 @@ export default function TimetablePage() {
                   <th className="w-24 p-3 text-left text-xs font-medium text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-white/5">
                     Vaqt
                   </th>
-                  {GRID_DAYS.map((d) => (
+                  {groupGridDays.map((d) => (
                     <th
                       key={d.value}
                       className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 border-b border-l border-gray-100 dark:border-white/5 uppercase tracking-wide"
@@ -267,7 +266,7 @@ export default function TimetablePage() {
               <tbody>
                 {timeSlots.length === 0 ? (
                   <tr>
-                    <td colSpan={GRID_DAYS.length + 1} className="p-12 text-center text-sm text-gray-400">
+                    <td colSpan={groupGridDays.length + 1} className="p-12 text-center text-sm text-gray-400">
                       Darslar topilmadi
                     </td>
                   </tr>
@@ -277,7 +276,7 @@ export default function TimetablePage() {
                       <td className="p-3 text-xs font-medium text-gray-400 dark:text-gray-500 align-top border-b border-gray-100 dark:border-white/5 whitespace-nowrap">
                         {time}
                       </td>
-                      {GRID_DAYS.map((d) => {
+                      {groupGridDays.map((d) => {
                         const lessons = byDay(d.value).filter((g) => g.timeFrom === time);
                         return (
                           <td
