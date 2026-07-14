@@ -39,6 +39,12 @@ const MAIN_KB = {
 
 const CANCEL_KB = { keyboard: [["❌ Bekor qilish"]], resize_keyboard: true };
 
+function profileKeyboard(origin: string) {
+  return {
+    inline_keyboard: [[{ text: "🎓 Mening profilim", web_app: { url: `${origin}/miniapp/profil` } }]],
+  };
+}
+
 async function send(token: string, chatId: number | string, text: string, kb: Record<string, unknown> = MAIN_KB) {
   await tg(token, "sendMessage", { chat_id: chatId, text, reply_markup: kb });
 }
@@ -73,6 +79,10 @@ async function findUserByChat(chatId: number | string) {
   if (!s) return null;
   const userId = s.key.replace("telegram_chat_id_", "");
   return db.user.findUnique({ where: { id: userId } });
+}
+
+async function findLeadByChat(chatId: number | string) {
+  return db.lead.findFirst({ where: { telegramChatId: String(chatId), isArchived: false } });
 }
 
 function cleanPhone(t: string) {
@@ -118,6 +128,7 @@ async function createLead(token: string, chatId: number, userId: string, data: L
 export async function POST(req: NextRequest) {
   const token = await getToken();
   if (!token) return NextResponse.json({ ok: true });
+  const origin = req.nextUrl.origin;
 
   const secretSetting = await db.setting.findUnique({ where: { key: "telegram_webhook_secret" } });
   if (secretSetting?.value) {
@@ -167,7 +178,12 @@ export async function POST(req: NextRequest) {
         const lead = await db.lead.findUnique({ where: { id: leadId } });
         if (lead) {
           await db.lead.update({ where: { id: leadId }, data: { telegramChatId: String(chatId) } });
-          await send(token, chatId, `✅ Salom, ${lead.fullName}!\nSiz o'quv markaz botiga ulandingiz. Endi bu yerda dars va to'lov eslatmalarini olasiz.`, { remove_keyboard: true });
+          await send(
+            token,
+            chatId,
+            `✅ Salom, ${lead.fullName}!\nSiz o'quv markaz botiga ulandingiz. Endi bu yerda dars va to'lov eslatmalarini olasiz.\n\nProfilingizni (jadval, davomat, to'lov, baholar) pastdagi tugma orqali ko'rishingiz mumkin 👇`,
+            profileKeyboard(origin)
+          );
           return NextResponse.json({ ok: true });
         }
       }
@@ -188,12 +204,27 @@ export async function POST(req: NextRequest) {
         await send(token, chatId, `Salom, ${already.fullName}! 👋\nQuyidagi tugmalardan foydalaning:`);
         return NextResponse.json({ ok: true });
       }
+      const alreadyLead = await findLeadByChat(chatId);
+      if (alreadyLead) {
+        await send(
+          token,
+          chatId,
+          `Salom, ${alreadyLead.fullName}! 👋\nProfilingizni pastdagi tugma orqali ko'rishingiz mumkin 👇`,
+          profileKeyboard(origin)
+        );
+        return NextResponse.json({ ok: true });
+      }
       await send(token, chatId, "👋 Salom! Bu — Robocode CRM boti.\nUlanish uchun adminingizdan shaxsiy havola oling.", { remove_keyboard: true });
       return NextResponse.json({ ok: true });
     }
 
     const user = await findUserByChat(chatId);
     if (!user) {
+      const lead = await findLeadByChat(chatId);
+      if (lead) {
+        await send(token, chatId, "Profilingizni pastdagi tugma orqali ko'rishingiz mumkin 👇", profileKeyboard(origin));
+        return NextResponse.json({ ok: true });
+      }
       await send(token, chatId, "🔒 Siz hali ulanmagansiz.\nAdminingizdan shaxsiy havola oling va Start bosing.", { remove_keyboard: true });
       return NextResponse.json({ ok: true });
     }
