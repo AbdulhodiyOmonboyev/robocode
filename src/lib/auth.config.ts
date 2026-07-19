@@ -1,6 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
 
 const PUBLIC_PATHS = ["/login", "/api/auth"];
+// Exact-match only (unlike PUBLIC_PATHS above) — "/" as a prefix would match every route.
+const PUBLIC_EXACT_PATHS = ["/"];
 
 // Avatarni faqat kichik URL bo'lsa sessiyaga qo'shamiz.
 // base64 (data:) rasm cookie'ni shishirib "REQUEST_HEADER_TOO_LARGE" (494) beradi.
@@ -14,7 +16,8 @@ export const authConfig: NextAuthConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isPublic = PUBLIC_PATHS.some((p) => nextUrl.pathname.startsWith(p));
+      const isPublic =
+        PUBLIC_PATHS.some((p) => nextUrl.pathname.startsWith(p)) || PUBLIC_EXACT_PATHS.includes(nextUrl.pathname);
 
       if (!isPublic && !isLoggedIn) return false;
       if (isLoggedIn && nextUrl.pathname === "/login") {
