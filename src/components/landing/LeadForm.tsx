@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { User, Phone, BookOpen, MessageSquare, Check } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
-import type { PublicCourse } from "./types";
+import { COURSE_NAMES } from "./Courses";
 import { Reveal } from "./Reveal";
 
-export function LeadForm({ courses }: { courses: PublicCourse[] }) {
-  const [form, setForm] = useState({ fullName: "", phone: "", courseId: "", note: "", website: "" });
+const EMPTY_FORM = { fullName: "", phone: "", courseName: "", note: "", website: "" };
+
+export function LeadForm() {
+  const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -24,10 +26,13 @@ export function LeadForm({ courses }: { courses: PublicCourse[] }) {
       return;
     }
     setLoading(true);
+    // The landing page's 7 courses are marketing copy, not CRM Course records
+    // (no matching courseId), so the choice is folded into the note instead.
+    const note = [form.courseName ? `Kurs: ${form.courseName}` : null, form.note.trim() || null].filter(Boolean).join("\n");
     const res = await fetch("/api/public/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ fullName: form.fullName, phone: form.phone, note, website: form.website }),
     });
     setLoading(false);
     if (res.ok) setDone(true);
@@ -74,7 +79,7 @@ export function LeadForm({ courses }: { courses: PublicCourse[] }) {
                   <button
                     onClick={() => {
                       setDone(false);
-                      setForm({ fullName: "", phone: "", courseId: "", note: "", website: "" });
+                      setForm(EMPTY_FORM);
                     }}
                     className="mt-6 text-[#A3E635] text-sm font-semibold hover:underline"
                   >
@@ -110,23 +115,21 @@ export function LeadForm({ courses }: { courses: PublicCourse[] }) {
                     </label>
                     <PhoneInput value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} size="lg" className="!bg-white/5 !border-white/10" />
                   </div>
-                  {courses.length > 0 && (
-                    <div>
-                      <label className={label}>
-                        <BookOpen className="w-3.5 h-3.5 text-[#A3E635]" /> Kurs tanlash
-                      </label>
-                      <select className={inp} value={form.courseId} onChange={(e) => setForm((f) => ({ ...f, courseId: e.target.value }))}>
-                        <option className="bg-[#08060F]" value="">
-                          Tanlang (ixtiyoriy)
+                  <div>
+                    <label className={label}>
+                      <BookOpen className="w-3.5 h-3.5 text-[#A3E635]" /> Kurs tanlash
+                    </label>
+                    <select className={inp} value={form.courseName} onChange={(e) => setForm((f) => ({ ...f, courseName: e.target.value }))}>
+                      <option className="bg-[#08060F]" value="">
+                        Tanlang (ixtiyoriy)
+                      </option>
+                      {COURSE_NAMES.map((name) => (
+                        <option className="bg-[#08060F]" key={name} value={name}>
+                          {name}
                         </option>
-                        {courses.map((c) => (
-                          <option className="bg-[#08060F]" key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label className={label}>
                       <MessageSquare className="w-3.5 h-3.5 text-[#A3E635]" /> Izoh <span className="text-white/40 font-normal">(ixtiyoriy)</span>

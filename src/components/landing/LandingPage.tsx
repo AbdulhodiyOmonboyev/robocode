@@ -8,9 +8,8 @@ import { Courses } from "./Courses";
 import { Team } from "./Team";
 import { LeadForm } from "./LeadForm";
 import { Footer } from "./Footer";
-import type { PublicCourse } from "./types";
 
-export function LandingPage({ centerName, logo, courses }: { centerName: string; logo: string; courses: PublicCourse[] }) {
+export function LandingPage({ centerName, logo }: { centerName: string; logo: string }) {
   const scrollToForm = () => {
     document.getElementById("ariza")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -24,7 +23,7 @@ export function LandingPage({ centerName, logo, courses }: { centerName: string;
         <WhatAwaits />
         <Courses onSelect={scrollToForm} />
         <Team />
-        <LeadForm courses={courses} />
+        <LeadForm />
       </main>
       <Footer centerName={centerName} logo={logo} />
     </div>

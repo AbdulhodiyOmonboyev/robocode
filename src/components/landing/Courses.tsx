@@ -43,6 +43,8 @@ const CURRICULUM = [
   },
 ];
 
+export const COURSE_NAMES = CURRICULUM.map((c) => c.name);
+
 export function Courses({ onSelect }: { onSelect: () => void }) {
   return (
     <section id="courses" className="bg-[#08060F] border-b border-white/10">

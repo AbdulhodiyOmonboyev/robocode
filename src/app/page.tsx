@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { LandingPage } from "@/components/landing/LandingPage";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_URL}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -38,14 +38,9 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [courses, settings] = await Promise.all([
-    db.course.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true, description: true, durationMonths: true, price: true, currency: true },
-      orderBy: { name: "asc" },
-    }),
-    db.setting.findMany({ where: { key: { in: ["brand_logo", "center_name"] } } }),
-  ]).catch(() => [[], []] as const);
+  const settings = await db.setting
+    .findMany({ where: { key: { in: ["brand_logo", "center_name"] } } })
+    .catch(() => []);
 
   const settingsMap: Record<string, string> = {};
   settings.forEach((s) => (settingsMap[s.key] = s.value));
@@ -68,11 +63,7 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <LandingPage
-        centerName={centerName}
-        logo={logo}
-        courses={courses.map((c) => ({ ...c, price: c.price.toString() }))}
-      />
+      <LandingPage centerName={centerName} logo={logo} />
     </>
   );
 }
