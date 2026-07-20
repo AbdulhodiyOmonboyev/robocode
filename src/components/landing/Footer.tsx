@@ -1,4 +1,5 @@
 import { InstagramGlyph } from "./InstagramGlyph";
+import { TelegramGlyph } from "./TelegramGlyph";
 
 export function Footer({ centerName, logo }: { centerName: string; logo: string }) {
   return (
@@ -18,28 +19,89 @@ export function Footer({ centerName, logo }: { centerName: string; logo: string 
         <div>
           <h3 className="font-semibold text-white text-sm uppercase tracking-wide">Aloqa</h3>
           <ul className="mt-4 space-y-3 text-sm text-[#A1A1AA]">
-            <li>Manzil: tez orada to&apos;ldiriladi</li>
-            <li>Telefon: tez orada to&apos;ldiriladi</li>
-            <li>Ish vaqti: tez orada to&apos;ldiriladi</li>
+            <li>
+              Manzil:{" "}
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=P8WW%2BP7G+Ulitsa+Lermontova+Andijan+Uzbekistan"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#A3E635] transition-colors"
+              >
+                Lermontov ko&apos;chasi, Andijon (P8WW+P7G)
+              </a>
+            </li>
+            <li>
+              Telefon:{" "}
+              <a href="tel:+998998999005" className="hover:text-[#A3E635] transition-colors">
+                +998 99 899 9005
+              </a>
+              ,{" "}
+              <a href="tel:+998930759005" className="hover:text-[#A3E635] transition-colors">
+                +998 93 075 9005
+              </a>
+            </li>
+            <li>Ish vaqti: 9:00 – 18:00</li>
           </ul>
         </div>
 
         <div>
           <h3 className="font-semibold text-white text-sm uppercase tracking-wide">Ijtimoiy tarmoqlar</h3>
-          <ul className="mt-4 space-y-3 text-sm">
-            <li>
-              <a
-                href="https://instagram.com/aka.yakubov"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 text-[#A1A1AA] hover:text-[#A3E635] transition-colors"
-              >
-                <InstagramGlyph className="w-4 h-4 flex-shrink-0" />
-                @aka.yakubov
-              </a>
-            </li>
-            <li className="text-[#A1A1AA]">Telegram: tez orada to&apos;ldiriladi</li>
-          </ul>
+          <div className="mt-4 flex items-start gap-8 text-sm">
+            <div>
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/50 uppercase tracking-wide">
+                <InstagramGlyph className="w-3.5 h-3.5 flex-shrink-0" /> Instagram
+              </span>
+              <ul className="mt-2 space-y-2">
+                <li>
+                  <a
+                    href="https://instagram.com/aka.yakubov"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#A1A1AA] hover:text-[#A3E635] transition-colors"
+                  >
+                    @aka.yakubov
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://robocode.uz"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#A1A1AA] hover:text-[#A3E635] transition-colors"
+                  >
+                    @robocode.uz
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/50 uppercase tracking-wide">
+                <TelegramGlyph className="w-3.5 h-3.5 flex-shrink-0" /> Telegram
+              </span>
+              <ul className="mt-2 space-y-2">
+                <li>
+                  <a
+                    href="https://t.me/robocodee"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#A1A1AA] hover:text-[#A3E635] transition-colors"
+                  >
+                    @robocodee
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://t.me/robocodeadmin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#A1A1AA] hover:text-[#A3E635] transition-colors"
+                  >
+                    @robocodeadmin
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div>
