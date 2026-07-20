@@ -14,9 +14,9 @@ const TEAM = [
     bio: "6+ yil xalqaro IT tajribasi. Politecnico di Torino (Italiya) bitiruvchisi. React, TypeScript, Agile (Scrum). Senior Software Engineer, Mentor.",
   },
   {
-    name: "Nazrullo Raxmatov",
-    role: "Back-end ustoz",
-    bio: "3+ yil IT tajribasi. Robocode bitiruvchisi va ustozi. EduCompass backend jamoasida, 20+ backend loyiha.",
+    name: "Shuxratbek Aliyev",
+    role: "Grafik va UX/UI ustoz",
+    bio: "5 yil tajriba, Robocode yetakchi mentori. Vodiy Brend Startup asoschisi — 30+ brend, 150+ bitiruvchi.",
   },
   {
     name: "Ziyodullo Shuxratbekov",
@@ -24,9 +24,34 @@ const TEAM = [
     bio: "EduCompass asoschisi. 250 000$ qiymatdagi loyiha muallifi, 20+ startap, 700 000$+ investitsiya jalb qilgan.",
   },
   {
+    name: "Nazrullo Raxmatov",
+    role: "Back-end ustoz",
+    bio: "3+ yil IT tajribasi. Robocode bitiruvchisi va ustozi. EduCompass backend jamoasida, 20+ backend loyiha.",
+  },
+  {
+    name: "Abduvahob Qahhorov",
+    role: "Back-end ustoz",
+    bio: "5+ yil tajriba. UIC Group va Prolab loyihalarida ishlagan — tizim arxitekturasi va server logikasi bo'yicha mutaxassis.",
+  },
+  {
     name: "Saidislom To'lqinov",
     role: "Front-end / 3D ustoz",
     bio: "5 yil tajriba, Fransiyadagi \"NFINITE\"da ishlaydi. CANFORAMA, CASTORAMA, LECLERC, WALLMART bilan hamkorlik. 25+ shogird.",
+  },
+  {
+    name: "Husanboy Zafarov",
+    role: "Front-end ustoz",
+    bio: "3+ yil tajriba, Robocode bitiruvchisi. EduCompass va Bozorly loyihalarida ishlagan, Figma'da UI dizayn.",
+  },
+  {
+    name: "Hasanboy Zafarov",
+    role: "Vibe Coding ustoz",
+    bio: "Robocode front-end mentori. Responsive web interfeyslar va zamonaviy front-end texnologiyalari bo'yicha ustoz.",
+  },
+  {
+    name: "Alimjanov Saidmurod",
+    role: "Front-end / Foundation ustoz",
+    bio: "2+ yil tajriba. Darslarni rus va o'zbek tillarida olib boradi. Bozorly loyihasida ishtirok etgan.",
   },
 ];
 

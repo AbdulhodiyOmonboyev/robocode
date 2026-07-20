@@ -41,6 +41,11 @@ const CURRICULUM = [
     duration: null,
     modules: ["Figma", "Responsive saytlar", "Mobil ilovalar", "Branding"],
   },
+  {
+    name: "Vibe Coding",
+    duration: null,
+    modules: ["Zamonaviy front-end texnologiyalari va AI yordamida tez ishlab chiqish", "Responsive web interfeyslar", "Real mijoz loyihalari"],
+  },
 ];
 
 export const COURSE_NAMES = CURRICULUM.map((c) => c.name);

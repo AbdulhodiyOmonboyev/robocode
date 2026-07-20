@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { LandingPage } from "@/components/landing/LandingPage";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_URL}`;
+const BASE_URL =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://crm-oquv-markaz2.vercel.app");
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

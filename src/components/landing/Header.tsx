@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 const NAV_LINKS = [
   { href: "#about", label: "Biz haqimizda" },
   { href: "#courses", label: "Kurslar" },
+  { href: "#startup-studio", label: "Startup Studio" },
   { href: "#team", label: "Jamoa" },
   { href: "#contact", label: "Aloqa" },
 ];
