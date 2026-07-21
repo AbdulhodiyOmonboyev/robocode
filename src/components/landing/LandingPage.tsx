@@ -1,5 +1,6 @@
 "use client";
 
+import { LangProvider } from "./LangContext";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
 import { Stats } from "./Stats";
@@ -16,18 +17,20 @@ export function LandingPage({ centerName, logo }: { centerName: string; logo: st
   };
 
   return (
-    <div className="min-h-screen bg-[#08060F]">
-      <Header centerName={centerName} logo={logo} />
-      <main>
-        <Hero />
-        <Stats />
-        <WhatAwaits />
-        <Courses onSelect={scrollToForm} />
-        <StartupStudio onSelect={scrollToForm} />
-        <Team />
-        <LeadForm />
-      </main>
-      <Footer centerName={centerName} logo={logo} />
-    </div>
+    <LangProvider>
+      <div className="min-h-screen bg-[#08060F]">
+        <Header centerName={centerName} logo={logo} />
+        <main>
+          <Hero />
+          <Stats />
+          <WhatAwaits />
+          <Courses onSelect={scrollToForm} />
+          <StartupStudio onSelect={scrollToForm} />
+          <Team />
+          <LeadForm />
+        </main>
+        <Footer centerName={centerName} logo={logo} />
+      </div>
+    </LangProvider>
   );
 }

@@ -3,16 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-
-const NAV_LINKS = [
-  { href: "#about", label: "Biz haqimizda" },
-  { href: "#courses", label: "Kurslar" },
-  { href: "#startup-studio", label: "Startup Studio" },
-  { href: "#team", label: "Jamoa" },
-  { href: "#contact", label: "Aloqa" },
-];
+import { useLang } from "./LangContext";
+import { NAV_ITEMS } from "./translations";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function Header({ centerName, logo }: { centerName: string; logo: string }) {
+  const { lang, t } = useLang();
+  const navLinks = NAV_ITEMS[lang];
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -39,22 +36,23 @@ export function Header({ centerName, logo }: { centerName: string; logo: string 
         </a>
 
         <nav className="hidden md:flex items-center gap-7">
-          {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="text-sm font-medium text-[#A1A1AA] hover:text-[#A3E635] transition-colors">
+          {navLinks.map((l) => (
+            <a key={l.href} href={l.href} className="text-sm font-medium text-[#A1A1AA] hover:text-[#A657F2] transition-colors">
               {l.label}
             </a>
           ))}
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
+          <LanguageSwitcher />
           <Link href="/login" className="text-sm font-semibold text-white/80 hover:text-white transition-colors px-3 py-2">
-            Kirish
+            {t.navLogin}
           </Link>
           <a
             href="#ariza"
-            className="text-sm font-bold text-[#08060F] bg-[#A3E635] hover:brightness-110 transition-[filter] px-4 py-2.5 rounded-xl shadow-[0_0_20px_rgba(163,230,53,0.35)]"
+            className="text-sm font-bold text-[#08060F] bg-[#A657F2] hover:brightness-110 transition-[filter] px-4 py-2.5 rounded-xl shadow-[0_0_20px_rgba(166,87,242,0.35)]"
           >
-            Kursga yozilish
+            {t.navCta}
           </a>
         </div>
 
@@ -71,7 +69,7 @@ export function Header({ centerName, logo }: { centerName: string; logo: string 
       {menuOpen && (
         <div className="md:hidden border-t border-white/10 bg-[#08060F] px-4 pb-4 pt-2">
           <nav className="flex flex-col">
-            {NAV_LINKS.map((l) => (
+            {navLinks.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
@@ -82,14 +80,19 @@ export function Header({ centerName, logo }: { centerName: string; logo: string 
               </a>
             ))}
           </nav>
-          <div className="flex items-center gap-3 mt-3">
-            <Link href="/login" onClick={handleNavClick} className="flex-1 text-center text-sm font-semibold text-white border border-white/15 rounded-xl py-2.5">
-              Kirish
+          <div className="flex items-center justify-between gap-3 mt-3">
+            <LanguageSwitcher />
+            <Link href="/login" onClick={handleNavClick} className="text-sm font-semibold text-white">
+              {t.navLogin}
             </Link>
-            <a href="#ariza" onClick={handleNavClick} className="flex-1 text-center text-sm font-bold text-[#08060F] bg-[#A3E635] rounded-xl py-2.5">
-              Kursga yozilish
-            </a>
           </div>
+          <a
+            href="#ariza"
+            onClick={handleNavClick}
+            className="mt-3 block text-center text-sm font-bold text-[#08060F] bg-[#A657F2] rounded-xl py-2.5"
+          >
+            {t.navCta}
+          </a>
         </div>
       )}
     </header>
