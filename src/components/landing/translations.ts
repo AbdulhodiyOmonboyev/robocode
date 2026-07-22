@@ -41,6 +41,9 @@ export const T = {
     featuresTitle: "Sizni nimalar kutyapti",
     coursesLabel: "Kurslar",
     coursesTitle: "Sizga mos yo’nalishni tanlang",
+    pricingLabel: "Tariflar",
+    pricingTitle: "Narxlar",
+    pricingIncludedTitle: "Narxga nimalar kiradi:",
     testimonialsLabel: "Fikrlar",
     testimonialsTitle: "Bitiruvchilarimiz nima deydi",
     studioLead: "Startapingiz uchun",
@@ -96,6 +99,9 @@ export const T = {
     featuresTitle: "Что вас ждёт",
     coursesLabel: "Курсы",
     coursesTitle: "Выберите подходящее направление",
+    pricingLabel: "Тарифы",
+    pricingTitle: "Цены",
+    pricingIncludedTitle: "Что входит в стоимость:",
     testimonialsLabel: "Отзывы",
     testimonialsTitle: "Что говорят наши выпускники",
     studioLead: "Инвестиции в ваш стартап —",
@@ -150,6 +156,9 @@ export const T = {
     featuresTitle: "What’s waiting for you",
     coursesLabel: "Courses",
     coursesTitle: "Choose the track that fits you",
+    pricingLabel: "Plans",
+    pricingTitle: "Pricing",
+    pricingIncludedTitle: "What’s included:",
     testimonialsLabel: "Testimonials",
     testimonialsTitle: "What our graduates say",
     studioLead: "Investment for your startup —",
@@ -370,6 +379,39 @@ export const COURSES: Record<Lang, Course[]> = {
       modules: ["Modern front-end technologies and fast AI-assisted development", "Responsive web interfaces", "Real client projects"],
     },
   ],
+};
+
+// TODO: replace the placeholder "price on request" strings with real monthly
+// prices once they're finalized. `monthly` is index-aligned with COURSES[lang]
+// (same order, one entry per course) so cards stay matched to the right course.
+export const PRICES: Record<Lang, { monthly: string[]; included: string[] }> = {
+  uz: {
+    monthly: Array(8).fill("So’rov bo’yicha"),
+    included: [
+      "Tajribali mentor yordami",
+      "Amaliy loyihalar va portfolio",
+      "Kurs tugagach sertifikat",
+      "Ish topishga ko’maklashish",
+    ],
+  },
+  ru: {
+    monthly: Array(8).fill("По запросу"),
+    included: [
+      "Поддержка опытного ментора",
+      "Практические проекты и портфолио",
+      "Сертификат по окончании курса",
+      "Помощь в трудоустройстве",
+    ],
+  },
+  en: {
+    monthly: Array(8).fill("Price on request"),
+    included: [
+      "Support from an experienced mentor",
+      "Hands-on projects and a portfolio",
+      "Certificate on completion",
+      "Job placement support",
+    ],
+  },
 };
 
 export const STUDIO_CARDS: Record<Lang, { title: string; desc: string }[]> = {
