@@ -30,7 +30,6 @@ export const T = {
   uz: {
     navLogin: "Kirish",
     navCta: "Kursga yozilish",
-    heroBadge: "ANDIJONDAGI BIRINCHI IT AKADEMIYA",
     heroPrefix: "ROBOCODE — ",
     heroHighlight: "ANDIJONDAGI",
     heroSuffix: " BIRINCHI IT AKADEMIYA",
@@ -88,7 +87,6 @@ export const T = {
   ru: {
     navLogin: "Войти",
     navCta: "Записаться на курс",
-    heroBadge: "ПЕРВАЯ IT-АКАДЕМИЯ В АНДИЖАНЕ",
     heroPrefix: "ROBOCODE — ",
     heroHighlight: "ПЕРВАЯ",
     heroSuffix: " IT-АКАДЕМИЯ В АНДИЖАНЕ",
@@ -145,7 +143,6 @@ export const T = {
   en: {
     navLogin: "Log in",
     navCta: "Enroll now",
-    heroBadge: "ANDIJAN’S FIRST IT ACADEMY",
     heroPrefix: "ROBOCODE — ",
     heroHighlight: "ANDIJAN’S FIRST",
     heroSuffix: " IT ACADEMY",

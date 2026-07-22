@@ -29,10 +29,6 @@ export function Hero() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-24 sm:pt-24 sm:pb-32">
         <div className="max-w-3xl">
-          <span className="landing-bracket inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#A657F2] px-4 py-2 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#A657F2] animate-pulse" />
-            {t.heroBadge}
-          </span>
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold uppercase tracking-tight text-white leading-[1.05]">
             {t.heroPrefix}
             <span className="text-[#A657F2]">{t.heroHighlight}</span>
