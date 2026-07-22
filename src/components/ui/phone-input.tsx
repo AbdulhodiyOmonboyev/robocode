@@ -58,7 +58,7 @@ export interface PhoneInputProps {
 }
 
 export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function PhoneInput(
-  { value, onChange, onBlur, id, name, label, error, placeholder = "90 123 45 67", className, disabled, required, autoFocus, size = "sm" },
+  { value, onChange, onBlur, id, name, label, error, placeholder = "94 071 35 55", className, disabled, required, autoFocus, size = "sm" },
   forwardedRef
 ) {
   const [digits, setDigits] = useState(() => toNationalDigits(value || ""));
@@ -89,7 +89,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
   }, [digits]);
 
   const emit = (nextDigits: string) => {
-    const full = nextDigits.length ? `${COUNTRY_CODE} ${formatNational(nextDigits)}` : "";
+    const full = nextDigits.length ? `${COUNTRY_CODE}${nextDigits}` : "";
     lastEmitted.current = full;
     onChange({ target: { value: full } });
   };

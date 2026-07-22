@@ -6,6 +6,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// True once the user has entered the full 9-digit Uzbek national number
+// (stored/submitted as "+998" followed by those 9 digits, no separators).
+export function isPhoneComplete(phone: string): boolean {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 12 && digits.startsWith("998");
+}
+
 export function formatPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   if (digits.length === 12 && digits.startsWith("998")) {

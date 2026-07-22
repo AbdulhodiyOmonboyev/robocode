@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useConfirm } from "@/components/ui/confirm";
 import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_SOURCE_LABELS } from "@/lib/constants";
-import { formatDate, formatDateTime, formatRelativeTime, formatPhone, phoneToTel, phoneToTelegram, phoneToWhatsapp, formatCurrency, getInitials } from "@/lib/utils";
+import { formatDate, formatDateTime, formatRelativeTime, formatPhone, phoneToTel, phoneToTelegram, phoneToWhatsapp, formatCurrency, getInitials, isPhoneComplete } from "@/lib/utils";
 
 interface LeadPayment { id: string; amount: string | number; paidAt: string; forMonth: string | null; }
 interface LeadScore { id: string; score: number; exam: { title: string; maxScore: number } | null; }
@@ -123,6 +123,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const save = async () => {
+    const parentPhone = editData.parentPhone as string | undefined;
+    if (parentPhone && !isPhoneComplete(parentPhone)) {
+      toast.error("To'liq telefon raqam kiriting");
+      return;
+    }
     setSaving(true);
     const res = await fetch(`/api/leads/${id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },

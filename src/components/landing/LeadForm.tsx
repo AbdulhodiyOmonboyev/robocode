@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { User, Phone, BookOpen, MessageSquare, Check } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { isPhoneComplete } from "@/lib/utils";
 import { COURSES } from "./translations";
 import { useLang } from "./LangContext";
 import { Reveal } from "./Reveal";
@@ -24,7 +25,7 @@ export function LeadForm() {
       setError(t.formErrName);
       return;
     }
-    if (form.phone.replace(/\D/g, "").length < 7) {
+    if (!isPhoneComplete(form.phone)) {
       setError(t.formErrPhone);
       return;
     }

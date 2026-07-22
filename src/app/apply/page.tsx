@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { User, Phone, BookOpen, Clock, MessageSquare, Users, Check } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { isPhoneComplete } from "@/lib/utils";
 
 export default function ApplyPage() {
   const [cfg, setCfg] = useState<{ courses: { id: string; name: string }[]; name: string; logo: string }>({ courses: [], name: "Robocode CRM", logo: "" });
@@ -19,7 +20,8 @@ export default function ApplyPage() {
     e.preventDefault();
     setError("");
     if (form.fullName.trim().length < 2) { setError("Ism familiyangizni kiriting"); return; }
-    if (form.phone.replace(/\D/g, "").length < 7) { setError("Telefon raqamingizni to'g'ri kiriting"); return; }
+    if (!isPhoneComplete(form.phone)) { setError("To'liq telefon raqam kiriting"); return; }
+    if (form.referrerPhone && !isPhoneComplete(form.referrerPhone)) { setError("Tavsiya qilgan kishining telefon raqamini to'liq kiriting"); return; }
     setLoading(true);
     const res = await fetch("/api/public/lead", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form),

@@ -13,19 +13,19 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, isPhoneComplete } from "@/lib/utils";
 
 const BRAND = "#5E2CA5";
 
 const schema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 harf"),
-  phone: z.string().min(9, "Telefon raqam kiriting"),
-  phoneSecondary: z.string().optional(),
+  phone: z.string().refine(isPhoneComplete, "To'liq telefon raqam kiriting"),
+  phoneSecondary: z.string().optional().refine((v) => !v || isPhoneComplete(v), "To'liq telefon raqam kiriting"),
   email: z.string().email().optional().or(z.literal("")),
   age: z.coerce.number().int().min(5).max(99).optional().or(z.literal("")),
   address: z.string().optional(),
   parentName: z.string().optional(),
-  parentPhone: z.string().optional(),
+  parentPhone: z.string().optional().refine((v) => !v || isPhoneComplete(v), "To'liq telefon raqam kiriting"),
   courseId: z.string().optional(),
   timeSlotId: z.string().optional(),
   timePreference: z.enum(["MORNING","AFTERNOON","EVENING","FLEXIBLE"]),
@@ -81,7 +81,7 @@ export default function NewLeadPage() {
   }, []);
 
   useEffect(() => {
-    if (!phone || phone.replace(/\D/g, "").length < 9) { setDuplicate(null); return; }
+    if (!phone || !isPhoneComplete(phone)) { setDuplicate(null); return; }
     const timer = setTimeout(async () => {
       const res = await fetch(`/api/leads?search=${encodeURIComponent(phone)}&limit=1`);
       if (res.ok) {
@@ -194,6 +194,7 @@ export default function NewLeadPage() {
               <div>
                 <label className={labelCls}>Qo&apos;shimcha raqam</label>
                 <PhoneInput value={watch("phoneSecondary") || ""} onChange={e => setValue("phoneSecondary", e.target.value)} />
+                {errors.phoneSecondary && <p className="mt-1 text-[11px] text-red-500">{errors.phoneSecondary.message}</p>}
               </div>
               <div>
                 <label className={labelCls}>Yoshi</label>
@@ -210,6 +211,7 @@ export default function NewLeadPage() {
               <div>
                 <label className={labelCls}>Ota-ona telefoni</label>
                 <PhoneInput value={watch("parentPhone") || ""} onChange={e => setValue("parentPhone", e.target.value)} />
+                {errors.parentPhone && <p className="mt-1 text-[11px] text-red-500">{errors.parentPhone.message}</p>}
               </div>
             </div>
           </div>

@@ -10,12 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
+import { isPhoneComplete } from "@/lib/utils";
 
 const schema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 harf"),
   username: z.string().min(3).regex(/^[a-z0-9_]+$/, "Kichik harf, raqam va _ faqat"),
   email: z.string().email("Email noto'g'ri").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  phone: z.string().optional().refine((v) => !v || isPhoneComplete(v), "To'liq telefon raqam kiriting"),
   password: z.string().min(8, "Kamida 8 belgi").optional().or(z.literal("")),
   role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR"]),
   canManageLeads: z.boolean(),
@@ -134,7 +135,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Email" type="email" {...register("email")} error={errors.email?.message} placeholder="aziz@example.com" />
-            <PhoneInput label="Telefon" value={watch("phone") || ""} onChange={e => setValue("phone", e.target.value)} />
+            <PhoneInput label="Telefon" value={watch("phone") || ""} onChange={e => setValue("phone", e.target.value)} error={errors.phone?.message} />
           </div>
 
           {/* Password */}
