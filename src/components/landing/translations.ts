@@ -41,6 +41,8 @@ export const T = {
     featuresTitle: "Sizni nimalar kutyapti",
     coursesLabel: "Kurslar",
     coursesTitle: "Sizga mos yo’nalishni tanlang",
+    testimonialsLabel: "Fikrlar",
+    testimonialsTitle: "Bitiruvchilarimiz nima deydi",
     studioLead: "Startapingiz uchun",
     studioDesc:
       "Startup — innovatsion g’oya asosida yaratilgan loyiha bo’lib, muammoni hal qilish va tez rivojlanishga qaratilgan.",
@@ -94,6 +96,8 @@ export const T = {
     featuresTitle: "Что вас ждёт",
     coursesLabel: "Курсы",
     coursesTitle: "Выберите подходящее направление",
+    testimonialsLabel: "Отзывы",
+    testimonialsTitle: "Что говорят наши выпускники",
     studioLead: "Инвестиции в ваш стартап —",
     studioDesc:
       "Стартап — это проект, основанный на инновационной идее, направленный на решение проблемы и быстрый рост.",
@@ -146,6 +150,8 @@ export const T = {
     featuresTitle: "What’s waiting for you",
     coursesLabel: "Courses",
     coursesTitle: "Choose the track that fits you",
+    testimonialsLabel: "Testimonials",
+    testimonialsTitle: "What our graduates say",
     studioLead: "Investment for your startup —",
     studioDesc: "A startup is a project built on an innovative idea, aimed at solving a problem and growing fast.",
     studioHelp: "Our dedicated team helps you go from idea to MVP and an international accelerator (UZCombinator).",
@@ -487,4 +493,67 @@ export const MENTORS: Record<Lang, Mentor[]> = {
   uz: MENTORS_BASE.map((m) => ({ name: m.name, role: m.role.uz, bio: m.bio.uz, instagram: m.instagram })),
   ru: MENTORS_BASE.map((m) => ({ name: m.name, role: m.role.ru, bio: m.bio.ru, instagram: m.instagram })),
   en: MENTORS_BASE.map((m) => ({ name: m.name, role: m.role.en, bio: m.bio.en, instagram: m.instagram })),
+};
+
+// name is a proper noun (not localized); photo is reserved for a real photo
+// later (falls back to initials until then); videoUrl, if set, is a direct
+// video file — a play button on the card opens it in a modal.
+export type Testimonial = { name: string; photo?: string; videoUrl?: string; course: string; workplace: string; review: string };
+
+const TESTIMONIALS_BASE: {
+  name: string;
+  photo?: string;
+  videoUrl?: string;
+  course: Record<Lang, string>;
+  workplace: Record<Lang, string>;
+  review: Record<Lang, string>;
+}[] = [
+  {
+    name: "Aziza Karimova",
+    course: { uz: "Front-end", ru: "Front-end", en: "Front-end" },
+    workplace: {
+      uz: "PLACEHOLDER — IT kompaniyada Frontend dasturchi",
+      ru: "PLACEHOLDER — Frontend-разработчик в IT-компании",
+      en: "PLACEHOLDER — Frontend developer at an IT company",
+    },
+    review: {
+      uz: "PLACEHOLDER sharh matni — bitiruvchining haqiqiy fikri keyinroq shu yerga qo’yiladi. Bu 2–3 qatorlik namuna matn.",
+      ru: "PLACEHOLDER текст отзыва — реальный отзыв выпускника будет добавлен сюда позже. Это пример текста на 2–3 строки.",
+      en: "PLACEHOLDER review text — the graduate’s real feedback will be added here later. This is a sample 2–3 line quote.",
+    },
+  },
+  {
+    name: "Bekzod Toshpulatov",
+    course: { uz: "Robototexnika", ru: "Робототехника", en: "Robotics" },
+    workplace: {
+      uz: "PLACEHOLDER — STEM markazida robototexnika o’qituvchisi",
+      ru: "PLACEHOLDER — преподаватель робототехники в STEM-центре",
+      en: "PLACEHOLDER — robotics instructor at a STEM center",
+    },
+    review: {
+      uz: "PLACEHOLDER sharh matni — bitiruvchining haqiqiy fikri keyinroq shu yerga qo’yiladi. Bu 2–3 qatorlik namuna matn.",
+      ru: "PLACEHOLDER текст отзыва — реальный отзыв выпускника будет добавлен сюда позже. Это пример текста на 2–3 строки.",
+      en: "PLACEHOLDER review text — the graduate’s real feedback will be added here later. This is a sample 2–3 line quote.",
+    },
+  },
+  {
+    name: "Madina Yusupova",
+    course: { uz: "Grafik va Web dizayn", ru: "Графика и веб-дизайн", en: "Graphic & Web Design" },
+    workplace: {
+      uz: "PLACEHOLDER — frilanser UI/UX dizayner",
+      ru: "PLACEHOLDER — фрилансер UI/UX-дизайнер",
+      en: "PLACEHOLDER — freelance UI/UX designer",
+    },
+    review: {
+      uz: "PLACEHOLDER sharh matni — bitiruvchining haqiqiy fikri keyinroq shu yerga qo’yiladi. Bu 2–3 qatorlik namuna matn.",
+      ru: "PLACEHOLDER текст отзыва — реальный отзыв выпускника будет добавлен сюда позже. Это пример текста на 2–3 строки.",
+      en: "PLACEHOLDER review text — the graduate’s real feedback will be added here later. This is a sample 2–3 line quote.",
+    },
+  },
+];
+
+export const TESTIMONIALS: Record<Lang, Testimonial[]> = {
+  uz: TESTIMONIALS_BASE.map((m) => ({ name: m.name, photo: m.photo, videoUrl: m.videoUrl, course: m.course.uz, workplace: m.workplace.uz, review: m.review.uz })),
+  ru: TESTIMONIALS_BASE.map((m) => ({ name: m.name, photo: m.photo, videoUrl: m.videoUrl, course: m.course.ru, workplace: m.workplace.ru, review: m.review.ru })),
+  en: TESTIMONIALS_BASE.map((m) => ({ name: m.name, photo: m.photo, videoUrl: m.videoUrl, course: m.course.en, workplace: m.workplace.en, review: m.review.en })),
 };
