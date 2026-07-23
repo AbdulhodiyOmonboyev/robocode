@@ -1,34 +1,40 @@
-import { Hammer, GraduationCap, Cpu, Users2, Award, Briefcase } from "lucide-react";
+"use client";
 
-const ITEMS = [
-  { icon: Hammer, title: "Amaliy loyihalar", desc: "Har bir mavzu real loyihalar orqali mustahkamlanadi." },
-  { icon: GraduationCap, title: "Tajribali ustozlar", desc: "Sohada faoliyat yurituvchi mutaxassislardan ta'lim." },
-  { icon: Cpu, title: "Zamonaviy jihozlar", desc: "Yangi kompyuterlar va robototexnika uskunalari." },
-  { icon: Users2, title: "Kichik guruhlar", desc: "Har bir o'quvchiga individual e'tibor." },
-  { icon: Award, title: "Sertifikat", desc: "Kursni tugatgan har bir o'quvchiga sertifikat." },
-  { icon: Briefcase, title: "Ish bilan ta'minlash", desc: "Eng yaxshi bitiruvchilarga ish topishda ko'maklashamiz." },
-];
+import { Hammer, GraduationCap, Cpu, Users2, Award, Briefcase } from "lucide-react";
+import { Reveal } from "./Reveal";
+import { useLang } from "./LangContext";
+import { WHY_US } from "./translations";
+
+const ICONS = { hammer: Hammer, gradCap: GraduationCap, cpu: Cpu, users: Users2, award: Award, briefcase: Briefcase };
 
 export function WhyUs() {
-  return (
-    <section id="why-us" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
-      <div className="max-w-2xl mx-auto text-center">
-        <span className="text-sm font-semibold text-brand">Nega biz</span>
-        <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-          Bizni tanlash uchun sabablar
-        </h2>
-      </div>
+  const { lang, t } = useLang();
+  const items = WHY_US[lang];
 
-      <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {ITEMS.map((item) => (
-          <div key={item.title} className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-6 shadow-sm">
-            <div className="w-11 h-11 rounded-xl bg-brand/10 flex items-center justify-center mb-4">
-              <item.icon className="w-5 h-5 text-brand" />
-            </div>
-            <h3 className="font-bold text-gray-900 dark:text-white">{item.title}</h3>
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
-          </div>
-        ))}
+  return (
+    <section id="why-us" className="bg-[#08060F] border-b border-white/10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+        <Reveal className="max-w-2xl mx-auto text-center">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#A657F2]">{t.whyUsLabel}</span>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-white">{t.whyUsTitle}</h2>
+        </Reveal>
+
+        <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {items.map((item, i) => {
+            const Icon = ICONS[item.icon];
+            return (
+              <Reveal key={item.title} delay={i * 80}>
+                <div className="landing-bracket h-full bg-white/[0.03] rounded-2xl p-7 hover:bg-white/[0.05] transition-colors">
+                  <div className="w-11 h-11 rounded-xl bg-[#7C3AED]/20 flex items-center justify-center mb-5">
+                    <Icon className="w-5 h-5 text-[#A657F2]" />
+                  </div>
+                  <h3 className="font-bold text-white">{item.title}</h3>
+                  <p className="mt-2 text-sm text-[#A1A1AA] leading-relaxed">{item.desc}</p>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

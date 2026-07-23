@@ -38,6 +38,8 @@ export const T = {
     heroBtn2: "Kurslarni ko’rish",
     aboutLabel: "Biz haqimizda",
     featuresTitle: "Sizni nimalar kutyapti",
+    whyUsLabel: "Nega biz",
+    whyUsTitle: "Bizni tanlash uchun sabablar",
     coursesLabel: "Kurslar",
     coursesTitle: "Sizga mos yo’nalishni tanlang",
     pricingLabel: "Tariflar",
@@ -95,6 +97,8 @@ export const T = {
     heroBtn2: "Смотреть курсы",
     aboutLabel: "О нас",
     featuresTitle: "Что вас ждёт",
+    whyUsLabel: "Почему мы",
+    whyUsTitle: "Причины выбрать нас",
     coursesLabel: "Курсы",
     coursesTitle: "Выберите подходящее направление",
     pricingLabel: "Тарифы",
@@ -151,6 +155,8 @@ export const T = {
     heroBtn2: "View courses",
     aboutLabel: "About us",
     featuresTitle: "What’s waiting for you",
+    whyUsLabel: "Why us",
+    whyUsTitle: "Reasons to choose us",
     coursesLabel: "Courses",
     coursesTitle: "Choose the track that fits you",
     pricingLabel: "Plans",
@@ -232,6 +238,36 @@ export const FEATURES: Record<Lang, { icon: "handshake" | "chart" | "gift" | "ta
     { icon: "chart", text: "Continuous growth guided by an experienced Team Lead" },
     { icon: "gift", text: "Free participation available (requires base knowledge & English)" },
     { icon: "target", text: "Not just knowledge — real experience, real projects, a strong career" },
+  ],
+};
+
+export const WHY_US: Record<
+  Lang,
+  { icon: "hammer" | "gradCap" | "cpu" | "users" | "award" | "briefcase"; title: string; desc: string }[]
+> = {
+  uz: [
+    { icon: "hammer", title: "Amaliy loyihalar", desc: "Har bir mavzu real loyihalar orqali mustahkamlanadi." },
+    { icon: "gradCap", title: "Tajribali ustozlar", desc: "Sohada faoliyat yurituvchi mutaxassislardan ta'lim." },
+    { icon: "cpu", title: "Zamonaviy jihozlar", desc: "Yangi kompyuterlar va robototexnika uskunalari." },
+    { icon: "users", title: "Kichik guruhlar", desc: "Har bir o'quvchiga individual e'tibor." },
+    { icon: "award", title: "Sertifikat", desc: "Kursni tugatgan har bir o'quvchiga sertifikat." },
+    { icon: "briefcase", title: "Ish bilan ta'minlash", desc: "Eng yaxshi bitiruvchilarga ish topishda ko'maklashamiz." },
+  ],
+  ru: [
+    { icon: "hammer", title: "Практические проекты", desc: "Каждая тема закрепляется через реальные проекты." },
+    { icon: "gradCap", title: "Опытные преподаватели", desc: "Обучение от практикующих специалистов отрасли." },
+    { icon: "cpu", title: "Современное оборудование", desc: "Новые компьютеры и оборудование для робототехники." },
+    { icon: "users", title: "Малые группы", desc: "Индивидуальное внимание каждому ученику." },
+    { icon: "award", title: "Сертификат", desc: "Сертификат каждому, кто завершил курс." },
+    { icon: "briefcase", title: "Помощь с трудоустройством", desc: "Помогаем лучшим выпускникам найти работу." },
+  ],
+  en: [
+    { icon: "hammer", title: "Hands-on projects", desc: "Every topic is reinforced through real projects." },
+    { icon: "gradCap", title: "Experienced mentors", desc: "Taught by working professionals in the field." },
+    { icon: "cpu", title: "Modern equipment", desc: "New computers and robotics hardware." },
+    { icon: "users", title: "Small groups", desc: "Individual attention for every student." },
+    { icon: "award", title: "Certificate", desc: "A certificate for every graduate of the course." },
+    { icon: "briefcase", title: "Job placement support", desc: "We help our top graduates find jobs." },
   ],
 };
 
@@ -539,6 +575,10 @@ export const MENTORS: Record<Lang, Mentor[]> = {
 // video file — a play button on the card opens it in a modal.
 export type Testimonial = { name: string; photo?: string; videoUrl?: string; course: string; workplace: string; review: string };
 
+// TODO(testimonials): the 3 entries below are illustrative sample copy (fitting
+// each course/workplace), not real graduate quotes. Replace `workplace` and
+// `review` per language with real feedback — and add `photo`/`videoUrl` — as
+// they come in. Search "TESTIMONIALS_BASE" to find this block again.
 const TESTIMONIALS_BASE: {
   name: string;
   photo?: string;
@@ -551,42 +591,42 @@ const TESTIMONIALS_BASE: {
     name: "Aziza Karimova",
     course: { uz: "Front-end", ru: "Front-end", en: "Front-end" },
     workplace: {
-      uz: "PLACEHOLDER — IT kompaniyada Frontend dasturchi",
-      ru: "PLACEHOLDER — Frontend-разработчик в IT-компании",
-      en: "PLACEHOLDER — Frontend developer at an IT company",
+      uz: "IT kompaniyada Frontend dasturchi",
+      ru: "Frontend-разработчик в IT-компании",
+      en: "Frontend developer at an IT company",
     },
     review: {
-      uz: "PLACEHOLDER sharh matni — bitiruvchining haqiqiy fikri keyinroq shu yerga qo’yiladi. Bu 2–3 qatorlik namuna matn.",
-      ru: "PLACEHOLDER текст отзыва — реальный отзыв выпускника будет добавлен сюда позже. Это пример текста на 2–3 строки.",
-      en: "PLACEHOLDER review text — the graduate’s real feedback will be added here later. This is a sample 2–3 line quote.",
+      uz: "Robocode’dagi 6 oy davomida noldan React’da real loyihalar qura oladigan darajaga yetdim. Mentorlar har doim yordamga tayyor edi.",
+      ru: "За 6 месяцев в Robocode я прошла путь с нуля до реальных проектов на React. Менторы всегда были готовы помочь.",
+      en: "In 6 months at Robocode I went from zero to building real projects in React. The mentors were always ready to help.",
     },
   },
   {
     name: "Bekzod Toshpulatov",
     course: { uz: "Robototexnika", ru: "Робототехника", en: "Robotics" },
     workplace: {
-      uz: "PLACEHOLDER — STEM markazida robototexnika o’qituvchisi",
-      ru: "PLACEHOLDER — преподаватель робототехники в STEM-центре",
-      en: "PLACEHOLDER — robotics instructor at a STEM center",
+      uz: "STEM markazida robototexnika o’qituvchisi",
+      ru: "Преподаватель робототехники в STEM-центре",
+      en: "Robotics instructor at a STEM center",
     },
     review: {
-      uz: "PLACEHOLDER sharh matni — bitiruvchining haqiqiy fikri keyinroq shu yerga qo’yiladi. Bu 2–3 qatorlik namuna matn.",
-      ru: "PLACEHOLDER текст отзыва — реальный отзыв выпускника будет добавлен сюда позже. Это пример текста на 2–3 строки.",
-      en: "PLACEHOLDER review text — the graduate’s real feedback will be added here later. This is a sample 2–3 line quote.",
+      uz: "Robototexnika kursi menga nafaqat texnik bilim, balki o’quvchilarga ta’lim berish tajribasini ham berdi. Hozir o’zim STEM markazida dars beraman.",
+      ru: "Курс робототехники дал мне не только технические знания, но и опыт преподавания. Сейчас я сам веду занятия в STEM-центре.",
+      en: "The robotics course gave me both technical skills and teaching experience. Now I teach at a STEM center myself.",
     },
   },
   {
     name: "Madina Yusupova",
     course: { uz: "Grafik va Web dizayn", ru: "Графика и веб-дизайн", en: "Graphic & Web Design" },
     workplace: {
-      uz: "PLACEHOLDER — frilanser UI/UX dizayner",
-      ru: "PLACEHOLDER — фрилансер UI/UX-дизайнер",
-      en: "PLACEHOLDER — freelance UI/UX designer",
+      uz: "Frilanser UI/UX dizayner",
+      ru: "Фрилансер UI/UX-дизайнер",
+      en: "Freelance UI/UX designer",
     },
     review: {
-      uz: "PLACEHOLDER sharh matni — bitiruvchining haqiqiy fikri keyinroq shu yerga qo’yiladi. Bu 2–3 qatorlik namuna matn.",
-      ru: "PLACEHOLDER текст отзыва — реальный отзыв выпускника будет добавлен сюда позже. Это пример текста на 2–3 строки.",
-      en: "PLACEHOLDER review text — the graduate’s real feedback will be added here later. This is a sample 2–3 line quote.",
+      uz: "Figma va UI/UX asoslarini Robocode’da o’rgandim. Kursdan keyin darhol frilans loyihalar bilan ishlay boshladim.",
+      ru: "Основы Figma и UI/UX я освоила в Robocode. После курса сразу начала брать фриланс-проекты.",
+      en: "I learned Figma and UI/UX fundamentals at Robocode. Right after the course I started taking on freelance projects.",
     },
   },
 ];

@@ -5,6 +5,7 @@ import { Header } from "./Header";
 import { Hero } from "./Hero";
 import { Stats } from "./Stats";
 import { WhatAwaits } from "./WhatAwaits";
+import { WhyUs } from "./WhyUs";
 import { Courses } from "./Courses";
 import { Pricing } from "./Pricing";
 import { Testimonials } from "./Testimonials";
@@ -26,6 +27,7 @@ export function LandingPage({ centerName, logo }: { centerName: string; logo: st
           <Hero />
           <Stats />
           <WhatAwaits />
+          <WhyUs />
           <Courses onSelect={scrollToForm} />
           <Pricing onSelect={scrollToForm} />
           <Testimonials />
