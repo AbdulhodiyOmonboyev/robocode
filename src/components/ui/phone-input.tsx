@@ -55,10 +55,12 @@ export interface PhoneInputProps {
   autoFocus?: boolean;
   /** "sm" (default) matches the dense dashboard forms; "lg" matches the bigger public apply form. */
   size?: "sm" | "lg";
+  /** Extra classes for the editable input itself (e.g. text/placeholder color on a dark card) — `className` only reaches the outer wrapper. */
+  inputClassName?: string;
 }
 
 export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function PhoneInput(
-  { value, onChange, onBlur, id, name, label, error, placeholder = "94 071 35 55", className, disabled, required, autoFocus, size = "sm" },
+  { value, onChange, onBlur, id, name, label, error, placeholder = "94 071 35 55", className, inputClassName, disabled, required, autoFocus, size = "sm" },
   forwardedRef
 ) {
   const [digits, setDigits] = useState(() => toNationalDigits(value || ""));
@@ -182,7 +184,8 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
           autoFocus={autoFocus}
           className={cn(
             "flex-1 min-w-0 bg-transparent placeholder-gray-400 outline-none",
-            size === "lg" ? "py-3 pr-4 text-base text-gray-900" : "py-2 pr-3 text-[13px] text-gray-900 dark:text-white"
+            size === "lg" ? "py-3 pr-4 text-base text-gray-900" : "py-2 pr-3 text-[13px] text-gray-900 dark:text-white",
+            inputClassName
           )}
         />
       </div>

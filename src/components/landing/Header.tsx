@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useLang } from "./LangContext";
 import { NAV_ITEMS } from "./translations";
@@ -45,9 +44,6 @@ export function Header({ centerName, logo }: { centerName: string; logo: string 
 
         <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher />
-          <Link href="/login" className="text-sm font-semibold text-white/80 hover:text-white transition-colors px-3 py-2">
-            {t.navLogin}
-          </Link>
           <a
             href="#ariza"
             className="text-sm font-bold text-[#08060F] bg-[#A657F2] hover:brightness-110 transition-[filter] px-4 py-2.5 rounded-xl shadow-[0_0_20px_rgba(166,87,242,0.35)]"
@@ -82,9 +78,6 @@ export function Header({ centerName, logo }: { centerName: string; logo: string 
           </nav>
           <div className="flex items-center justify-between gap-3 mt-3">
             <LanguageSwitcher />
-            <Link href="/login" onClick={handleNavClick} className="text-sm font-semibold text-white">
-              {t.navLogin}
-            </Link>
           </div>
           <a
             href="#ariza"

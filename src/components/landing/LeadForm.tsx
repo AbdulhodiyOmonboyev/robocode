@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User, Phone, BookOpen, MessageSquare, Check } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { isPhoneComplete } from "@/lib/utils";
@@ -10,13 +10,17 @@ import { Reveal } from "./Reveal";
 
 const EMPTY_FORM = { fullName: "", phone: "", courseName: "", note: "", website: "" };
 
-export function LeadForm() {
+export function LeadForm({ selectedCourse }: { selectedCourse?: string }) {
   const { lang, t } = useLang();
   const courses = COURSES[lang];
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (selectedCourse) setForm((f) => ({ ...f, courseName: selectedCourse }));
+  }, [selectedCourse]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +116,13 @@ export function LeadForm() {
                     <label className={label}>
                       <Phone className="w-3.5 h-3.5 text-[#A657F2]" /> {t.formPhone} *
                     </label>
-                    <PhoneInput value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} size="lg" className="!bg-white/5 !border-white/10" />
+                    <PhoneInput
+                      value={form.phone}
+                      onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                      size="lg"
+                      className="!bg-white/5 !border-white/10"
+                      inputClassName="!text-white placeholder:!text-white/30"
+                    />
                   </div>
                   <div>
                     <label className={label}>

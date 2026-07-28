@@ -5,7 +5,7 @@ import { Reveal } from "./Reveal";
 import { useLang } from "./LangContext";
 import { COURSES, PRICES } from "./translations";
 
-export function Pricing({ onSelect }: { onSelect: () => void }) {
+export function Pricing({ onSelect }: { onSelect: (courseName?: string) => void }) {
   const { lang, t } = useLang();
   const courses = COURSES[lang];
   const prices = PRICES[lang];
@@ -43,7 +43,7 @@ export function Pricing({ onSelect }: { onSelect: () => void }) {
 
                 <button
                   type="button"
-                  onClick={onSelect}
+                  onClick={() => onSelect(c.name)}
                   className="mt-5 inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#A657F2] group-hover:gap-2.5 transition-all"
                 >
                   {lang === "uz" ? "Yozilish" : lang === "ru" ? "Записаться" : "Enroll"} <ArrowRight className="w-4 h-4" />

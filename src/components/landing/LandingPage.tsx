@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { LangProvider } from "./LangContext";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
@@ -15,7 +16,10 @@ import { LeadForm } from "./LeadForm";
 import { Footer } from "./Footer";
 
 export function LandingPage({ centerName, logo }: { centerName: string; logo: string }) {
-  const scrollToForm = () => {
+  const [selectedCourse, setSelectedCourse] = useState("");
+
+  const scrollToForm = (courseName?: string) => {
+    if (courseName) setSelectedCourse(courseName);
     document.getElementById("ariza")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -31,9 +35,9 @@ export function LandingPage({ centerName, logo }: { centerName: string; logo: st
           <Courses onSelect={scrollToForm} />
           <Pricing onSelect={scrollToForm} />
           <Testimonials />
-          <StartupStudio onSelect={scrollToForm} />
+          <StartupStudio onSelect={() => scrollToForm()} />
           <Team />
-          <LeadForm />
+          <LeadForm selectedCourse={selectedCourse} />
         </main>
         <Footer centerName={centerName} logo={logo} />
       </div>
