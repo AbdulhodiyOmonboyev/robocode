@@ -44,6 +44,29 @@ export function formatCurrency(amount: number | string, currency = "UZS"): strin
   }).format(num);
 }
 
+// Deterministic Uzbek month names. Do NOT swap these for
+// toLocaleDateString("uz-UZ", ...) — Node's SSR ICU data and the browser's
+// render that differently, which throws a hydration mismatch and wipes the
+// <html class="dark"> the theme toggle sets.
+export const UZ_MONTHS = [
+  "yanvar", "fevral", "mart", "aprel", "may", "iyun",
+  "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr",
+] as const;
+
+// "2026-07" → "iyul 2026"
+export function formatMonthUz(month: string): string {
+  const [y, m] = month.split("-").map(Number);
+  if (!y || !m || m < 1 || m > 12) return month;
+  return `${UZ_MONTHS[m - 1]} ${y}`;
+}
+
+// Date → "02 iyul 2026"
+export function formatDateUz(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return "";
+  return `${String(d.getDate()).padStart(2, "0")} ${UZ_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return format(d, "dd.MM.yyyy");

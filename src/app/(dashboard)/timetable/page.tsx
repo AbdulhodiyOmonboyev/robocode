@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Plus, Download, LayoutGrid, DoorOpen } from 
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { WEEKDAYS } from "@/lib/constants";
+import { UZ_MONTHS } from "@/lib/utils";
 
 const BRAND = "#5E2CA5";
 
@@ -40,11 +41,6 @@ type ViewMode = "group" | "room";
 function hexAlpha(hex: string, alpha: string) {
   return hex.startsWith("#") ? `${hex}${alpha}` : hex;
 }
-
-const UZ_MONTHS = [
-  "yanvar", "fevral", "mart", "aprel", "may", "iyun",
-  "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr",
-];
 
 function getWeekRange(offset: number) {
   const now = new Date();
@@ -286,6 +282,7 @@ export default function TimetablePage() {
                             <div className="space-y-1.5">
                               {lessons.map((g) => {
                                 const color = g.course?.color || "#6366f1";
+                                const count = g._count?.leads ?? 0;
                                 return (
                                   <div
                                     key={g.id}
@@ -296,9 +293,9 @@ export default function TimetablePage() {
                                     <p className="font-semibold truncate" style={{ color }}>
                                       {g.name}{g.room ? ` / ${g.room}` : ""}
                                     </p>
-                                    {(g.timeFrom || g.timeTo) && (
+                                    {(g.timeFrom || g.timeTo || count > 0) && (
                                       <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-                                        {g.timeFrom}{g.timeTo ? `–${g.timeTo}` : ""}
+                                        {g.timeFrom}{g.timeTo ? `–${g.timeTo}` : ""}{count > 0 ? ` · ${count} o'quvchi` : ""}
                                       </p>
                                     )}
                                   </div>

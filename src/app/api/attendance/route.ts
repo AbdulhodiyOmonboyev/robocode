@@ -34,7 +34,13 @@ export async function GET(req: NextRequest) {
       if (!journal[key]) journal[key] = {};
       journal[key][r.leadId] = r.status;
     }
-    return NextResponse.json({ month, students, journal });
+    // Same student shape as the single-date branch below — the client keys
+    // rows and journal lookups off `leadId`, not `id`.
+    return NextResponse.json({
+      month,
+      students: students.map((s) => ({ leadId: s.id, fullName: s.fullName, phone: s.phone, status: null })),
+      journal,
+    });
   }
 
   const date = searchParams.get("date");

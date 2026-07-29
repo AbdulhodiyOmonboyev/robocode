@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Download, Printer, Wallet, TrendingDown, Banknote, TrendingUp, AlertCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatMonthUz } from "@/lib/utils";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { MonthPicker } from "@/components/ui/date-picker";
 
@@ -28,10 +28,7 @@ function currentMonth(): string {
   return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function monthLabel(month: string): string {
-  const [y, m] = month.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString("uz-UZ", { month: "long", year: "numeric" });
-}
+const monthLabel = formatMonthUz;
 
 export default function FinancialReportPage() {
   const { dark } = useDarkMode();

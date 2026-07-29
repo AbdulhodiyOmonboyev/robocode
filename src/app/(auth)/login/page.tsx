@@ -22,9 +22,25 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [logo, setLogo] = useState("");
+  // Until React hydrates, the submit button is a plain HTML button and a click
+  // (or Enter) triggers a native form submit — which used to reload /login with
+  // ?username=…&password=… in the URL and no session. Gate submit on this flag
+  // so an early tap waits for the JS handler instead of silently failing.
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    setHydrated(true);
     fetch("/api/branding").then(r=>r.json()).then(d=>{ if (d.logo) setLogo(d.logo); }).catch(()=>{});
+  }, []);
+
+  // Scrub credentials a pre-hydration native GET submit may have left in the
+  // address bar (and browser history) before they get bookmarked or shared.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search);
+    if (q.has("username") || q.has("password")) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   }, []);
 
   const {
@@ -73,7 +89,9 @@ export default function LoginPage() {
             <p className="text-[13px] text-gray-400 dark:text-gray-500 mt-1">Tizimga kirish</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* method="post" is a safety net only: if a native submit ever escapes
+              the handler, credentials go in the body rather than the query string. */}
+          <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 rounded-xl p-3 text-[13px] text-center">
                 {error}
@@ -145,9 +163,12 @@ export default function LoginPage() {
             </div>
 
             {/* Submit */}
+            {/* Disabled until hydrated: an HTML form's implicit submission (Enter
+                key) is also suppressed while its default button is disabled, so
+                this covers both the click and the keyboard path. */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !hydrated}
               className="w-full flex items-center justify-center py-2.5 px-4 bg-[#5E2CA5] hover:bg-[#4a2280] disabled:opacity-70 disabled:cursor-not-allowed text-white text-[13px] font-semibold rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/40 focus:ring-offset-2"
             >
               {loading ? (

@@ -217,7 +217,7 @@ export default function MiniAppProfilePage() {
             {/* Payments */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[13px] font-semibold text-gray-400 uppercase tracking-wide">💳 To'lov holati</h3>
+                <h3 className="text-[13px] font-semibold text-gray-400 uppercase tracking-wide">💳 To&apos;lov holati</h3>
                 <span
                   className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
                   style={
@@ -230,7 +230,7 @@ export default function MiniAppProfilePage() {
                 </span>
               </div>
               <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-2">
-                Jami to'langan: <b className="text-gray-800 dark:text-gray-200">{fmtMoney(data.payments.totalPaid)} so&apos;m</b>
+                Jami to&apos;langan: <b className="text-gray-800 dark:text-gray-200">{fmtMoney(data.payments.totalPaid)} so&apos;m</b>
               </p>
               {data.payments.history.length > 0 && (
                 <div className="space-y-1.5 border-t border-gray-100 dark:border-white/5 pt-2">

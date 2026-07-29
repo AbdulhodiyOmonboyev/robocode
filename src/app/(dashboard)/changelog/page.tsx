@@ -1,5 +1,5 @@
 import { Sparkles, Wrench, Zap, Bug } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatDateUz } from "@/lib/utils";
 
 const BRAND = "#5E2CA5";
 
@@ -86,7 +86,7 @@ export default function ChangelogPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Yangilanishlar tarixi</h1>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Tizimga qo'shilgan versiyalar va o'zgarishlar</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Tizimga qo&apos;shilgan versiyalar va o&apos;zgarishlar</p>
       </div>
 
       {/* Timeline */}
@@ -126,7 +126,7 @@ export default function ChangelogPage() {
                       {entry.title}
                     </span>
                     <span className="ml-auto text-[12px] text-gray-400 dark:text-gray-500 tabular-nums">
-                      {new Date(entry.date).toLocaleDateString("uz-UZ", { day: "2-digit", month: "long", year: "numeric" })}
+                      {formatDateUz(entry.date)}
                     </span>
                   </div>
 
@@ -156,7 +156,7 @@ export default function ChangelogPage() {
         {/* End marker */}
         <div className="flex items-center gap-2 pl-10 -mt-2 text-[12px] text-gray-400 dark:text-gray-500">
           <Wrench className="w-3.5 h-3.5" />
-          Bu tizimning boshlang'ich versiyasi
+          Bu tizimning boshlang&apos;ich versiyasi
         </div>
       </div>
     </div>
