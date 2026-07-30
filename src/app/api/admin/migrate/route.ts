@@ -222,6 +222,63 @@ const statements: string[] = [
   `ALTER TABLE "Course" DROP COLUMN IF EXISTS "branchId"`,
 
   `DROP TABLE IF EXISTS "Branch"`,
+
+  // O'qituvchi paneli jadvallari (LessonScore, Exercise, ExerciseScore, HomeworkSubmission)
+  `CREATE TABLE IF NOT EXISTS "LessonScore" (
+    "id" TEXT PRIMARY KEY,
+    "groupId" TEXT NOT NULL,
+    "leadId" TEXT NOT NULL,
+    "date" DATE NOT NULL,
+    "score" INTEGER NOT NULL,
+    "note" TEXT,
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT now(),
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT now()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "LessonScore_groupId_leadId_date_key" ON "LessonScore"("groupId","leadId","date")`,
+  `CREATE INDEX IF NOT EXISTS "LessonScore_groupId_date_idx" ON "LessonScore"("groupId","date")`,
+  `CREATE INDEX IF NOT EXISTS "LessonScore_leadId_date_idx" ON "LessonScore"("leadId","date")`,
+
+  `CREATE TABLE IF NOT EXISTS "Exercise" (
+    "id" TEXT PRIMARY KEY,
+    "groupId" TEXT NOT NULL,
+    "date" DATE NOT NULL,
+    "title" TEXT NOT NULL,
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS "Exercise_groupId_date_idx" ON "Exercise"("groupId","date")`,
+
+  `CREATE TABLE IF NOT EXISTS "ExerciseScore" (
+    "id" TEXT PRIMARY KEY,
+    "exerciseId" TEXT NOT NULL,
+    "leadId" TEXT NOT NULL,
+    "score" INTEGER NOT NULL,
+    "note" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT now(),
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT now()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "ExerciseScore_exerciseId_leadId_key" ON "ExerciseScore"("exerciseId","leadId")`,
+  `CREATE INDEX IF NOT EXISTS "ExerciseScore_leadId_idx" ON "ExerciseScore"("leadId")`,
+
+  `CREATE TABLE IF NOT EXISTS "HomeworkSubmission" (
+    "id" TEXT PRIMARY KEY,
+    "exerciseId" TEXT NOT NULL,
+    "leadId" TEXT NOT NULL,
+    "content" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'unchecked',
+    "grade" INTEGER,
+    "teacherNote" TEXT,
+    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT now(),
+    "checkedAt" TIMESTAMP(3),
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT now(),
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT now()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "HomeworkSubmission_exerciseId_leadId_key" ON "HomeworkSubmission"("exerciseId","leadId")`,
+  `CREATE INDEX IF NOT EXISTS "HomeworkSubmission_exerciseId_idx" ON "HomeworkSubmission"("exerciseId")`,
+  `CREATE INDEX IF NOT EXISTS "HomeworkSubmission_leadId_idx" ON "HomeworkSubmission"("leadId")`,
+  `CREATE INDEX IF NOT EXISTS "HomeworkSubmission_status_idx" ON "HomeworkSubmission"("status")`,
 ];
 
 export async function POST() {
