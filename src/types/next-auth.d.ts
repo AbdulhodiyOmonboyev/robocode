@@ -13,6 +13,7 @@ declare module "next-auth" {
     canManageUsers: boolean;
     canViewReports: boolean;
     canExportData: boolean;
+    isTeacher: boolean;
   }
 
   interface Session {
@@ -34,5 +35,6 @@ declare module "next-auth/jwt" {
     canManageUsers: boolean;
     canViewReports: boolean;
     canExportData: boolean;
+    isTeacher: boolean;
   }
 }

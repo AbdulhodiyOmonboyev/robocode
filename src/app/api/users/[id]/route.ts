@@ -19,6 +19,13 @@ const updateSchema = z.object({
   canManageUsers: z.boolean().optional(),
   canViewReports: z.boolean().optional(),
   canExportData: z.boolean().optional(),
+  language: z.string().optional().nullable(),
+  gender: z.string().optional().nullable(),
+  birthDate: z.string().optional().nullable(),
+  region: z.string().optional().nullable(),
+  district: z.string().optional().nullable(),
+  instagram: z.string().optional().nullable(),
+  telegram: z.string().optional().nullable(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -37,10 +44,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { password, oldPassword, email, avatarUrl, role, isActive, canManageLeads, canManageCourses, canManageUsers, canViewReports, canExportData, ...rest } = parsed.data;
+  const { password, oldPassword, email, avatarUrl, role, isActive, canManageLeads, canManageCourses, canManageUsers, canViewReports, canExportData, birthDate, ...rest } = parsed.data;
   const updateData: Prisma.UserUpdateInput = { ...rest };
   if (email !== undefined) updateData.email = email || null;
   if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl || null;
+  if (birthDate !== undefined) updateData.birthDate = birthDate ? new Date(birthDate) : null;
 
   // Only admins may change role, active status, and permissions
   if (isAdmin) {

@@ -71,6 +71,14 @@ model User {
   salary           Decimal? @db.Decimal(12, 2)
   subject          String?
 
+  language  String?
+  gender    String?
+  birthDate DateTime? @db.Date
+  region    String?
+  district  String?
+  instagram String?
+  telegram  String?
+
   canManageLeads   Boolean @default(true)
   canManageCourses Boolean @default(false)
   canManageUsers   Boolean @default(false)
@@ -90,6 +98,9 @@ model User {
   salaryRecordsCreated SalaryRecord[] @relation("SalaryCreatedBy")
   examsCreated    Exam[]    @relation("ExamCreatedBy")
   coinTxCreated   CoinTx[]  @relation("CoinCreatedBy")
+  lessonScoresCreated LessonScore[] @relation("LessonScoreCreatedBy")
+  exercisesCreated Exercise[] @relation("ExerciseCreatedBy")
+  homeworkCreated HomeworkSubmission[] @relation("HomeworkCreatedBy")
   staffAttendances StaffAttendance[] @relation("StaffAttendanceUser")
   tasksAssigned    Task[]   @relation("TaskAssignedTo")
   tasksCreated     Task[]   @relation("TaskCreatedBy")
@@ -140,6 +151,7 @@ model Lead {
   parentName     String?
   parentPhone    String?
   telegramChatId String?
+  birthDate      DateTime? @db.Date
   coins          Int      @default(0)
   frozenAt       DateTime?
   frozenUntil    DateTime?
@@ -182,6 +194,9 @@ model Lead {
   attendances Attendance[]
   scores     Score[]
   coinTxs    CoinTx[]
+  lessonScores LessonScore[]
+  exerciseScores ExerciseScore[]
+  homeworkSubmissions HomeworkSubmission[]
 
   trialDate       DateTime?
   enrolledAt      DateTime?
@@ -271,19 +286,21 @@ model PaymentType {
 }
 
 model Exam {
-  id          String   @id @default(cuid())
-  title       String
-  type        String   @default("exam")
-  courseId    String?
-  course      Course?  @relation(fields: [courseId], references: [id])
-  groupId     String?
-  group       Group?   @relation(fields: [groupId], references: [id])
-  date        DateTime @db.Date
-  maxScore    Int      @default(100)
-  createdById String
-  createdBy   User     @relation("ExamCreatedBy", fields: [createdById], references: [id])
-  scores      Score[]
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  title        String
+  type         String   @default("exam")
+  courseId     String?
+  course       Course?  @relation(fields: [courseId], references: [id])
+  groupId      String?
+  group        Group?   @relation(fields: [groupId], references: [id])
+  date         DateTime @db.Date
+  maxScore     Int      @default(100)
+  passingScore Int?
+  section      String?
+  createdById  String
+  createdBy    User     @relation("ExamCreatedBy", fields: [createdById], references: [id])
+  scores       Score[]
+  createdAt    DateTime @default(now())
 
   @@index([date])
 }
@@ -301,6 +318,81 @@ model Score {
 
   @@unique([examId, leadId])
   @@index([leadId])
+}
+
+// "Ballar" tab — one 0-100 score per (group, student, lesson date), independent of Exam/Score.
+model LessonScore {
+  id          String   @id @default(cuid())
+  groupId     String
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  score       Int
+  note        String?
+  createdById String
+  createdBy   User     @relation("LessonScoreCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([groupId, leadId, date])
+  @@index([groupId, date])
+  @@index([leadId, date])
+}
+
+// "Mashqlar" tab — a teacher adds an exercise on a lesson date, then scores each student on it.
+model Exercise {
+  id          String   @id @default(cuid())
+  groupId     String
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  title       String
+  createdById String
+  createdBy   User     @relation("ExerciseCreatedBy", fields: [createdById], references: [id])
+  scores      ExerciseScore[]
+  submissions HomeworkSubmission[]
+  createdAt   DateTime @default(now())
+
+  @@index([groupId, date])
+}
+
+model ExerciseScore {
+  id         String   @id @default(cuid())
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  leadId     String
+  lead       Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  score      Int
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([exerciseId, leadId])
+  @@index([leadId])
+}
+
+// "Uy vazifalari" tab — a student's submission for an exercise, reviewed/graded by the teacher.
+model HomeworkSubmission {
+  id          String    @id @default(cuid())
+  exerciseId  String
+  exercise    Exercise  @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  leadId      String
+  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  content     String?   @db.Text
+  status      String    @default("unchecked") // unchecked | checked
+  grade       Int?
+  teacherNote String?
+  submittedAt DateTime  @default(now())
+  checkedAt   DateTime?
+  createdById String
+  createdBy   User      @relation("HomeworkCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([exerciseId, leadId])
+  @@index([exerciseId])
+  @@index([leadId])
+  @@index([status])
 }
 
 model CoinTx {
@@ -353,6 +445,8 @@ model Group {
   payments  Payment[]
   attendances Attendance[]
   exams     Exam[]
+  lessonScores LessonScore[]
+  exercises Exercise[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }

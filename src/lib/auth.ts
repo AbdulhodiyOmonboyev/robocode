@@ -45,6 +45,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           data: { lastLoginAt: new Date() },
         });
 
+        const teachingGroupsCount = await db.group.count({
+          where: { teacherId: user.id, isArchived: false },
+        });
+
         return {
           id: user.id,
           name: user.fullName,
@@ -58,6 +62,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           canManageUsers: user.canManageUsers,
           canViewReports: user.canViewReports,
           canExportData: user.canExportData,
+          isTeacher: teachingGroupsCount > 0,
         };
       },
     }),

@@ -3,6 +3,13 @@ import type { NextAuthConfig } from "next-auth";
 const PUBLIC_PATHS = ["/login", "/api/auth"];
 // Exact-match only (unlike PUBLIC_PATHS above) — "/" as a prefix would match every route.
 const PUBLIC_EXACT_PATHS = ["/"];
+const TEACHER_PREFIX = "/teacher";
+
+const isAdminRole = (role: string) => role === "SUPER_ADMIN" || role === "ADMIN";
+// Teachers (Group.teacherId holders) land on their own panel; admins keep the regular dashboard
+// even if they also happen to teach a group.
+const landingPath = (user: { role: string; isTeacher: boolean }) =>
+  user.isTeacher && !isAdminRole(user.role) ? "/teacher/dashboard" : "/dashboard";
 
 // Avatarni faqat kichik URL bo'lsa sessiyaga qo'shamiz.
 // base64 (data:) rasm cookie'ni shishirib "REQUEST_HEADER_TOO_LARGE" (494) beradi.
@@ -20,8 +27,15 @@ export const authConfig: NextAuthConfig = {
         PUBLIC_PATHS.some((p) => nextUrl.pathname.startsWith(p)) || PUBLIC_EXACT_PATHS.includes(nextUrl.pathname);
 
       if (!isPublic && !isLoggedIn) return false;
-      if (isLoggedIn && nextUrl.pathname === "/login") {
-        return Response.redirect(new URL("/dashboard", nextUrl));
+
+      if (isLoggedIn) {
+        const user = auth!.user;
+        if (nextUrl.pathname === "/login") {
+          return Response.redirect(new URL(landingPath(user), nextUrl));
+        }
+        if (nextUrl.pathname.startsWith(TEACHER_PREFIX) && !user.isTeacher && !isAdminRole(user.role)) {
+          return Response.redirect(new URL("/dashboard", nextUrl));
+        }
       }
       return true;
     },
@@ -37,6 +51,7 @@ export const authConfig: NextAuthConfig = {
         token.canManageUsers = user.canManageUsers;
         token.canViewReports = user.canViewReports;
         token.canExportData = user.canExportData;
+        token.isTeacher = user.isTeacher;
       }
       // Client called useSession().update(partial) — e.g. after saving name/avatar on the profile page
       if (trigger === "update" && session) {
@@ -57,6 +72,7 @@ export const authConfig: NextAuthConfig = {
         session.user.canManageUsers = token.canManageUsers;
         session.user.canViewReports = token.canViewReports;
         session.user.canExportData = token.canExportData;
+        session.user.isTeacher = token.isTeacher;
       }
       return session;
     },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,7 +61,11 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Username yoki parol noto'g'ri");
       } else {
-        router.push("/dashboard");
+        const session = await getSession();
+        const role = session?.user?.role;
+        const isAdminRole = role === "SUPER_ADMIN" || role === "ADMIN";
+        const isTeacher = !!session?.user?.isTeacher;
+        router.push(isTeacher && !isAdminRole ? "/teacher/dashboard" : "/dashboard");
         router.refresh();
       }
     } catch {
