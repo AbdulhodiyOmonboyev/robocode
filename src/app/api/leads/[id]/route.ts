@@ -33,6 +33,7 @@ const updateSchema = z.object({
   frozenAt: z.string().optional().nullable(),
   frozenUntil: z.string().optional().nullable(),
   isArchived: z.boolean().optional(),
+  loginCode: z.string().min(4).max(20).optional().nullable(),
 });
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

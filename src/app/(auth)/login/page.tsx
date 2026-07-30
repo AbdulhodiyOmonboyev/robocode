@@ -53,19 +53,36 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const result = await signIn("credentials", {
+      let result = await signIn("credentials", {
         username: data.username,
         password: data.password,
         redirect: false,
       });
+      // Not a staff username/phone+password match — if the identifier looks like a phone
+      // number, this might be a student (Lead) logging in with phone + code instead.
+      if (result?.error && /\d/.test(data.username)) {
+        result = await signIn("student", {
+          phone: data.username,
+          code: data.password,
+          redirect: false,
+        });
+      }
       if (result?.error) {
-        setError("Username yoki parol noto'g'ri");
+        setError("Login/telefon yoki parol/kod noto'g'ri");
       } else {
         const session = await getSession();
         const role = session?.user?.role;
         const isAdminRole = role === "SUPER_ADMIN" || role === "ADMIN";
         const isTeacher = !!session?.user?.isTeacher;
-        router.push(isTeacher && !isAdminRole ? "/teacher/dashboard" : "/dashboard");
+        const isStudent = session?.user?.accountType === "student";
+        let landing = "/dashboard";
+        if (isStudent) landing = "/student/dashboard";
+        else if (!isAdminRole) {
+          if (isTeacher) landing = "/teacher/dashboard";
+          else if (role === "RECEPTION") landing = "/reception";
+          else if (role === "ACCOUNTANT") landing = "/finance";
+        }
+        router.push(landing);
         router.refresh();
       }
     } catch {
@@ -105,7 +122,7 @@ export default function LoginPage() {
             {/* Username */}
             <div>
               <label className="block text-[12px] font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                Login
+                Login yoki telefon
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -115,7 +132,7 @@ export default function LoginPage() {
                   {...register("username")}
                   type="text"
                   autoComplete="username"
-                  placeholder="admin"
+                  placeholder="admin yoki +998 90 123 45 67"
                   className="block w-full pl-10 pr-4 py-2.5 text-[13px] border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
                 />
               </div>

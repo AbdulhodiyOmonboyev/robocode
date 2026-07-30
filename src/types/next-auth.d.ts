@@ -13,7 +13,17 @@ declare module "next-auth" {
     canManageUsers: boolean;
     canViewReports: boolean;
     canExportData: boolean;
+    canSeePayments: boolean;
+    canManagePayments: boolean;
+    canSeeStudentContacts: boolean;
+    canManageAttendance: boolean;
+    canManageGrades: boolean;
+    canSeeReports: boolean;
+    canManageExpenses: boolean;
     isTeacher: boolean;
+    // "student" sessions come from a Lead (via phone+code), not a User row — `id` is the
+    // Lead id in that case, and none of the staff permission flags above are meaningful.
+    accountType: "staff" | "student";
   }
 
   interface Session {
@@ -35,6 +45,16 @@ declare module "next-auth/jwt" {
     canManageUsers: boolean;
     canViewReports: boolean;
     canExportData: boolean;
+    canSeePayments: boolean;
+    canManagePayments: boolean;
+    canSeeStudentContacts: boolean;
+    canManageAttendance: boolean;
+    canManageGrades: boolean;
+    canSeeReports: boolean;
+    canManageExpenses: boolean;
     isTeacher: boolean;
+    // "student" sessions come from a Lead (via phone+code), not a User row — `id` is the
+    // Lead id in that case, and none of the staff permission flags above are meaningful.
+    accountType: "staff" | "student";
   }
 }

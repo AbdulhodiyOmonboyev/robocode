@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   ArrowLeft, Phone, MessageCircle, BookOpen, Users, Wallet,
@@ -17,7 +18,7 @@ interface Score { id: string; score: number; exam: { title: string; maxScore: nu
 interface Student {
   id: string;
   fullName: string;
-  phone: string;
+  phone: string | null;
   status: string;
   coins: number;
   course: { id: string; name: string; color: string | null } | null;
@@ -33,26 +34,36 @@ const BRAND = "#5E2CA5";
 export default function TeacherStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdminRole = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "ADMIN";
+  const showPayments = isAdminRole || !!session?.user?.canSeePayments;
+  const showContacts = isAdminRole || !!session?.user?.canSeeStudentContacts;
   const [student, setStudent] = useState<Student | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("payments");
+  const [tab, setTab] = useState<Tab>("attendance");
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [leadRes, paymentsRes] = await Promise.all([
-      fetch(`/api/teacher/students/${id}`),
-      fetch(`/api/teacher/students/${id}/payments`),
-    ]);
+    const leadRes = await fetch(`/api/teacher/students/${id}`);
     if (!leadRes.ok) { router.push("/teacher/students"); return; }
     const leadData = await leadRes.json();
-    const paymentsData = await paymentsRes.json();
     setStudent(leadData);
-    setPayments(paymentsData.payments || []);
+    if (showPayments) {
+      const paymentsRes = await fetch(`/api/teacher/students/${id}/payments`);
+      if (paymentsRes.ok) {
+        const paymentsData = await paymentsRes.json();
+        setPayments(paymentsData.payments || []);
+      }
+    }
     setLoading(false);
-  }, [id, router]);
+  }, [id, router, showPayments]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (!showPayments && tab === "payments") setTab("attendance");
+  }, [showPayments, tab]);
 
   if (loading) {
     return (
@@ -74,7 +85,7 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
   const statusCls = LEAD_STATUS_COLORS[student.status as keyof typeof LEAD_STATUS_COLORS] || "";
 
   const tabs: { key: Tab; label: string; icon: typeof Wallet }[] = [
-    { key: "payments", label: "To'lovlar", icon: Wallet },
+    ...(showPayments ? [{ key: "payments" as const, label: "To'lovlar", icon: Wallet }] : []),
     { key: "attendance", label: "Davomat", icon: CalendarCheck },
     { key: "scores", label: "Ballar", icon: GraduationCap },
   ];
@@ -99,14 +110,16 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
                     {LEAD_STATUS_LABELS[student.status as keyof typeof LEAD_STATUS_LABELS] || student.status}
                   </span>
                 </div>
-                <div className="flex items-center gap-4 mt-2 flex-wrap text-sm">
-                  <a href={phoneToTel(student.phone)} className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-[#5E2CA5] transition-colors">
-                    <Phone className="w-3.5 h-3.5" /> {formatPhone(student.phone)}
-                  </a>
-                  <a href={phoneToTelegram(student.phone)} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-[#5E2CA5] transition-colors">
-                    <MessageCircle className="w-3.5 h-3.5" /> Telegram
-                  </a>
-                </div>
+                {showContacts && student.phone && (
+                  <div className="flex items-center gap-4 mt-2 flex-wrap text-sm">
+                    <a href={phoneToTel(student.phone)} className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-[#5E2CA5] transition-colors">
+                      <Phone className="w-3.5 h-3.5" /> {formatPhone(student.phone)}
+                    </a>
+                    <a href={phoneToTelegram(student.phone)} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-[#5E2CA5] transition-colors">
+                      <MessageCircle className="w-3.5 h-3.5" /> Telegram
+                    </a>
+                  </div>
+                )}
                 <div className="flex items-center gap-4 mt-1.5 flex-wrap text-sm">
                   {student.course && (
                     <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
@@ -130,16 +143,18 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5 flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-              <Wallet className="w-5 h-5 text-emerald-600" />
+        <div className={`grid grid-cols-1 gap-4 ${showPayments ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+          {showPayments && (
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                <Wallet className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[12px] text-gray-400 mb-0.5">Jami to&apos;lov</p>
+                <p className="text-[18px] font-bold text-gray-900 dark:text-white leading-tight truncate">{totalPaid.toLocaleString("ru-RU")} so&apos;m</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[12px] text-gray-400 mb-0.5">Jami to&apos;lov</p>
-              <p className="text-[18px] font-bold text-gray-900 dark:text-white leading-tight truncate">{totalPaid.toLocaleString("ru-RU")} so&apos;m</p>
-            </div>
-          </div>
+          )}
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm p-5 flex items-center gap-4">
             <div className="w-11 h-11 rounded-xl bg-[#5E2CA5]/10 flex items-center justify-center flex-shrink-0">
               <CalendarCheck className="w-5 h-5 text-[#5E2CA5]" />

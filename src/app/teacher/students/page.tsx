@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Search, Users, Coins } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { formatPhone, formatDate, formatRelativeTime, getInitials } from "@/lib/utils";
@@ -9,15 +10,19 @@ import { formatPhone, formatDate, formatRelativeTime, getInitials } from "@/lib/
 interface Student {
   id: string;
   fullName: string;
-  phone: string;
+  phone: string | null;
   birthDate: string | null;
   lastActivityAt: string | null;
   group: { id: string; name: string } | null;
   coins: number;
-  balance: number;
+  balance: number | null;
 }
 
 export default function TeacherStudentsPage() {
+  const { data: session } = useSession();
+  const isAdminRole = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "ADMIN";
+  const showPayments = isAdminRole || !!session?.user?.canSeePayments;
+  const showContacts = isAdminRole || !!session?.user?.canSeeStudentContacts;
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -72,9 +77,9 @@ export default function TeacherStudentsPage() {
               <thead>
                 <tr className="text-[11px] uppercase tracking-wide text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-white/5">
                   <th className="px-5 py-3 font-medium">Ism</th>
-                  <th className="px-5 py-3 font-medium hidden sm:table-cell">Telefon</th>
+                  {showContacts && <th className="px-5 py-3 font-medium hidden sm:table-cell">Telefon</th>}
                   <th className="px-5 py-3 font-medium hidden md:table-cell">Guruh</th>
-                  <th className="px-5 py-3 font-medium">Balans</th>
+                  {showPayments && <th className="px-5 py-3 font-medium">Balans</th>}
                   <th className="px-5 py-3 font-medium hidden lg:table-cell">Tug&apos;ilgan sana</th>
                   <th className="px-5 py-3 font-medium hidden lg:table-cell">Oxirgi faollik</th>
                 </tr>
@@ -90,16 +95,20 @@ export default function TeacherStudentsPage() {
                         <span className="text-[13px] font-semibold text-gray-900 dark:text-white hover:text-[#5E2CA5] transition-colors">{s.fullName}</span>
                       </Link>
                     </td>
-                    <td className="px-5 py-3.5 hidden sm:table-cell text-[13px] text-gray-500 dark:text-gray-400">{formatPhone(s.phone)}</td>
+                    {showContacts && (
+                      <td className="px-5 py-3.5 hidden sm:table-cell text-[13px] text-gray-500 dark:text-gray-400">{s.phone ? formatPhone(s.phone) : "—"}</td>
+                    )}
                     <td className="px-5 py-3.5 hidden md:table-cell text-[13px] text-gray-500 dark:text-gray-400">{s.group?.name || "—"}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={s.balance > 0 ? "text-red-600 dark:text-red-400 font-semibold text-[13px]" : "text-emerald-600 dark:text-emerald-400 font-semibold text-[13px]"}>
-                        {Math.abs(s.balance).toLocaleString("ru-RU")} so&apos;m
-                      </span>
-                      <span className="ml-2 inline-flex items-center gap-1 text-[11px] text-amber-500">
-                        <Coins className="w-3 h-3" /> {s.coins}
-                      </span>
-                    </td>
+                    {showPayments && (
+                      <td className="px-5 py-3.5">
+                        <span className={(s.balance ?? 0) > 0 ? "text-red-600 dark:text-red-400 font-semibold text-[13px]" : "text-emerald-600 dark:text-emerald-400 font-semibold text-[13px]"}>
+                          {Math.abs(s.balance ?? 0).toLocaleString("ru-RU")} so&apos;m
+                        </span>
+                        <span className="ml-2 inline-flex items-center gap-1 text-[11px] text-amber-500">
+                          <Coins className="w-3 h-3" /> {s.coins}
+                        </span>
+                      </td>
+                    )}
                     <td className="px-5 py-3.5 hidden lg:table-cell text-[13px] text-gray-500 dark:text-gray-400">{s.birthDate ? formatDate(s.birthDate) : "—"}</td>
                     <td className="px-5 py-3.5 hidden lg:table-cell text-[13px] text-gray-500 dark:text-gray-400">{s.lastActivityAt ? formatRelativeTime(s.lastActivityAt) : "—"}</td>
                   </tr>

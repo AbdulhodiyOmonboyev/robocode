@@ -18,13 +18,31 @@ const schema = z.object({
   email: z.string().email("Email noto'g'ri").optional().or(z.literal("")),
   phone: z.string().optional().refine((v) => !v || isPhoneComplete(v), "To'liq telefon raqam kiriting"),
   password: z.string().min(8, "Kamida 8 belgi").optional().or(z.literal("")),
-  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR"]),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR", "RECEPTION", "ACCOUNTANT"]),
   canManageLeads: z.boolean(),
   canManageCourses: z.boolean(),
   canManageUsers: z.boolean(),
   canViewReports: z.boolean(),
   canExportData: z.boolean(),
+  canSeePayments: z.boolean(),
+  canManagePayments: z.boolean(),
+  canSeeStudentContacts: z.boolean(),
+  canManageAttendance: z.boolean(),
+  canManageGrades: z.boolean(),
+  canSeeReports: z.boolean(),
+  canManageExpenses: z.boolean(),
 });
+
+// Sensible starting point per role when creating a brand-new user — admin can still
+// flip any of these individually before saving.
+const ROLE_DEFAULT_PERMISSIONS: Record<FormData["role"], Partial<FormData>> = {
+  SUPER_ADMIN: {},
+  ADMIN: {},
+  MANAGER: { canViewReports: true, canSeeReports: true },
+  OPERATOR: { canManageAttendance: true, canManageGrades: true },
+  RECEPTION: { canManageLeads: true, canSeeStudentContacts: true },
+  ACCOUNTANT: { canSeePayments: true, canManagePayments: true, canSeeReports: true, canManageExpenses: true },
+};
 
 type FormData = z.infer<typeof schema>;
 
@@ -40,7 +58,20 @@ interface EditableUser {
   canManageUsers: boolean;
   canViewReports: boolean;
   canExportData: boolean;
+  canSeePayments: boolean;
+  canManagePayments: boolean;
+  canSeeStudentContacts: boolean;
+  canManageAttendance: boolean;
+  canManageGrades: boolean;
+  canSeeReports: boolean;
+  canManageExpenses: boolean;
 }
+
+const PERMISSION_KEYS = [
+  "canManageLeads", "canManageCourses", "canManageUsers", "canViewReports", "canExportData",
+  "canSeePayments", "canManagePayments", "canSeeStudentContacts", "canManageAttendance",
+  "canManageGrades", "canSeeReports", "canManageExpenses",
+] as const satisfies readonly (keyof FormData)[];
 
 interface Props {
   user: EditableUser | null;
@@ -78,6 +109,13 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
       canManageUsers: user?.canManageUsers ?? false,
       canViewReports: user?.canViewReports ?? false,
       canExportData: user?.canExportData ?? false,
+      canSeePayments: user?.canSeePayments ?? false,
+      canManagePayments: user?.canManagePayments ?? false,
+      canSeeStudentContacts: user?.canSeeStudentContacts ?? true,
+      canManageAttendance: user?.canManageAttendance ?? false,
+      canManageGrades: user?.canManageGrades ?? false,
+      canSeeReports: user?.canSeeReports ?? false,
+      canManageExpenses: user?.canManageExpenses ?? false,
     },
   });
 
@@ -85,6 +123,17 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
     const p = generatePassword();
     setGeneratedPass(p);
     setValue("password", p);
+  };
+
+  // New users get sensible permission defaults for the picked role; editing an existing
+  // user never auto-overwrites permissions an admin already customized.
+  const applyRoleDefaults = (role: FormData["role"]) => {
+    setValue("role", role);
+    if (user) return;
+    const defaults = ROLE_DEFAULT_PERMISSIONS[role];
+    for (const key of PERMISSION_KEYS) {
+      setValue(key, defaults[key] ?? false);
+    }
   };
 
   const onSubmit = async (data: FormData) => {
@@ -119,7 +168,14 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
     { key: "canManageUsers", label: "Foydalanuvchilar boshqarish" },
     { key: "canViewReports", label: "Hisobotlarni ko'rish" },
     { key: "canExportData", label: "Ma'lumotlarni eksport" },
-  ] as const;
+    { key: "canSeePayments", label: "To'lov holatini ko'rish" },
+    { key: "canManagePayments", label: "To'lov qabul qilish" },
+    { key: "canSeeStudentContacts", label: "O'quvchi telefon/manzilini ko'rish" },
+    { key: "canManageAttendance", label: "Davomat belgilash" },
+    { key: "canManageGrades", label: "Ball/baho qo'yish" },
+    { key: "canSeeReports", label: "Hisobotlarni ko'rish (portal)" },
+    { key: "canManageExpenses", label: "Xarajatlarni boshqarish" },
+  ] as const satisfies readonly { key: keyof FormData; label: string }[];
 
   return (
     <Modal
@@ -170,10 +226,13 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Rol *</label>
             <select
-              {...register("role")}
+              value={watch("role")}
+              onChange={(e) => applyRoleDefaults(e.target.value as FormData["role"])}
               className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
             >
               <option value="OPERATOR">Operator</option>
+              <option value="RECEPTION">Reception</option>
+              <option value="ACCOUNTANT">Buxgalter</option>
               <option value="MANAGER">Menejjer</option>
               <option value="ADMIN">Admin</option>
               <option value="SUPER_ADMIN">Super Admin</option>

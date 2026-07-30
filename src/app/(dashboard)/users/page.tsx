@@ -16,6 +16,8 @@ const ROLE_BADGE_CLS: Record<string, string> = {
   ADMIN: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400",
   OPERATOR: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
   MANAGER: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+  RECEPTION: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-400",
+  ACCOUNTANT: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-400",
 };
 
 interface User {
@@ -24,7 +26,7 @@ interface User {
   username: string;
   email: string | null;
   phone: string | null;
-  role: "SUPER_ADMIN" | "ADMIN" | "MANAGER" | "OPERATOR";
+  role: "SUPER_ADMIN" | "ADMIN" | "MANAGER" | "OPERATOR" | "RECEPTION" | "ACCOUNTANT";
   isActive: boolean;
   createdAt: string;
   lastLoginAt: string | null;
@@ -34,6 +36,13 @@ interface User {
   canManageUsers: boolean;
   canViewReports: boolean;
   canExportData: boolean;
+  canSeePayments: boolean;
+  canManagePayments: boolean;
+  canSeeStudentContacts: boolean;
+  canManageAttendance: boolean;
+  canManageGrades: boolean;
+  canSeeReports: boolean;
+  canManageExpenses: boolean;
 }
 
 const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap";

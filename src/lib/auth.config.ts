@@ -4,12 +4,26 @@ const PUBLIC_PATHS = ["/login", "/api/auth"];
 // Exact-match only (unlike PUBLIC_PATHS above) — "/" as a prefix would match every route.
 const PUBLIC_EXACT_PATHS = ["/"];
 const TEACHER_PREFIX = "/teacher";
+const RECEPTION_PREFIX = "/reception";
+const FINANCE_PREFIX = "/finance";
+const STUDENT_PREFIX = "/student";
 
 const isAdminRole = (role: string) => role === "SUPER_ADMIN" || role === "ADMIN";
+// Sessions issued before the "student" account type existed have no accountType in their
+// JWT yet — treat that as "staff" so already-logged-in admin/teacher sessions keep working.
+const isStudent = (user: { accountType?: "staff" | "student" }) => user.accountType === "student";
+
 // Teachers (Group.teacherId holders) land on their own panel; admins keep the regular dashboard
-// even if they also happen to teach a group.
-const landingPath = (user: { role: string; isTeacher: boolean }) =>
-  user.isTeacher && !isAdminRole(user.role) ? "/teacher/dashboard" : "/dashboard";
+// even if they also happen to teach a group or hold the RECEPTION/ACCOUNTANT role. Students
+// (Lead-based logins) always land on their own portal.
+const landingPath = (user: { role: string; isTeacher: boolean; accountType?: "staff" | "student" }) => {
+  if (isStudent(user)) return "/student/dashboard";
+  if (isAdminRole(user.role)) return "/dashboard";
+  if (user.isTeacher) return "/teacher/dashboard";
+  if (user.role === "RECEPTION") return "/reception";
+  if (user.role === "ACCOUNTANT") return "/finance";
+  return "/dashboard";
+};
 
 // Avatarni faqat kichik URL bo'lsa sessiyaga qo'shamiz.
 // base64 (data:) rasm cookie'ni shishirib "REQUEST_HEADER_TOO_LARGE" (494) beradi.
@@ -36,6 +50,20 @@ export const authConfig: NextAuthConfig = {
         if (nextUrl.pathname.startsWith(TEACHER_PREFIX) && !user.isTeacher && !isAdminRole(user.role)) {
           return Response.redirect(new URL("/dashboard", nextUrl));
         }
+        if (nextUrl.pathname.startsWith(RECEPTION_PREFIX) && user.role !== "RECEPTION" && !isAdminRole(user.role)) {
+          return Response.redirect(new URL("/dashboard", nextUrl));
+        }
+        if (nextUrl.pathname.startsWith(FINANCE_PREFIX) && user.role !== "ACCOUNTANT" && !isAdminRole(user.role)) {
+          return Response.redirect(new URL("/dashboard", nextUrl));
+        }
+        // Students' session id is a Lead id, not a User id — confine them to their own
+        // portal so they never reach staff pages/APIs that assume session.user.id is a User.
+        if (isStudent(user) && !nextUrl.pathname.startsWith(STUDENT_PREFIX) && !nextUrl.pathname.startsWith("/api/student")) {
+          return Response.redirect(new URL("/student/dashboard", nextUrl));
+        }
+        if (nextUrl.pathname.startsWith(STUDENT_PREFIX) && !isStudent(user)) {
+          return Response.redirect(new URL(landingPath(user), nextUrl));
+        }
       }
       return true;
     },
@@ -51,7 +79,15 @@ export const authConfig: NextAuthConfig = {
         token.canManageUsers = user.canManageUsers;
         token.canViewReports = user.canViewReports;
         token.canExportData = user.canExportData;
+        token.canSeePayments = user.canSeePayments;
+        token.canManagePayments = user.canManagePayments;
+        token.canSeeStudentContacts = user.canSeeStudentContacts;
+        token.canManageAttendance = user.canManageAttendance;
+        token.canManageGrades = user.canManageGrades;
+        token.canSeeReports = user.canSeeReports;
+        token.canManageExpenses = user.canManageExpenses;
         token.isTeacher = user.isTeacher;
+        token.accountType = user.accountType;
       }
       // Client called useSession().update(partial) — e.g. after saving name/avatar on the profile page
       if (trigger === "update" && session) {
@@ -72,7 +108,15 @@ export const authConfig: NextAuthConfig = {
         session.user.canManageUsers = token.canManageUsers;
         session.user.canViewReports = token.canViewReports;
         session.user.canExportData = token.canExportData;
+        session.user.canSeePayments = token.canSeePayments;
+        session.user.canManagePayments = token.canManagePayments;
+        session.user.canSeeStudentContacts = token.canSeeStudentContacts;
+        session.user.canManageAttendance = token.canManageAttendance;
+        session.user.canManageGrades = token.canManageGrades;
+        session.user.canSeeReports = token.canSeeReports;
+        session.user.canManageExpenses = token.canManageExpenses;
         session.user.isTeacher = token.isTeacher;
+        session.user.accountType = token.accountType ?? "staff";
       }
       return session;
     },

@@ -12,6 +12,10 @@ enum Role {
   ADMIN
   MANAGER
   OPERATOR
+  RECEPTION
+  ACCOUNTANT
+  // Session-only sentinel for Lead-based student logins — never stored on a real User row.
+  STUDENT
 }
 
 enum LeadStatus {
@@ -85,6 +89,14 @@ model User {
   canViewReports   Boolean @default(false)
   canExportData    Boolean @default(false)
 
+  canSeePayments         Boolean @default(false)
+  canManagePayments      Boolean @default(false)
+  canSeeStudentContacts  Boolean @default(true)
+  canManageAttendance    Boolean @default(false)
+  canManageGrades        Boolean @default(false)
+  canSeeReports          Boolean @default(false)
+  canManageExpenses      Boolean @default(false)
+
   leads        Lead[]     @relation("AssignedTo")
   createdLeads Lead[]     @relation("CreatedBy")
   reminders    Reminder[]
@@ -152,6 +164,7 @@ model Lead {
   parentPhone    String?
   telegramChatId String?
   birthDate      DateTime? @db.Date
+  loginCode      String?
   coins          Int      @default(0)
   frozenAt       DateTime?
   frozenUntil    DateTime?

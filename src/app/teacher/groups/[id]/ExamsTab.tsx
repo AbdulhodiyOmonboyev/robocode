@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { formatDateUz } from "@/lib/utils";
@@ -23,6 +24,9 @@ const fieldCls =
 const labelCls = "block text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1.5";
 
 export default function ExamsTab({ groupId }: { groupId: string }) {
+  const { data: session } = useSession();
+  const isAdminRole = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "ADMIN";
+  const canEdit = isAdminRole || !!session?.user?.canManageGrades;
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -79,14 +83,16 @@ export default function ExamsTab({ groupId }: { groupId: string }) {
   return (
     <div className="space-y-3">
       {dialog}
-      <div className="flex items-center justify-end">
-        <button
-          onClick={() => setShowAdd(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Yangi imtihon qo&apos;shish
-        </button>
-      </div>
+      {canEdit && (
+        <div className="flex items-center justify-end">
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Yangi imtihon qo&apos;shish
+          </button>
+        </div>
+      )}
 
       <Card className="overflow-hidden">
         {loading ? (
@@ -115,12 +121,14 @@ export default function ExamsTab({ groupId }: { groupId: string }) {
                     <td className="px-5 py-3.5 text-[13px] text-gray-500 dark:text-gray-400">{e.passingScore ?? "—"} / {e.maxScore}</td>
                     <td className="px-5 py-3.5 text-[13px] text-gray-500 dark:text-gray-400">{e.section || "—"}</td>
                     <td className="px-5 py-3.5 text-right">
-                      <button
-                        onClick={() => remove(e.id)}
-                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => remove(e.id)}
+                          className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTeacherGroupIds } from "@/lib/teacher";
+import { canSeePayments, canSeeStudentContacts } from "@/lib/permissions";
 
 function currentMonth() {
   const t = new Date(Date.now() + 5 * 3600 * 1000);
@@ -46,17 +47,19 @@ export async function GET(req: NextRequest) {
     ? await db.payment.groupBy({ by: ["leadId"], where: { forMonth: month, leadId: { in: leadIds } }, _sum: { amount: true } })
     : [];
   const paidMap = new Map(monthPayments.map((p) => [p.leadId, Number(p._sum.amount ?? 0)]));
+  const showPayments = canSeePayments(session.user);
+  const showContacts = canSeeStudentContacts(session.user);
 
   return NextResponse.json({
     students: students.map((s) => ({
       id: s.id,
       fullName: s.fullName,
-      phone: s.phone,
+      phone: showContacts ? s.phone : null,
       birthDate: s.birthDate,
       lastActivityAt: s.lastContactedAt,
       group: s.group,
       coins: s.coins,
-      balance: Number(s.course?.price ?? 0) - (paidMap.get(s.id) ?? 0),
+      balance: showPayments ? Number(s.course?.price ?? 0) - (paidMap.get(s.id) ?? 0) : null,
     })),
   });
 }

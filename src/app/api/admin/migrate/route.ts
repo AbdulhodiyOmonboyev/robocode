@@ -279,6 +279,25 @@ const statements: string[] = [
   `CREATE INDEX IF NOT EXISTS "HomeworkSubmission_exerciseId_idx" ON "HomeworkSubmission"("exerciseId")`,
   `CREATE INDEX IF NOT EXISTS "HomeworkSubmission_leadId_idx" ON "HomeworkSubmission"("leadId")`,
   `CREATE INDEX IF NOT EXISTS "HomeworkSubmission_status_idx" ON "HomeworkSubmission"("status")`,
+
+  // Yagona login + rollar: yangi rollar va admin boshqaradigan ruxsat bayroqlari
+  `ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'RECEPTION'`,
+  `ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'ACCOUNTANT'`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canSeePayments" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canManagePayments" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canSeeStudentContacts" BOOLEAN NOT NULL DEFAULT true`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canManageAttendance" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canManageGrades" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canSeeReports" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canManageExpenses" BOOLEAN NOT NULL DEFAULT false`,
+  // Teacher-role defaults: attendance/grades on, payments off (matches the "har rol uchun standart to'plam" requirement)
+  `UPDATE "User" SET "canManageAttendance" = true, "canManageGrades" = true WHERE "id" IN (SELECT DISTINCT "teacherId" FROM "Group" WHERE "teacherId" IS NOT NULL)`,
+  `UPDATE "User" SET "canSeePayments" = true, "canManagePayments" = true, "canSeeReports" = true WHERE "role" = 'ACCOUNTANT'`,
+  `UPDATE "User" SET "canManageLeads" = true, "canSeeStudentContacts" = true WHERE "role" = 'RECEPTION'`,
+
+  // O'quvchi (Lead) login: telefon + kod
+  `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "loginCode" TEXT`,
+  `ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'STUDENT'`,
 ];
 
 export async function POST() {

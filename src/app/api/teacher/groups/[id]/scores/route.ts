@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { getTeacherGroupIds } from "@/lib/teacher";
+import { canManageGrades } from "@/lib/permissions";
 
 async function assertOwnsGroup(userId: string, role: string, groupId: string) {
   if (role === "SUPER_ADMIN" || role === "ADMIN") return true;
@@ -58,6 +59,7 @@ const saveSchema = z.object({
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!canManageGrades(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id: groupId } = await params;
   if (!(await assertOwnsGroup(session.user.id, session.user.role, groupId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

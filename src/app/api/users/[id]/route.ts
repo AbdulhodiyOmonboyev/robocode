@@ -10,7 +10,7 @@ const updateSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   avatarUrl: z.string().optional(),
-  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR"]).optional(),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR", "RECEPTION", "ACCOUNTANT"]).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(8).optional(),
   oldPassword: z.string().optional(),
@@ -19,6 +19,13 @@ const updateSchema = z.object({
   canManageUsers: z.boolean().optional(),
   canViewReports: z.boolean().optional(),
   canExportData: z.boolean().optional(),
+  canSeePayments: z.boolean().optional(),
+  canManagePayments: z.boolean().optional(),
+  canSeeStudentContacts: z.boolean().optional(),
+  canManageAttendance: z.boolean().optional(),
+  canManageGrades: z.boolean().optional(),
+  canSeeReports: z.boolean().optional(),
+  canManageExpenses: z.boolean().optional(),
   language: z.string().optional().nullable(),
   gender: z.string().optional().nullable(),
   birthDate: z.string().optional().nullable(),
@@ -44,7 +51,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { password, oldPassword, email, avatarUrl, role, isActive, canManageLeads, canManageCourses, canManageUsers, canViewReports, canExportData, birthDate, ...rest } = parsed.data;
+  const {
+    password, oldPassword, email, avatarUrl, role, isActive,
+    canManageLeads, canManageCourses, canManageUsers, canViewReports, canExportData,
+    canSeePayments, canManagePayments, canSeeStudentContacts, canManageAttendance,
+    canManageGrades, canSeeReports, canManageExpenses,
+    birthDate, ...rest
+  } = parsed.data;
   const updateData: Prisma.UserUpdateInput = { ...rest };
   if (email !== undefined) updateData.email = email || null;
   if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl || null;
@@ -59,6 +72,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (canManageUsers !== undefined) updateData.canManageUsers = canManageUsers;
     if (canViewReports !== undefined) updateData.canViewReports = canViewReports;
     if (canExportData !== undefined) updateData.canExportData = canExportData;
+    if (canSeePayments !== undefined) updateData.canSeePayments = canSeePayments;
+    if (canManagePayments !== undefined) updateData.canManagePayments = canManagePayments;
+    if (canSeeStudentContacts !== undefined) updateData.canSeeStudentContacts = canSeeStudentContacts;
+    if (canManageAttendance !== undefined) updateData.canManageAttendance = canManageAttendance;
+    if (canManageGrades !== undefined) updateData.canManageGrades = canManageGrades;
+    if (canSeeReports !== undefined) updateData.canSeeReports = canSeeReports;
+    if (canManageExpenses !== undefined) updateData.canManageExpenses = canManageExpenses;
   }
 
   if (password) {
@@ -82,6 +102,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       id: true, fullName: true, username: true, email: true, avatarUrl: true, role: true, isActive: true,
       canManageLeads: true, canManageCourses: true, canManageUsers: true,
       canViewReports: true, canExportData: true,
+      canSeePayments: true, canManagePayments: true, canSeeStudentContacts: true,
+      canManageAttendance: true, canManageGrades: true, canSeeReports: true,
+      canManageExpenses: true,
     },
   });
 

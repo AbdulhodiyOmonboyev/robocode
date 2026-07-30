@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Save } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
@@ -27,6 +28,9 @@ function isWeekend(dateStr: string): boolean {
 }
 
 export default function AttendanceTab({ groupId, month }: { groupId: string; month: string }) {
+  const { data: session } = useSession();
+  const isAdminRole = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "ADMIN";
+  const canEdit = isAdminRole || !!session?.user?.canManageAttendance;
   const [students, setStudents] = useState<Student[]>([]);
   const [journal, setJournal] = useState<JournalData>({});
   const [loading, setLoading] = useState(true);
@@ -51,6 +55,7 @@ export default function AttendanceTab({ groupId, month }: { groupId: string; mon
   useEffect(() => { load(); }, [load]);
 
   const toggleCell = (date: string, leadId: string) => {
+    if (!canEdit) return;
     setJournal((prev) => {
       const dayData = { ...(prev[date] || {}) };
       dayData[leadId] = next(dayData[leadId]);
@@ -111,7 +116,7 @@ export default function AttendanceTab({ groupId, month }: { groupId: string; mon
             <span className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center text-white text-[9px] font-bold">🚩</span> Sababli
           </span>
         </div>
-        {students.length > 0 && (
+        {students.length > 0 && canEdit && (
           <button
             onClick={save}
             disabled={saving}
@@ -176,9 +181,11 @@ export default function AttendanceTab({ groupId, month }: { groupId: string; mon
                           <td key={d} className={cn("px-0 py-2 text-center", isToday && "bg-[#5E2CA5]/5 dark:bg-[#5E2CA5]/8")}>
                             <button
                               onClick={() => toggleCell(d, s.leadId)}
-                              title={status === "present" ? "Keldi" : status === "absent" ? "Kelmadi" : status === "excused" ? "Sababli" : weekend ? "Dam olish kuni" : "Belgilang"}
+                              disabled={!canEdit}
+                              title={!canEdit ? "Davomat belgilash uchun ruxsat yo'q" : status === "present" ? "Keldi" : status === "absent" ? "Kelmadi" : status === "excused" ? "Sababli" : weekend ? "Dam olish kuni" : "Belgilang"}
                               className={cn(
                                 "w-6 h-6 rounded-full mx-auto flex items-center justify-center text-[9px] font-bold transition-all duration-100",
+                                !canEdit && "cursor-not-allowed opacity-80",
                                 status === "present" ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm"
                                   : status === "absent" ? "bg-red-500 text-white hover:bg-red-600 shadow-sm"
                                   : status === "excused" ? "bg-amber-400 text-white hover:bg-amber-500 shadow-sm"

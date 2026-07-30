@@ -3,10 +3,12 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import type { Session } from "next-auth";
+import { canManageExpenses } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
 function isAdmin(u: Session["user"]) { return ["SUPER_ADMIN", "ADMIN"].includes(u?.role); }
+function canAccess(u: Session["user"]) { return isAdmin(u) || canManageExpenses(u); }
 
 // month "YYYY-MM" -> [start, end) in UTC accounting for Tashkent (+5)
 function monthRange(month: string) {
@@ -24,7 +26,7 @@ function currentMonth() {
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!isAdmin(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!canAccess(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
   const month = searchParams.get("month") || currentMonth();
@@ -50,7 +52,7 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!isAdmin(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!canAccess(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const user = session.user;
 
   const body = await req.json();

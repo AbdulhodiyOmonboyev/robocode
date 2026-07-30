@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { cn, getInitials, formatDateUz } from "@/lib/utils";
@@ -16,6 +17,9 @@ const fieldCls =
 const labelCls = "block text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1.5";
 
 export default function ExercisesTab({ groupId, month }: { groupId: string; month: string }) {
+  const { data: session } = useSession();
+  const isAdminRole = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "ADMIN";
+  const canEdit = isAdminRole || !!session?.user?.canManageGrades;
   const [students, setStudents] = useState<Student[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,14 +81,16 @@ export default function ExercisesTab({ groupId, month }: { groupId: string; mont
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-end">
-        <button
-          onClick={() => { setForm({ date: "", title: "" }); setShowAdd(true); }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Mashq qo&apos;shish
-        </button>
-      </div>
+      {canEdit && (
+        <div className="flex items-center justify-end">
+          <button
+            onClick={() => { setForm({ date: "", title: "" }); setShowAdd(true); }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium bg-[#5E2CA5] hover:bg-[#4a2280] text-white shadow-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Mashq qo&apos;shish
+          </button>
+        </div>
+      )}
 
       <Card className="overflow-hidden">
         {loading ? (
@@ -140,9 +146,11 @@ export default function ExercisesTab({ groupId, month }: { groupId: string; mont
                             />
                           ) : (
                             <button
-                              onClick={() => setEditing({ exerciseId: ex.id, leadId: s.leadId })}
+                              onClick={() => canEdit && setEditing({ exerciseId: ex.id, leadId: s.leadId })}
+                              disabled={!canEdit}
                               className={cn(
                                 "w-9 h-7 rounded-lg mx-auto flex items-center justify-center text-[12px] font-semibold transition-colors",
+                                !canEdit && "cursor-not-allowed opacity-80",
                                 typeof value === "number"
                                   ? value >= 80 ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                                   : value >= 50 ? "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400"

@@ -8,6 +8,13 @@ type UserSession = Session["user"] & {
   canManageUsers: boolean;
   canViewReports: boolean;
   canExportData: boolean;
+  canSeePayments: boolean;
+  canManagePayments: boolean;
+  canSeeStudentContacts: boolean;
+  canManageAttendance: boolean;
+  canManageGrades: boolean;
+  canSeeReports: boolean;
+  canManageExpenses: boolean;
 };
 
 export function isSuperAdmin(user: UserSession) {
@@ -58,11 +65,43 @@ export function canViewSystemSettings(user: UserSession) {
   return isSuperAdmin(user);
 }
 
+// Portal-scoped permission flags (teacher / reception / finance), admin-managed per user.
+export function canSeePayments(user: UserSession) {
+  return user.canSeePayments || isAdmin(user);
+}
+
+export function canManagePayments(user: UserSession) {
+  return user.canManagePayments || isAdmin(user);
+}
+
+export function canSeeStudentContacts(user: UserSession) {
+  return user.canSeeStudentContacts || isAdmin(user);
+}
+
+export function canManageAttendance(user: UserSession) {
+  return user.canManageAttendance || isAdmin(user);
+}
+
+export function canManageGrades(user: UserSession) {
+  return user.canManageGrades || isAdmin(user);
+}
+
+export function canSeeReports(user: UserSession) {
+  return user.canSeeReports || isAdmin(user);
+}
+
+export function canManageExpenses(user: UserSession) {
+  return user.canManageExpenses || isAdmin(user);
+}
+
 export const ROLE_LABELS: Record<Role, string> = {
   SUPER_ADMIN: "Super Admin",
   ADMIN: "Admin",
   MANAGER: "Menejjer",
   OPERATOR: "Operator",
+  RECEPTION: "Reception",
+  ACCOUNTANT: "Buxgalter",
+  STUDENT: "O'quvchi",
 };
 
 export const ROLE_COLORS: Record<Role, string> = {
@@ -70,4 +109,7 @@ export const ROLE_COLORS: Record<Role, string> = {
   ADMIN: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   MANAGER: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   OPERATOR: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
+  RECEPTION: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
+  ACCOUNTANT: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  STUDENT: "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200",
 };

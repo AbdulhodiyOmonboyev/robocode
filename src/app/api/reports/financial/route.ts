@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { canSeeReports } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -110,7 +111,8 @@ function toCSV(report: Awaited<ReturnType<typeof buildReport>>): string {
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
+  const isAdminRole = ["SUPER_ADMIN", "ADMIN"].includes(session.user.role);
+  if (!isAdminRole && !canSeeReports(session.user)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

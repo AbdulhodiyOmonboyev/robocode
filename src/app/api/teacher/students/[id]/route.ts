@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTeacherGroupIds } from "@/lib/teacher";
+import { canSeeStudentContacts } from "@/lib/permissions";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -34,5 +35,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
   }
 
-  return NextResponse.json(lead);
+  return NextResponse.json({
+    ...lead,
+    phone: canSeeStudentContacts(session.user) ? lead.phone : null,
+  });
 }

@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTeacherGroupIds } from "@/lib/teacher";
+import { canSeePayments } from "@/lib/permissions";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!canSeePayments(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await params;
 
   const lead = await db.lead.findUnique({ where: { id }, select: { groupId: true } });

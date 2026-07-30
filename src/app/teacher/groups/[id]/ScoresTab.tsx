@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Save } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
@@ -24,6 +25,9 @@ function todayStr() {
 }
 
 export default function ScoresTab({ groupId, month }: { groupId: string; month: string }) {
+  const { data: session } = useSession();
+  const isAdminRole = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "ADMIN";
+  const canEdit = isAdminRole || !!session?.user?.canManageGrades;
   const [students, setStudents] = useState<Student[]>([]);
   const [journal, setJournal] = useState<JournalData>({});
   const [loading, setLoading] = useState(true);
@@ -95,7 +99,7 @@ export default function ScoresTab({ groupId, month }: { groupId: string; month: 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-end">
-        {students.length > 0 && (
+        {students.length > 0 && canEdit && (
           <button
             onClick={save}
             disabled={saving}
@@ -170,9 +174,11 @@ export default function ScoresTab({ groupId, month }: { groupId: string; month: 
                               />
                             ) : (
                               <button
-                                onClick={() => setEditing({ date: d, leadId: s.leadId })}
+                                onClick={() => canEdit && setEditing({ date: d, leadId: s.leadId })}
+                                disabled={!canEdit}
                                 className={cn(
                                   "w-9 h-7 rounded-lg mx-auto flex items-center justify-center text-[12px] font-semibold transition-colors",
+                                  !canEdit && "cursor-not-allowed opacity-80",
                                   typeof value === "number"
                                     ? value >= 80 ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                                     : value >= 50 ? "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400"

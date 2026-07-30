@@ -10,12 +10,19 @@ const createUserSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   password: z.string().min(8, "Parol kamida 8 ta belgi"),
-  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR"]),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR", "RECEPTION", "ACCOUNTANT"]),
   canManageLeads: z.boolean().default(true),
   canManageCourses: z.boolean().default(false),
   canManageUsers: z.boolean().default(false),
   canViewReports: z.boolean().default(false),
   canExportData: z.boolean().default(false),
+  canSeePayments: z.boolean().default(false),
+  canManagePayments: z.boolean().default(false),
+  canSeeStudentContacts: z.boolean().default(true),
+  canManageAttendance: z.boolean().default(false),
+  canManageGrades: z.boolean().default(false),
+  canSeeReports: z.boolean().default(false),
+  canManageExpenses: z.boolean().default(false),
 });
 
 export async function GET(req: NextRequest) {
@@ -29,6 +36,9 @@ export async function GET(req: NextRequest) {
       role: true, isActive: true, avatarUrl: true, createdAt: true, lastLoginAt: true,
       canManageLeads: true, canManageCourses: true, canManageUsers: true,
       canViewReports: true, canExportData: true,
+      canSeePayments: true, canManagePayments: true, canSeeStudentContacts: true,
+      canManageAttendance: true, canManageGrades: true, canSeeReports: true,
+      canManageExpenses: true,
       _count: { select: { leads: true } },
     },
   });
