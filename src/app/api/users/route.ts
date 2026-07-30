@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { hasPermission } from "@/lib/rbac";
 
 const createUserSchema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 harf"),
@@ -51,7 +52,9 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = session.user;
-  if (!["SUPER_ADMIN", "ADMIN"].includes(user.role)) {
+  const isAdminRole = ["SUPER_ADMIN", "ADMIN"].includes(user.role);
+  const canAddStaff = isAdminRole || user.canManageUsers || await hasPermission(user, "staff", "add");
+  if (!canAddStaff) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -59,6 +62,12 @@ export async function POST(req: NextRequest) {
   const parsed = createUserSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  // Non-admin staff.add grantees can create regular staff but not other admins —
+  // otherwise granting "staff:add" would be an unintended privilege-escalation path.
+  if (!isAdminRole && ["SUPER_ADMIN", "ADMIN"].includes(parsed.data.role)) {
+    return NextResponse.json({ error: "Admin darajasidagi hodim yarata olmaysiz" }, { status: 403 });
   }
 
   const { password, email, ...rest } = parsed.data;

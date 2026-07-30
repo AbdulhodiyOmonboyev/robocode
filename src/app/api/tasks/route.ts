@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
+import { isManager } from "@/lib/permissions";
+import { hasPermission } from "@/lib/rbac";
 
 const createSchema = z.object({
   title: z.string().min(2, "Sarlavha kamida 2 harf"),
@@ -87,6 +89,13 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const { tagIds, dueDate, assignedToId, ...rest } = parsed.data;
+
+  // Everyone can add a task for themselves; assigning it to someone else is an
+  // administrative action that needs the "tasks:add" permission (or manager+).
+  const assigningOthers = assignedToId && assignedToId !== user.id;
+  if (assigningOthers && !isManager(user) && !(await hasPermission(user, "tasks", "add"))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const task = await db.task.create({
     data: {

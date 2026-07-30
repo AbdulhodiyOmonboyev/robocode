@@ -37,6 +37,7 @@ import {
   UserCheck,
   CheckSquare,
   Briefcase,
+  ShieldCheck,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -111,6 +112,7 @@ const navEntries: NavEntry[] = [
     children: [
       { href: "/settings", label: "Sozlamalar", icon: Settings },
       { href: "/users", label: "Hodimlar", icon: UserCog },
+      { href: "/permissions", label: "Rollar va ruxsatlar", icon: ShieldCheck },
       { href: "/logs", label: "Jurnallar", icon: ScrollText },
     ],
   },

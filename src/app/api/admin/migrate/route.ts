@@ -1,6 +1,19 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { PERMISSION_CATALOG } from "@/lib/permission-catalog";
+
+// Existing boolean flags this User already has → the new Permission catalog rows they
+// should map to. Run once after the tables above exist, so nobody's current access is
+// silently revoked when the granular system takes over enforcement for these modules.
+const FLAG_BRIDGE: { flag: string; module: string; actions: string[] }[] = [
+  { flag: "canManageLeads", module: "leads", actions: ["add", "edit", "delete", "view", "access"] },
+  { flag: "canManageCourses", module: "courses", actions: ["create", "edit", "delete", "view", "access"] },
+  { flag: "canManageUsers", module: "staff", actions: ["add", "edit", "delete", "view_schedule", "access"] },
+  { flag: "canManageExpenses", module: "expenses", actions: ["add", "edit", "delete", "view", "access"] },
+  { flag: "canManageAttendance", module: "attendance", actions: ["mark", "edit", "delete", "view", "access"] },
+  { flag: "canManageGrades", module: "grades", actions: ["access", "add"] },
+];
 
 export const dynamic = "force-dynamic";
 
@@ -298,6 +311,30 @@ const statements: string[] = [
   // O'quvchi (Lead) login: telefon + kod
   `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "loginCode" TEXT`,
   `ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'STUDENT'`,
+
+  // Ruxsatlar katalogi (Permission / UserPermission) — rows are seeded separately below.
+  `CREATE TABLE IF NOT EXISTS "Permission" (
+    "id" TEXT PRIMARY KEY,
+    "module" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "label" TEXT NOT NULL,
+    "tier" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT now()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Permission_module_action_key" ON "Permission"("module","action")`,
+
+  `CREATE TABLE IF NOT EXISTS "UserPermission" (
+    "id" TEXT PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "permissionId" TEXT NOT NULL,
+    "granted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT now(),
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT now()
+  )`,
+  `DO $$ BEGIN ALTER TABLE "UserPermission" ADD CONSTRAINT "UserPermission_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "UserPermission" ADD CONSTRAINT "UserPermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "UserPermission_userId_permissionId_key" ON "UserPermission"("userId","permissionId")`,
+  `CREATE INDEX IF NOT EXISTS "UserPermission_userId_idx" ON "UserPermission"("userId")`,
 ];
 
 export async function POST() {
@@ -317,5 +354,49 @@ export async function POST() {
     }
   }
   const ok = results.every((r) => r.status === "ok");
-  return NextResponse.json({ done: true, ok, results });
+
+  // Seed the permission catalog (idempotent upsert) and bridge existing boolean flags
+  // into initial grants, so this is safe to call repeatedly.
+  let seeded = 0;
+  let bridged = 0;
+  try {
+    for (const p of PERMISSION_CATALOG) {
+      await db.permission.upsert({
+        where: { module_action: { module: p.module, action: p.action } },
+        update: { label: p.label, tier: p.tier },
+        create: { module: p.module, action: p.action, label: p.label, tier: p.tier },
+      });
+      seeded++;
+    }
+
+    const usersWithFlags = await db.user.findMany({
+      select: {
+        id: true,
+        canManageLeads: true, canManageCourses: true, canManageUsers: true,
+        canManageExpenses: true, canManageAttendance: true, canManageGrades: true,
+      },
+    });
+    for (const bridge of FLAG_BRIDGE) {
+      const permissions = await db.permission.findMany({
+        where: { module: bridge.module, action: { in: bridge.actions } },
+        select: { id: true },
+      });
+      for (const user of usersWithFlags) {
+        const granted = !!(user as unknown as Record<string, boolean>)[bridge.flag];
+        if (!granted) continue;
+        for (const perm of permissions) {
+          await db.userPermission.upsert({
+            where: { userId_permissionId: { userId: user.id, permissionId: perm.id } },
+            update: {},
+            create: { userId: user.id, permissionId: perm.id, granted: true },
+          });
+          bridged++;
+        }
+      }
+    }
+  } catch (e) {
+    return NextResponse.json({ done: true, ok, results, seedError: e instanceof Error ? e.message : String(e) });
+  }
+
+  return NextResponse.json({ done: true, ok, results, seeded, bridged });
 }

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
+import { hasPermission } from "@/lib/rbac";
 
 const updateSchema = z.object({
   fullName: z.string().min(2).optional(),
@@ -43,8 +44,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const isAdmin = ["SUPER_ADMIN", "ADMIN"].includes(currentUser.role);
   const isSelf = currentUser.id === id;
+
   if (!isAdmin && !isSelf) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const canManageStaff = currentUser.canManageUsers || await hasPermission(currentUser, "staff", "edit");
+    if (!canManageStaff) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // A permission-granted (non-admin) staff editor can't touch an existing admin account.
+    const target = await db.user.findUnique({ where: { id }, select: { role: true } });
+    if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (["SUPER_ADMIN", "ADMIN"].includes(target.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   const body = await req.json();

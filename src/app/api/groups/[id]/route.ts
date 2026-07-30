@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
+import { isManager } from "@/lib/permissions";
+import { hasPermission } from "@/lib/rbac";
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -37,6 +39,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = session.user;
+  const allowed = isManager(user) || await hasPermission(user, "groups", "edit");
+  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await params;
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);

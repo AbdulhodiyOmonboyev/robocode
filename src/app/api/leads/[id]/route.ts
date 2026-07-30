@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import type { Prisma } from "@/generated/prisma/client";
+import { hasPermission } from "@/lib/rbac";
 
 const updateSchema = z.object({
   fullName: z.string().min(2).optional(),
@@ -77,6 +78,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const user = session.user;
+  const isAdminRole = ["SUPER_ADMIN", "ADMIN"].includes(user.role);
+  const canEdit = isAdminRole || user.canManageLeads || await hasPermission(user, "leads", "edit");
+  if (!canEdit) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  if (parsed.data.isArchived !== undefined) {
+    const action = parsed.data.isArchived ? "archive_delete" : "archive_restore";
+    const canArchive = isAdminRole || await hasPermission(user, "debtors_archive", action);
+    if (!canArchive) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const current = await db.lead.findUnique({ where: { id }, select: { status: true, stageId: true, assignedToId: true } });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 

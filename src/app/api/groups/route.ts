@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
+import { isManager } from "@/lib/permissions";
+import { hasPermission } from "@/lib/rbac";
 
 const createSchema = z.object({
   name: z.string().min(1, "Nom kiriting"),
@@ -53,6 +55,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const user = session.user;
+  const allowed = isManager(user) || await hasPermission(user, "groups", "add");
+  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json();
   const parsed = createSchema.safeParse(body);

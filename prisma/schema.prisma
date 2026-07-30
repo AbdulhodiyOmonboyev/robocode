@@ -116,6 +116,7 @@ model User {
   staffAttendances StaffAttendance[] @relation("StaffAttendanceUser")
   tasksAssigned    Task[]   @relation("TaskAssignedTo")
   tasksCreated     Task[]   @relation("TaskCreatedBy")
+  permissions      UserPermission[]
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -561,6 +562,34 @@ model SalaryRecord {
   createdAt   DateTime @default(now())
 
   @@index([month])
+}
+
+// Full ruxsatlar (permissions) catalog — seeded from src/lib/permission-catalog.ts.
+model Permission {
+  id       String   @id @default(cuid())
+  module   String
+  action   String
+  label    String
+  tier     String
+  createdAt DateTime @default(now())
+
+  grants   UserPermission[]
+
+  @@unique([module, action])
+}
+
+model UserPermission {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  granted      Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([userId, permissionId])
+  @@index([userId])
 }
 
 model StaffAttendance {
