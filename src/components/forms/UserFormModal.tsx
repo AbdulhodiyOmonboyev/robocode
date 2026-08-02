@@ -18,7 +18,7 @@ const schema = z.object({
   email: z.string().email("Email noto'g'ri").optional().or(z.literal("")),
   phone: z.string().optional().refine((v) => !v || isPhoneComplete(v), "To'liq telefon raqam kiriting"),
   password: z.string().min(8, "Kamida 8 belgi").optional().or(z.literal("")),
-  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR", "RECEPTION", "ACCOUNTANT"]),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR", "MENTOR", "RECEPTION", "ACCOUNTANT"]),
   canManageLeads: z.boolean(),
   canManageCourses: z.boolean(),
   canManageUsers: z.boolean(),
@@ -40,6 +40,7 @@ const ROLE_DEFAULT_PERMISSIONS: Record<FormData["role"], Partial<FormData>> = {
   ADMIN: {},
   MANAGER: { canViewReports: true, canSeeReports: true },
   OPERATOR: { canManageAttendance: true, canManageGrades: true },
+  MENTOR: { canManageAttendance: true, canManageGrades: true },
   RECEPTION: { canManageLeads: true, canSeeStudentContacts: true },
   ACCOUNTANT: { canSeePayments: true, canManagePayments: true, canSeeReports: true, canManageExpenses: true },
 };
@@ -231,6 +232,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: Props) {
               className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition"
             >
               <option value="OPERATOR">Operator</option>
+              <option value="MENTOR">Mentor (o&apos;qituvchi)</option>
               <option value="RECEPTION">Reception</option>
               <option value="ACCOUNTANT">Buxgalter</option>
               <option value="MANAGER">Menejjer</option>

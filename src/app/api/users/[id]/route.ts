@@ -11,7 +11,7 @@ const updateSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   avatarUrl: z.string().optional(),
-  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR", "RECEPTION", "ACCOUNTANT"]).optional(),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR", "MENTOR", "RECEPTION", "ACCOUNTANT"]).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(8).optional(),
   oldPassword: z.string().optional(),

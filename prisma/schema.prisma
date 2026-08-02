@@ -12,6 +12,7 @@ enum Role {
   ADMIN
   MANAGER
   OPERATOR
+  MENTOR
   RECEPTION
   ACCOUNTANT
   // Session-only sentinel for Lead-based student logins — never stored on a real User row.

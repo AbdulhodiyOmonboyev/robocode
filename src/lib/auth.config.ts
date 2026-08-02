@@ -20,7 +20,7 @@ const isStudent = (user: { accountType?: "staff" | "student" }) => user.accountT
 const landingPath = (user: { role: string; isTeacher: boolean; accountType?: "staff" | "student" }) => {
   if (isStudent(user)) return "/student/dashboard";
   if (isAdminRole(user.role)) return "/dashboard";
-  if (user.isTeacher) return "/teacher/dashboard";
+  if (user.isTeacher || user.role === "MENTOR") return "/teacher/dashboard";
   if (user.role === "RECEPTION") return "/reception";
   if (user.role === "ACCOUNTANT") return "/finance";
   return "/dashboard";
@@ -48,13 +48,13 @@ export const authConfig: NextAuthConfig = {
         if (nextUrl.pathname === "/login") {
           return Response.redirect(new URL(landingPath(user), nextUrl));
         }
-        if (nextUrl.pathname.startsWith(TEACHER_PREFIX) && !user.isTeacher && !isAdminRole(user.role)) {
+        if (nextUrl.pathname.startsWith(TEACHER_PREFIX) && !user.isTeacher && user.role !== "MENTOR" && !isAdminRole(user.role)) {
           return Response.redirect(new URL("/dashboard", nextUrl));
         }
-        // Admin's own home page — a teacher (who isn't also an admin) has no business
+        // Admin's own home page — a teacher/mentor (who isn't also an admin) has no business
         // landing here directly (typed URL, stale bookmark, etc.); send them back to
         // their own portal instead of exposing the admin dashboard.
-        if (nextUrl.pathname === DASHBOARD_HOME_PATH && user.isTeacher && !isAdminRole(user.role)) {
+        if (nextUrl.pathname === DASHBOARD_HOME_PATH && (user.isTeacher || user.role === "MENTOR") && !isAdminRole(user.role)) {
           return Response.redirect(new URL(landingPath(user), nextUrl));
         }
         if (nextUrl.pathname.startsWith(RECEPTION_PREFIX) && user.role !== "RECEPTION" && !isAdminRole(user.role)) {

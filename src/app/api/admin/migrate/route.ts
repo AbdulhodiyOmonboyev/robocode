@@ -296,6 +296,7 @@ const statements: string[] = [
   // Yagona login + rollar: yangi rollar va admin boshqaradigan ruxsat bayroqlari
   `ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'RECEPTION'`,
   `ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'ACCOUNTANT'`,
+  `ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'MENTOR'`,
   `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canSeePayments" BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canManagePayments" BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "canSeeStudentContacts" BOOLEAN NOT NULL DEFAULT true`,

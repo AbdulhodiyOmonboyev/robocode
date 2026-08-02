@@ -11,7 +11,7 @@ const createUserSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   password: z.string().min(8, "Parol kamida 8 ta belgi"),
-  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR", "RECEPTION", "ACCOUNTANT"]),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "OPERATOR", "MENTOR", "RECEPTION", "ACCOUNTANT"]),
   canManageLeads: z.boolean().default(true),
   canManageCourses: z.boolean().default(false),
   canManageUsers: z.boolean().default(false),
