@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { getHomeRouteForUser } from "@/lib/permissions";
 
 const schema = z.object({
   username: z.string().min(1, "Username kiritish shart"),
@@ -71,17 +72,7 @@ export default function LoginPage() {
         setError("Login/telefon yoki parol/kod noto'g'ri");
       } else {
         const session = await getSession();
-        const role = session?.user?.role;
-        const isAdminRole = role === "SUPER_ADMIN" || role === "ADMIN";
-        const isTeacher = !!session?.user?.isTeacher;
-        const isStudent = session?.user?.accountType === "student";
-        let landing = "/dashboard";
-        if (isStudent) landing = "/student/dashboard";
-        else if (!isAdminRole) {
-          if (isTeacher) landing = "/teacher/dashboard";
-          else if (role === "RECEPTION") landing = "/reception";
-          else if (role === "ACCOUNTANT") landing = "/finance";
-        }
+        const landing = session?.user ? getHomeRouteForUser(session.user) : "/dashboard";
         router.push(landing);
         router.refresh();
       }

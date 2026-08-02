@@ -94,6 +94,19 @@ export function canManageExpenses(user: UserSession) {
   return user.canManageExpenses || isAdmin(user);
 }
 
+// Where a user lands right after login. Single source of truth so the login page
+// (and any future post-auth redirect) can't drift out of sync with each other.
+//
+// Reception/Accountant intentionally land on /dashboard for now — they don't have
+// a dedicated home route yet (planned: /reception and /finance once those portals
+// cover the full workflow), so they fall through to the /dashboard default below.
+export function getHomeRouteForUser(user: Session["user"]): string {
+  if (user.accountType === "student") return "/student/dashboard";
+  if (isAdmin(user)) return "/dashboard";
+  if (user.isTeacher) return "/teacher/dashboard";
+  return "/dashboard";
+}
+
 export const ROLE_LABELS: Record<Role, string> = {
   SUPER_ADMIN: "Super Admin",
   ADMIN: "Admin",

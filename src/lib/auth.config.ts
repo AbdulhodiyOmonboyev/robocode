@@ -7,6 +7,7 @@ const TEACHER_PREFIX = "/teacher";
 const RECEPTION_PREFIX = "/reception";
 const FINANCE_PREFIX = "/finance";
 const STUDENT_PREFIX = "/student";
+const DASHBOARD_HOME_PATH = "/dashboard";
 
 const isAdminRole = (role: string) => role === "SUPER_ADMIN" || role === "ADMIN";
 // Sessions issued before the "student" account type existed have no accountType in their
@@ -49,6 +50,12 @@ export const authConfig: NextAuthConfig = {
         }
         if (nextUrl.pathname.startsWith(TEACHER_PREFIX) && !user.isTeacher && !isAdminRole(user.role)) {
           return Response.redirect(new URL("/dashboard", nextUrl));
+        }
+        // Admin's own home page — a teacher (who isn't also an admin) has no business
+        // landing here directly (typed URL, stale bookmark, etc.); send them back to
+        // their own portal instead of exposing the admin dashboard.
+        if (nextUrl.pathname === DASHBOARD_HOME_PATH && user.isTeacher && !isAdminRole(user.role)) {
+          return Response.redirect(new URL(landingPath(user), nextUrl));
         }
         if (nextUrl.pathname.startsWith(RECEPTION_PREFIX) && user.role !== "RECEPTION" && !isAdminRole(user.role)) {
           return Response.redirect(new URL("/dashboard", nextUrl));
