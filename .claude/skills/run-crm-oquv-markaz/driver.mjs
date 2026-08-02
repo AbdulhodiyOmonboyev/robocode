@@ -30,8 +30,8 @@ async function main() {
   });
 
   await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle" });
-  await page.fill('input[placeholder="admin"]', ADMIN_USER);
-  await page.fill('input[placeholder="••••••••"]', ADMIN_PASS);
+  await page.fill('input[autocomplete="username"]', ADMIN_USER);
+  await page.fill('input[autocomplete="current-password"]', ADMIN_PASS);
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/dashboard/, { timeout: 15000 });
 
