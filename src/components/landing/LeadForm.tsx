@@ -65,7 +65,7 @@ export function LeadForm({ selectedCourse }: { selectedCourse?: string }) {
           </Reveal>
 
           <Reveal delay={100}>
-            <div className="landing-bracket bg-white/[0.03] rounded-2xl p-6 sm:p-8">
+            <div className="landing-bracket landing-card p-6 sm:p-8">
               {done ? (
                 <div className="text-center py-6 sm:py-8">
                   <div className="w-16 h-16 rounded-2xl bg-[#A657F2]/10 flex items-center justify-center mx-auto mb-4">

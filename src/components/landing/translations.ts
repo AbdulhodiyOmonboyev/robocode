@@ -54,6 +54,11 @@ export const T = {
       "Maxsus jamoamiz g’oyani shakllantirishdan MVP va xalqaro akselerator (UZCombinator) darajasigacha yordam beradi.",
     teamLabel: "Jamoa",
     teamTitle: "Tajribali jamoa bilan tanishing",
+    faqLabel: "Savol-javob",
+    faqTitle: "Ko’p beriladigan savollar",
+    contactLabel: "Aloqa",
+    contactTitle: "Biz bilan bog’laning",
+    contactMapTitle: "Bizning manzil",
     formLabel: "Kursga yozilish",
     formTitle: "Bugun birinchi qadamni tashlang",
     formSub:
@@ -113,6 +118,11 @@ export const T = {
       "Наша команда поможет пройти путь от идеи до MVP и международного акселератора (UZCombinator).",
     teamLabel: "Команда",
     teamTitle: "Познакомьтесь с опытной командой",
+    faqLabel: "Вопрос-ответ",
+    faqTitle: "Часто задаваемые вопросы",
+    contactLabel: "Контакты",
+    contactTitle: "Свяжитесь с нами",
+    contactMapTitle: "Наш адрес",
     formLabel: "Записаться на курс",
     formTitle: "Сделайте первый шаг сегодня",
     formSub: "Заполните форму — наши специалисты свяжутся с вами и расскажут всё о курсе.",
@@ -169,6 +179,11 @@ export const T = {
     studioHelp: "Our dedicated team helps you go from idea to MVP and an international accelerator (UZCombinator).",
     teamLabel: "Team",
     teamTitle: "Meet our experienced team",
+    faqLabel: "FAQ",
+    faqTitle: "Frequently asked questions",
+    contactLabel: "Contact",
+    contactTitle: "Get in touch with us",
+    contactMapTitle: "Our location",
     formLabel: "Enroll now",
     formTitle: "Take the first step today",
     formSub: "Fill out the form — our specialists will contact you shortly with all the course details.",
@@ -635,4 +650,111 @@ export const TESTIMONIALS: Record<Lang, Testimonial[]> = {
   uz: TESTIMONIALS_BASE.map((m) => ({ name: m.name, photo: m.photo, videoUrl: m.videoUrl, course: m.course.uz, workplace: m.workplace.uz, review: m.review.uz })),
   ru: TESTIMONIALS_BASE.map((m) => ({ name: m.name, photo: m.photo, videoUrl: m.videoUrl, course: m.course.ru, workplace: m.workplace.ru, review: m.review.ru })),
   en: TESTIMONIALS_BASE.map((m) => ({ name: m.name, photo: m.photo, videoUrl: m.videoUrl, course: m.course.en, workplace: m.workplace.en, review: m.review.en })),
+};
+
+export type FaqItem = { q: string; a: string };
+
+export const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
+  uz: [
+    {
+      q: "Kursni boshlash uchun oldindan bilim kerakmi?",
+      a: "Yo’q, ko’pchilik kurslarimiz noldan boshlaydiganlar uchun mo’ljallangan. Mentorlarimiz asoslardan boshlab, bosqichma-bosqich amaliyot orqali o’rgatadi.",
+    },
+    {
+      q: "Darslar qaysi tilda olib boriladi?",
+      a: "Darslar asosan o’zbek va rus tillarida olib boriladi. Ba’zi mentorlar ingliz tilida ham dars berishlari mumkin — bu haqda ariza berishda so’rashingiz mumkin.",
+    },
+    {
+      q: "Kursni tugatgach sertifikat beriladimi?",
+      a: "Ha, kursni muvaffaqiyatli yakunlagan har bir o’quvchiga Robocode IT Academy sertifikati topshiriladi.",
+    },
+    {
+      q: "To’lov qanday amalga oshiriladi?",
+      a: "To’lovni oylik yoki bosqichma-bosqich amalga oshirishingiz mumkin. Aniq narx va to’lov shartlari kursni tanlaganingizdan so’ng mutaxassisimiz bilan suhbatda aniqlanadi.",
+    },
+    {
+      q: "Bitta guruhda necha kishi o’qiydi?",
+      a: "Har bir o’quvchiga individual e’tibor berish uchun guruhlarimiz kichik tarkibda shakllantiriladi.",
+    },
+    {
+      q: "Haftasiga necha marta dars bo’ladi?",
+      a: "Kursga qarab, haftasiga 2–3 marta, belgilangan jadval asosida amaliy darslar o’tkaziladi.",
+    },
+    {
+      q: "Kursdan keyin ish topishga yordam berasizlarmi?",
+      a: "Ha, eng yaxshi bitiruvchilarimizga hamkor kompaniyalar va Startup Studio loyihalari orqali ish topishda ko’maklashamiz.",
+    },
+    {
+      q: "Bepul ishtirok etish imkoniyati bormi?",
+      a: "Ha, ba’zi yo’nalishlarda bilim bazasi va ingliz tili darajasiga qarab bepul ishtirok etish imkoniyati mavjud.",
+    },
+  ],
+  ru: [
+    {
+      q: "Нужны ли предварительные знания для начала курса?",
+      a: "Нет, большинство наших курсов рассчитаны на начинающих с нуля. Менторы обучают поэтапно, начиная с основ, через практику.",
+    },
+    {
+      q: "На каком языке проводятся занятия?",
+      a: "Занятия проводятся в основном на узбекском и русском языках. Некоторые менторы могут вести и на английском — уточните это при подаче заявки.",
+    },
+    {
+      q: "Выдаётся ли сертификат после окончания курса?",
+      a: "Да, каждый успешно завершивший курс получает сертификат Robocode IT Academy.",
+    },
+    {
+      q: "Как происходит оплата?",
+      a: "Оплату можно вносить помесячно или поэтапно. Точная стоимость и условия оплаты уточняются со специалистом после выбора курса.",
+    },
+    {
+      q: "Сколько человек в одной группе?",
+      a: "Наши группы формируются небольшими, чтобы каждому ученику уделялось индивидуальное внимание.",
+    },
+    {
+      q: "Сколько раз в неделю проходят занятия?",
+      a: "В зависимости от курса занятия проходят 2–3 раза в неделю по установленному расписанию.",
+    },
+    {
+      q: "Помогаете ли вы с трудоустройством после курса?",
+      a: "Да, лучшим выпускникам мы помогаем найти работу через партнёрские компании и проекты Startup Studio.",
+    },
+    {
+      q: "Есть ли возможность бесплатного участия?",
+      a: "Да, по некоторым направлениям есть возможность бесплатного участия — в зависимости от базовых знаний и уровня английского.",
+    },
+  ],
+  en: [
+    {
+      q: "Do I need prior knowledge to start a course?",
+      a: "No, most of our courses are designed for complete beginners. Mentors teach step by step from the basics through hands-on practice.",
+    },
+    {
+      q: "What language are the classes taught in?",
+      a: "Classes are mainly taught in Uzbek and Russian. Some mentors can also teach in English — you can ask about this when applying.",
+    },
+    {
+      q: "Do you get a certificate after finishing the course?",
+      a: "Yes, every student who successfully completes a course receives a Robocode IT Academy certificate.",
+    },
+    {
+      q: "How does payment work?",
+      a: "You can pay monthly or in stages. Exact pricing and payment terms are confirmed with a specialist after you choose your course.",
+    },
+    {
+      q: "How many students are in one group?",
+      a: "Our groups are kept small so every student gets individual attention.",
+    },
+    {
+      q: "How many times a week are the classes?",
+      a: "Depending on the course, practical classes are held 2–3 times a week on a fixed schedule.",
+    },
+    {
+      q: "Do you help graduates find a job?",
+      a: "Yes, we help our top graduates find jobs through partner companies and Startup Studio projects.",
+    },
+    {
+      q: "Is free participation available?",
+      a: "Yes, some tracks offer free participation depending on your base knowledge and English level.",
+    },
+  ],
 };

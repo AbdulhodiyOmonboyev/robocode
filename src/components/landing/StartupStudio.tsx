@@ -38,7 +38,7 @@ export function StartupStudio({ onSelect }: { onSelect: () => void }) {
         </Reveal>
 
         <Reveal delay={140}>
-          <div className="landing-bracket mt-14 bg-white/[0.03] rounded-2xl p-6 sm:p-8 max-w-3xl mx-auto text-center">
+          <div className="landing-bracket landing-card mt-14 p-6 sm:p-8 max-w-3xl mx-auto text-center">
             <p className="text-[#A1A1AA] leading-relaxed">{t.studioDesc}</p>
           </div>
         </Reveal>
@@ -48,7 +48,7 @@ export function StartupStudio({ onSelect }: { onSelect: () => void }) {
             const Icon = HIGHLIGHT_ICONS[i];
             return (
               <Reveal key={h.title} delay={180 + i * 80}>
-                <div className="landing-bracket h-full bg-white/[0.03] rounded-2xl p-6 flex items-start gap-4">
+                <div className="landing-bracket landing-card h-full p-6 flex items-start gap-4">
                   <div className="w-11 h-11 rounded-xl bg-[#7C3AED]/20 flex items-center justify-center flex-shrink-0">
                     <Icon className="w-5 h-5 text-[#A657F2]" />
                   </div>
@@ -63,7 +63,7 @@ export function StartupStudio({ onSelect }: { onSelect: () => void }) {
         </div>
 
         <Reveal delay={340}>
-          <div className="landing-bracket mt-6 bg-white/[0.03] rounded-2xl p-6 sm:p-8 max-w-3xl mx-auto text-center">
+          <div className="landing-bracket landing-card mt-6 p-6 sm:p-8 max-w-3xl mx-auto text-center">
             <p className="text-[#A1A1AA] leading-relaxed">{t.studioHelp}</p>
           </div>
         </Reveal>
@@ -74,7 +74,7 @@ export function StartupStudio({ onSelect }: { onSelect: () => void }) {
             return (
               <Reveal key={title} delay={380 + i * 80}>
                 <div className="relative">
-                  <div className="landing-bracket h-full bg-white/[0.03] rounded-2xl p-6 text-center hover:bg-white/[0.05] transition-colors">
+                  <div className="landing-bracket landing-card h-full p-6 text-center">
                     <div className="w-11 h-11 rounded-xl bg-[#A657F2]/15 flex items-center justify-center mx-auto mb-4">
                       <Icon className="w-5 h-5 text-[#A657F2]" />
                     </div>

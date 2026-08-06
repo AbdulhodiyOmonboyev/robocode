@@ -161,3 +161,30 @@ textarea {
     animation: none;
   }
 }
+
+/* Shared card treatment for every landing grid (courses, team, pricing, testimonials, ...):
+   faint violet border, gentle lift + glow on hover. Pair with .landing-bracket for the corner accents. */
+.landing-card {
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(166, 87, 242, 0.14);
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 300ms ease, background-color 200ms ease, border-color 200ms ease;
+}
+.landing-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(166, 87, 242, 0.4);
+  box-shadow: 0 24px 50px -22px rgba(166, 87, 242, 0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-card:hover {
+    transform: none;
+  }
+}
+
+/* Fine film-grain texture for the hero backdrop — cheap, static SVG noise, no runtime cost. */
+.landing-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}

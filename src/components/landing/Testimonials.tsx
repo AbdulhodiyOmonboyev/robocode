@@ -24,7 +24,7 @@ export function Testimonials() {
         <div className="mt-12 flex gap-5 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0">
           {testimonials.map((item, i) => (
             <Reveal key={item.name} delay={(i % 3) * 80} className="shrink-0 w-[85%] snap-center sm:w-[60%] lg:w-auto">
-              <div className="landing-bracket h-full bg-white/[0.03] rounded-2xl p-6 hover:bg-white/[0.05] transition-colors">
+              <div className="landing-bracket landing-card h-full p-6">
                 <div className="flex items-center gap-4">
                   <div className="relative w-14 h-14 flex-shrink-0">
                     {item.photo ? (

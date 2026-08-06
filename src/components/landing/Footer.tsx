@@ -10,7 +10,7 @@ export function Footer({ centerName, logo }: { centerName: string; logo: string 
   const navLinks = NAV_ITEMS[lang];
 
   return (
-    <footer id="contact" className="bg-[#08060F]">
+    <footer className="bg-[#08060F]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
         <div>
           <div className="flex items-center gap-2.5">

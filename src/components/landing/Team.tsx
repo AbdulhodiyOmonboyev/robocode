@@ -29,7 +29,7 @@ export function Team() {
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {mentors.map((t2, i) => (
             <Reveal key={t2.name} delay={(i % 3) * 80}>
-              <div className="landing-bracket h-full bg-white/[0.03] rounded-2xl p-6 hover:bg-white/[0.05] transition-colors">
+              <div className="landing-bracket landing-card h-full p-6">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-[#7C3AED]/20 text-[#A657F2] font-bold flex items-center justify-center text-lg">
                     {initials(t2.name)}

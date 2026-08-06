@@ -21,7 +21,7 @@ export function Pricing({ onSelect }: { onSelect: (courseName?: string) => void 
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((c, i) => (
             <Reveal key={c.name} delay={(i % 3) * 80}>
-              <div className="landing-bracket group flex flex-col h-full bg-white/[0.03] rounded-2xl p-6 hover:bg-white/[0.05] transition-colors">
+              <div className="landing-bracket landing-card group flex flex-col h-full p-6">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="font-bold text-lg text-white uppercase tracking-tight">{c.name}</h3>
                   {c.duration && (

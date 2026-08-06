@@ -24,7 +24,7 @@ export function WhyUs() {
             const Icon = ICONS[item.icon];
             return (
               <Reveal key={item.title} delay={i * 80}>
-                <div className="landing-bracket h-full bg-white/[0.03] rounded-2xl p-7 hover:bg-white/[0.05] transition-colors">
+                <div className="landing-bracket landing-card h-full p-7">
                   <div className="w-11 h-11 rounded-xl bg-[#7C3AED]/20 flex items-center justify-center mb-5">
                     <Icon className="w-5 h-5 text-[#A657F2]" />
                   </div>
