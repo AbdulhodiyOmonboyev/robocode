@@ -28,7 +28,10 @@ export function LandingPage({ centerName, logo }: { centerName: string; logo: st
 
   return (
     <LangProvider>
-      <div className="min-h-screen bg-[#08060F]">
+      <div className="relative min-h-screen">
+        {/* Fixed (non-scrolling) brand gradient — every section below is transparent
+            and lets this show through, so the whole page reads as one surface. */}
+        <div aria-hidden="true" className="landing-page-bg fixed inset-0 -z-10 pointer-events-none" />
         <Header centerName={centerName} logo={logo} />
         <main>
           <Hero />

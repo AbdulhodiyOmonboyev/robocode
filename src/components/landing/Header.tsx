@@ -36,7 +36,7 @@ export function Header({ centerName, logo }: { centerName: string; logo: string 
 
         <nav className="hidden md:flex items-center gap-7">
           {navLinks.map((l) => (
-            <a key={l.href} href={l.href} className="text-sm font-medium text-[#A1A1AA] hover:text-[#A657F2] transition-colors">
+            <a key={l.href} href={l.href} className="text-sm font-medium text-ink-muted hover:text-violet-accent transition-colors">
               {l.label}
             </a>
           ))}
@@ -44,10 +44,7 @@ export function Header({ centerName, logo }: { centerName: string; logo: string 
 
         <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher />
-          <a
-            href="#ariza"
-            className="text-sm font-bold text-[#08060F] bg-[#A657F2] hover:brightness-110 transition-[filter] px-4 py-2.5 rounded-xl shadow-[0_0_20px_rgba(166,87,242,0.35)]"
-          >
+          <a href="#ariza" className="btn-primary text-sm px-4 py-2.5">
             {t.navCta}
           </a>
         </div>
@@ -79,11 +76,7 @@ export function Header({ centerName, logo }: { centerName: string; logo: string 
           <div className="flex items-center justify-between gap-3 mt-3">
             <LanguageSwitcher />
           </div>
-          <a
-            href="#ariza"
-            onClick={handleNavClick}
-            className="mt-3 block text-center text-sm font-bold text-[#08060F] bg-[#A657F2] rounded-xl py-2.5"
-          >
+          <a href="#ariza" onClick={handleNavClick} className="btn-primary mt-3 w-full text-sm py-2.5">
             {t.navCta}
           </a>
         </div>

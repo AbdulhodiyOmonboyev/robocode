@@ -32,10 +32,7 @@ export function StickyCTA() {
         show ? "translate-y-0 opacity-100" : "translate-y-24 opacity-0 pointer-events-none"
       }`}
     >
-      <a
-        href="#ariza"
-        className="flex items-center justify-center gap-2 bg-[#A657F2] text-[#08060F] font-bold py-3.5 rounded-xl shadow-[0_8px_30px_rgba(166,87,242,0.5)]"
-      >
+      <a href="#ariza" className="btn-primary w-full py-3.5 shadow-[0_8px_30px_rgba(124,58,237,0.5)]">
         {t.navCta}
         <ArrowRight className="w-4 h-4" />
       </a>

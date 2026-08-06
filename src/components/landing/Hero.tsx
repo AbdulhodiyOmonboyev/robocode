@@ -33,12 +33,7 @@ export function Hero() {
 
   return (
     <section id="top" className="relative overflow-hidden">
-      {/* Brand gradient backdrop — the one place the full #08060F → #1E0B3C → #2A0E5A
-          sweep runs at full strength; the rest of the page settles to flat #08060F. */}
-      <div
-        className="absolute inset-0 -z-20"
-        style={{ background: "linear-gradient(160deg, #08060F 10%, #1E0B3C 55%, #2A0E5A 115%)" }}
-      />
+      {/* Soft radial violet glow, layered on top of the page's fixed gradient backdrop. */}
       <div
         aria-hidden="true"
         className="absolute -z-10 top-[-10%] left-1/2 -translate-x-1/2 w-[900px] h-[700px] rounded-full blur-[140px] opacity-50"
@@ -61,29 +56,21 @@ export function Hero() {
       <div ref={parallaxRef} className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-24 sm:pt-24 sm:pb-32">
         <div className="max-w-3xl">
           <h1
-            className="font-extrabold uppercase tracking-tight text-white leading-[1.05]"
+            className="font-black uppercase tracking-tight text-white leading-[1.05]"
             style={{ fontSize: "clamp(2.5rem, 4.5vw + 1.2rem, 4.75rem)" }}
           >
             {t.heroPrefix}
-            <span className="bg-gradient-to-r from-[#C9A6FF] via-[#A657F2] to-[#7C3AED] bg-clip-text text-transparent">
-              {t.heroHighlight}
-            </span>
+            <span className="text-violet-accent">{t.heroHighlight}</span>
             {t.heroSuffix}
           </h1>
-          <p className="mt-6 text-lg sm:text-xl text-[#A1A1AA] max-w-xl leading-relaxed">{t.heroSub}</p>
+          <p className="mt-6 text-lg sm:text-xl text-ink-muted max-w-xl leading-relaxed">{t.heroSub}</p>
           <div className="mt-9 flex flex-col sm:flex-row gap-3">
-            <a
-              href="#ariza"
-              className="inline-flex items-center justify-center gap-2 bg-[#A657F2] hover:brightness-110 hover:shadow-[0_0_45px_rgba(166,87,242,0.55)] transition-[filter,box-shadow] text-[#08060F] font-bold px-6 py-3.5 rounded-xl shadow-[0_0_30px_rgba(166,87,242,0.35)]"
-            >
+            <a href="#ariza" className="btn-primary px-6 py-3.5">
               {t.heroBtn1}
               <ArrowRight className="w-4 h-4" />
             </a>
-            <a
-              href="#courses"
-              className="inline-flex items-center justify-center gap-2 bg-white/5 border border-white/15 hover:border-[#A657F2]/40 transition-colors text-white font-semibold px-6 py-3.5 rounded-xl"
-            >
-              <PlayCircle className="w-4 h-4 text-[#A657F2]" />
+            <a href="#courses" className="btn-secondary px-6 py-3.5">
+              <PlayCircle className="w-4 h-4 text-violet-accent" />
               {t.heroBtn2}
             </a>
           </div>

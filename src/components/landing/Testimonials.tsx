@@ -13,25 +13,25 @@ export function Testimonials() {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
   return (
-    <section id="testimonials" className="bg-[#08060F] border-b border-white/10">
+    <section id="testimonials" className="border-b border-white/10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
         <Reveal className="max-w-2xl mx-auto text-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#A657F2]">{t.testimonialsLabel}</span>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-white">{t.testimonialsTitle}</h2>
+          <span className="landing-eyebrow">{t.testimonialsLabel}</span>
+          <h2 className="landing-heading mt-3">{t.testimonialsTitle}</h2>
         </Reveal>
 
         {/* Mobile: horizontal swipe carousel (scroll-snap, no library). Desktop: 3-column grid. */}
         <div className="mt-12 flex gap-5 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0">
           {testimonials.map((item, i) => (
             <Reveal key={item.name} delay={(i % 3) * 80} className="shrink-0 w-[85%] snap-center sm:w-[60%] lg:w-auto">
-              <div className="landing-bracket landing-card h-full p-6">
+              <div className="landing-card h-full p-6">
                 <div className="flex items-center gap-4">
                   <div className="relative w-14 h-14 flex-shrink-0">
                     {item.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.photo} alt={item.name} className="w-14 h-14 rounded-2xl object-cover" />
                     ) : (
-                      <div className="w-14 h-14 rounded-2xl bg-[#7C3AED]/20 text-[#A657F2] font-bold flex items-center justify-center text-lg">
+                      <div className="w-14 h-14 rounded-2xl bg-violet-btn/20 text-violet-accent font-bold flex items-center justify-center text-lg">
                         {getInitials(item.name)}
                       </div>
                     )}
@@ -40,7 +40,7 @@ export function Testimonials() {
                         type="button"
                         onClick={() => setActiveVideo(item.videoUrl!)}
                         aria-label="Play video"
-                        className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#A657F2] flex items-center justify-center shadow-[0_0_10px_rgba(166,87,242,0.6)] hover:brightness-110 transition"
+                        className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-violet-accent flex items-center justify-center shadow-[0_0_10px_rgba(166,87,242,0.6)] hover:brightness-110 transition"
                       >
                         <Play className="w-3 h-3 text-white fill-white" strokeWidth={0} />
                       </button>
@@ -48,15 +48,13 @@ export function Testimonials() {
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-bold text-white text-sm truncate">{item.name}</h3>
-                    <p className="text-xs text-[#A657F2] font-semibold mt-0.5 truncate">{item.workplace}</p>
+                    <p className="text-xs text-violet-accent font-semibold mt-0.5 truncate">{item.workplace}</p>
                   </div>
                 </div>
 
-                <span className="inline-block mt-4 px-2.5 py-1 text-[11px] font-semibold rounded-full bg-white/5 text-white/60 border border-white/10">
-                  {item.course}
-                </span>
+                <span className="landing-badge mt-4 px-2.5 py-1 text-[11px]">{item.course}</span>
 
-                <p className="mt-3 text-sm text-[#A1A1AA] leading-relaxed line-clamp-3">{item.review}</p>
+                <p className="mt-3 text-sm text-ink-muted leading-relaxed line-clamp-3">{item.review}</p>
               </div>
             </Reveal>
           ))}

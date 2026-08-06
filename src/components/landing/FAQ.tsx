@@ -12,11 +12,11 @@ export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="bg-[#08060F] border-b border-white/10">
+    <section id="faq" className="border-b border-white/10">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
         <Reveal className="text-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#A657F2]">{t.faqLabel}</span>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-white">{t.faqTitle}</h2>
+          <span className="landing-eyebrow">{t.faqLabel}</span>
+          <h2 className="landing-heading mt-3">{t.faqTitle}</h2>
         </Reveal>
 
         <div className="mt-12 space-y-3">
@@ -24,7 +24,7 @@ export function FAQ() {
             const open = openIndex === i;
             return (
               <Reveal key={item.q} delay={i * 60}>
-                <div className="landing-bracket landing-card overflow-hidden">
+                <div className="landing-card overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setOpenIndex(open ? null : i)}
@@ -33,7 +33,7 @@ export function FAQ() {
                   >
                     <span className="font-semibold text-white">{item.q}</span>
                     <ChevronDown
-                      className={`w-5 h-5 flex-shrink-0 text-[#A657F2] transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+                      className={`w-5 h-5 flex-shrink-0 text-violet-accent transition-transform duration-300 ${open ? "rotate-180" : ""}`}
                     />
                   </button>
                   <div
@@ -41,7 +41,7 @@ export function FAQ() {
                     style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
                   >
                     <div className="overflow-hidden">
-                      <p className="px-5 pb-4 sm:px-6 sm:pb-5 text-sm text-[#A1A1AA] leading-relaxed">{item.a}</p>
+                      <p className="px-5 pb-4 sm:px-6 sm:pb-5 text-sm text-ink-muted leading-relaxed">{item.a}</p>
                     </div>
                   </div>
                 </div>
