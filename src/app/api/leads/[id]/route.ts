@@ -35,6 +35,7 @@ const updateSchema = z.object({
   frozenUntil: z.string().optional().nullable(),
   isArchived: z.boolean().optional(),
   loginCode: z.string().min(4).max(20).optional().nullable(),
+  tagIds: z.array(z.string()).optional(),
 });
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -91,13 +92,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const current = await db.lead.findUnique({ where: { id }, select: { status: true, stageId: true, assignedToId: true } });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const { trialDate, enrolledAt, lastContactedAt, frozenAt, frozenUntil, ...rest } = parsed.data;
+  const { trialDate, enrolledAt, lastContactedAt, frozenAt, frozenUntil, tagIds, ...rest } = parsed.data;
   const updateData: Prisma.LeadUpdateInput = { ...rest };
   if (trialDate !== undefined) updateData.trialDate = trialDate ? new Date(trialDate) : null;
   if (enrolledAt !== undefined) updateData.enrolledAt = enrolledAt ? new Date(enrolledAt) : null;
   if (lastContactedAt !== undefined) updateData.lastContactedAt = lastContactedAt ? new Date(lastContactedAt) : null;
   if (frozenAt !== undefined) updateData.frozenAt = frozenAt ? new Date(frozenAt) : null;
   if (frozenUntil !== undefined) updateData.frozenUntil = frozenUntil ? new Date(frozenUntil) : null;
+  // Teglarni to'liq almashtiramiz (checkbox ro'yxatidan tanlangan holat bilan bir xil bo'lsin)
+  if (tagIds !== undefined) updateData.tags = { set: tagIds.map((tid) => ({ id: tid })) };
 
   // Auto-set enrolledAt when status changes to ENROLLED
   if (parsed.data.status === "ENROLLED" && current.status !== "ENROLLED") {
