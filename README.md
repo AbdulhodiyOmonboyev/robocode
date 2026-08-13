@@ -1,3 +1,43 @@
+# CRM O'quv Markaz
+
+## Monorepo structure (in progress — `refactor/split`)
+
+This repository is being split into a standalone backend and frontend. The
+existing Next.js app below keeps running unchanged during the migration.
+
+```
+.
+├── backend/    Express API (port 4000)
+├── frontend/   Vite + React app (port 5173)
+└── ...         existing Next.js app (port 3000, unchanged)
+```
+
+### backend/ — Express API, port `4000`
+
+```bash
+cd backend
+npm install
+cp .env.example .env   # fill in DATABASE_URL / JWT_SECRET
+npm start               # node src/server.js
+```
+
+Stack: Express, `@prisma/client` + `prisma`, `bcryptjs`, `jsonwebtoken`, `cors`,
+`dotenv`, `zod`.
+
+### frontend/ — Vite + React, port `5173`
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Stack: Vite, React (JS), Tailwind CSS.
+
+---
+
+## Legacy Next.js app (port 3000)
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
