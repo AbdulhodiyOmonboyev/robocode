@@ -6,15 +6,21 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "postinstall": "prisma generate",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
-    "jsonwebtoken": "^9.0.2",
     "cors": "^2.8.5",
+    "date-fns": "^4.4.0",
     "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.2.0",
+    "pg": "^8.23.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
