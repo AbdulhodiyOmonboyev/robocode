@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  Plus, Filter, Download, Phone, MessageCircle, Edit, Trash2,
+  Plus, Filter, Download, Upload, Phone, MessageCircle, Edit, Trash2,
   LayoutGrid, ChevronLeft, ChevronRight, ChevronDown, Search, X, Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +14,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
 import { cn, formatDate, formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
+
+interface ImportResult {
+  total: number;
+  created: number;
+  failed: number;
+  errors: { row: number; reason: string }[];
+}
 
 interface Lead {
   id: string; fullName: string; phone: string; email: string | null;
@@ -53,6 +60,11 @@ export default function LeadsPage() {
   const [assigning, setAssigning] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importSource, setImportSource] = useState("OTHER");
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
@@ -146,15 +158,40 @@ export default function LeadsPage() {
     setSelected(new Set()); loadLeads();
   };
 
-  const exportCSV = async () => {
-    const res = await fetch("/api/reports/export");
+  const exportExcel = async () => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, String(v)); });
+    const res = await fetch(`/api/leads/export?${params}`);
     if (res.ok) {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url; a.download = `lidlar_${new Date().toISOString().slice(0, 10)}.xlsx`;
       a.click(); URL.revokeObjectURL(url);
+    } else {
+      toast.error("Eksport qilib bo'lmadi");
     }
+  };
+
+  const closeImportModal = () => {
+    setShowImportModal(false);
+    setImportFile(null);
+    setImportResult(null);
+  };
+
+  const handleImport = async () => {
+    if (!importFile) { toast.error("Fayl tanlang"); return; }
+    setImporting(true);
+    const fd = new FormData();
+    fd.append("file", importFile);
+    fd.append("source", importSource);
+    const res = await fetch("/api/leads/import", { method: "POST", body: fd });
+    const data = await res.json();
+    setImporting(false);
+    if (!res.ok) { toast.error(data.error || "Xatolik yuz berdi"); return; }
+    setImportResult(data);
+    if (data.created > 0) { toast.success(`${data.created} ta lid qo'shildi`); loadLeads(); }
+    if (data.failed > 0) toast.error(`${data.failed} ta qatorda xatolik topildi`);
   };
 
   const chipCls = (active: boolean) =>
@@ -197,8 +234,11 @@ export default function LeadsPage() {
           >
             <Filter className="w-3.5 h-3.5" /> Filtrlar
           </button>
-          <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150">
-            <Download className="w-3.5 h-3.5" /> Excel
+          <button onClick={exportExcel} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150">
+            <Download className="w-3.5 h-3.5" /> Excelga eksport
+          </button>
+          <button onClick={() => setShowImportModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150">
+            <Upload className="w-3.5 h-3.5" /> Import
           </button>
           <Link href="/leads/kanban" className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150">
             <LayoutGrid className="w-3.5 h-3.5" /> Kanban
@@ -539,6 +579,61 @@ export default function LeadsPage() {
                 </div>
               </div>
             )}
+        </Modal>
+      )}
+
+      {/* Excel import modal */}
+      {showImportModal && (
+        <Modal
+          title="Lidlarni Excel'dan import qilish"
+          subtitle="F.I.Sh va Telefon ustunlari majburiy"
+          maxWidth="max-w-lg"
+          onClose={closeImportModal}
+          footer={
+            <>
+              <ModalPrimaryButton onClick={handleImport} loading={importing} disabled={!importFile}>
+                Yuklash
+              </ModalPrimaryButton>
+              <ModalSecondaryButton onClick={closeImportModal}>Yopish</ModalSecondaryButton>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1.5">Excel fayl (.xlsx)</label>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => { setImportFile(e.target.files?.[0] || null); setImportResult(null); }}
+                className="w-full text-[13px] text-gray-600 dark:text-gray-300 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-[#5E2CA5]/10 file:text-[#5E2CA5] file:text-[13px] file:font-medium file:cursor-pointer cursor-pointer"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1.5">Manba (barcha qatorlar uchun)</label>
+              <select value={importSource} onChange={(e) => setImportSource(e.target.value)} className={inputCls}>
+                {Object.entries(LEAD_SOURCE_LABELS).filter(([v]) => v !== "WEBSITE").map(([v, l]) => (
+                  <option key={v} value={v}>{l}</option>
+                ))}
+              </select>
+            </div>
+
+            {importResult && (
+              <div className="rounded-xl bg-gray-50 dark:bg-white/5 p-3 space-y-2">
+                <p className="text-[13px] text-gray-700 dark:text-gray-300">
+                  Jami: {importResult.total} · Qo&apos;shildi: <span className="text-emerald-600 dark:text-emerald-400 font-medium">{importResult.created}</span> · Xato: <span className="text-red-500 dark:text-red-400 font-medium">{importResult.failed}</span>
+                </p>
+                {importResult.errors.length > 0 && (
+                  <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+                    {importResult.errors.map((e, i) => (
+                      <p key={i} className="text-[12px] text-red-500 dark:text-red-400">
+                        Qator {e.row}: {e.reason}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </Modal>
       )}
     </div>

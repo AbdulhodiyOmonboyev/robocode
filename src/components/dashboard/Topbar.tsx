@@ -7,7 +7,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { cn, getInitials, formatPhone } from "@/lib/utils";
 import { useDarkMode } from "@/hooks/useDarkMode";
-import NotificationBell from "@/components/shared/NotificationBell";
+import NotificationBell from "@/components/dashboard/NotificationBell";
 
 interface SessionUser {
   fullName?: string;

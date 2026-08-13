@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { Prisma } from "@/generated/prisma/client";
 import { hasPermission } from "@/lib/rbac";
+import { buildLeadsWhere } from "@/lib/leads";
 
 const createSchema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 harf"),
@@ -41,80 +41,7 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "50");
   const skip = (page - 1) * limit;
 
-  const search = searchParams.get("search") || "";
-  const status = searchParams.get("status") || "";
-  const courseId = searchParams.get("courseId") || "";
-  const assignedToId = searchParams.get("assignedToId") || "";
-  const source = searchParams.get("source") || "";
-  const dateFrom = searchParams.get("dateFrom") || "";
-  const dateTo = searchParams.get("dateTo") || "";
-  const timePreference = searchParams.get("timePreference") || "";
-
-  const where: Prisma.LeadWhereInput = {};
-
-  // archived / frozen filters
-  where.isArchived = searchParams.get("archived") === "1";
-  if (searchParams.get("frozen") === "1") where.frozenAt = { not: null };
-
-  // OPERATOR can only see own leads
-  if (user.role === "OPERATOR") {
-    where.assignedToId = user.id;
-  }
-
-  if (search) {
-    const trimmed = search.trim();
-    const tokens = trimmed.split(/\s+/).filter(Boolean);
-    const digitsOnly = trimmed.replace(/\D/g, "");
-
-    const orConditions: Prisma.LeadWhereInput[] = [
-      { fullName: { contains: trimmed, mode: "insensitive" } },
-      { phone: { contains: trimmed } },
-      { email: { contains: trimmed, mode: "insensitive" } },
-    ];
-
-    // Multiple words: match a lead whose name contains every word, regardless
-    // of order (e.g. "Vali Alisher" still finds "Alisher Valiyev").
-    if (tokens.length > 1) {
-      orConditions.push({
-        AND: tokens.map((t) => ({ fullName: { contains: t, mode: "insensitive" as const } })),
-      });
-    }
-
-    // Phone numbers are stored/typed with varying formatting (+998, spaces,
-    // dashes) — compare digits only so "901234567" matches "+998 90 123 45 67".
-    if (digitsOnly.length >= 3) {
-      const phoneMatches = await db.$queryRaw<{ id: string }[]>`
-        SELECT id FROM "Lead"
-        WHERE regexp_replace(phone, '\\D', '', 'g') LIKE ${"%" + digitsOnly + "%"}
-           OR regexp_replace(COALESCE("phoneSecondary", ''), '\\D', '', 'g') LIKE ${"%" + digitsOnly + "%"}
-      `;
-      if (phoneMatches.length) {
-        orConditions.push({ id: { in: phoneMatches.map((m) => m.id) } });
-      }
-    }
-
-    where.OR = orConditions;
-  }
-
-  if (status) where.status = status as Prisma.EnumLeadStatusFilter["equals"];
-  const stageId = searchParams.get("stageId") || "";
-  if (stageId) where.stageId = stageId;
-  if (courseId) where.courseId = courseId;
-  if (source) where.source = source as Prisma.EnumLeadSourceFilter["equals"];
-  if (timePreference) where.timePreference = timePreference as Prisma.EnumTimePreferenceFilter["equals"];
-
-  if (assignedToId === "unassigned") {
-    where.assignedToId = null;
-  } else if (assignedToId) {
-    where.assignedToId = assignedToId;
-  }
-
-  if (dateFrom || dateTo) {
-    const createdAt: Prisma.DateTimeFilter = {};
-    if (dateFrom) createdAt.gte = new Date(dateFrom);
-    if (dateTo) createdAt.lte = new Date(dateTo + "T23:59:59");
-    where.createdAt = createdAt;
-  }
+  const where = await buildLeadsWhere(searchParams, user);
 
   const [leads, total] = await Promise.all([
     db.lead.findMany({
