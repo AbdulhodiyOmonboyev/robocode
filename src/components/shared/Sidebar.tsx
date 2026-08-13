@@ -43,9 +43,25 @@ import { cn, getInitials } from "@/lib/utils";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
 type NavEntry =
-  | { type: "item"; href: string; label: string; icon: LucideIcon; children?: NavItem[] }
-  | { type: "group"; label: string; icon: LucideIcon; children: NavItem[] };
+  | { type: "item"; href: string; label: string; icon: LucideIcon; children?: NavItem[]; visible?: (u: NavUser) => boolean }
+  | { type: "group"; label: string; icon: LucideIcon; children: NavItem[]; visible?: (u: NavUser) => boolean };
 
+interface NavUser {
+  role?: string;
+  canManageLeads?: boolean;
+  canManageUsers?: boolean;
+  canViewReports?: boolean;
+  canSeeReports?: boolean;
+  canSeePayments?: boolean;
+  canManagePayments?: boolean;
+  canManageExpenses?: boolean;
+}
+
+const isAdminRole = (u: NavUser) => u.role === "SUPER_ADMIN" || u.role === "ADMIN";
+const isManagerRole = (u: NavUser) => isAdminRole(u) || u.role === "MANAGER";
+
+// Sozlamalar, Hodimlar boshqaruvi kabi nozik bo'limlar faqat tegishli huquqi borlarga
+// ko'rinadi — qolganlari (Lidlar, Guruhlar va h.k.) barcha xodimlar uchun ochiq qoladi.
 const navEntries: NavEntry[] = [
   { type: "item", href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   {
@@ -75,6 +91,7 @@ const navEntries: NavEntry[] = [
     type: "group",
     label: "Moliya",
     icon: Wallet,
+    visible: (u) => isManagerRole(u) || !!u.canSeePayments || !!u.canManagePayments || !!u.canManageExpenses,
     children: [
       { href: "/payments", label: "To'lovlar", icon: Wallet },
       { href: "/debtors", label: "Qarzdorlar", icon: AlertCircle },
@@ -89,6 +106,7 @@ const navEntries: NavEntry[] = [
     type: "group",
     label: "Hisobotlar",
     icon: BarChart3,
+    visible: (u) => isManagerRole(u) || !!u.canViewReports || !!u.canSeeReports,
     children: [
       { href: "/reports", label: "Hisobotlar", icon: BarChart3 },
       { href: "/analytics", label: "Analitika", icon: TrendingUp },
@@ -100,6 +118,7 @@ const navEntries: NavEntry[] = [
     type: "group",
     label: "Boshqaruv",
     icon: Briefcase,
+    visible: (u) => isManagerRole(u) || !!u.canManageUsers,
     children: [
       { href: "/staff-attendance", label: "Xodimlar davomati", icon: UserCheck },
       { href: "/tasks", label: "Vazifalar", icon: CheckSquare },
@@ -109,6 +128,7 @@ const navEntries: NavEntry[] = [
     type: "group",
     label: "Sozlamalar",
     icon: Settings,
+    visible: (u) => isAdminRole(u) || !!u.canManageUsers,
     children: [
       { href: "/settings", label: "Sozlamalar", icon: Settings },
       { href: "/users", label: "Hodimlar", icon: UserCog },
@@ -136,7 +156,7 @@ const initOpenGroups = (pathname: string): Record<string, boolean> => {
   return result;
 };
 
-interface SessionUser {
+interface SessionUser extends NavUser {
   fullName?: string;
   name?: string;
   role?: string;
@@ -169,6 +189,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }: Side
   useEffect(() => { onClose(); }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const user = session?.user as SessionUser | undefined;
+  const visibleNavEntries = navEntries.filter((entry) => !entry.visible || entry.visible(user ?? {}));
 
   const toggle = (key: string) =>
     setOpenGroups((prev) => {
@@ -363,7 +384,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }: Side
 
       {/* Navigation */}
       <nav className="flex-1 px-2.5 py-4 overflow-y-auto space-y-0.5 scrollbar-none">
-        {navEntries.map(renderNavEntry)}
+        {visibleNavEntries.map(renderNavEntry)}
       </nav>
 
       {/* User profile */}

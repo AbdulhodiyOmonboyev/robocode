@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
+import SessionRoleSync from "@/components/shared/SessionRoleSync";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${inter.variable} font-sans antialiased bg-gray-50 dark:bg-gray-950`}>
         <SessionProvider>
+          <SessionRoleSync />
           {children}
           <Toaster position="top-right" richColors closeButton />
         </SessionProvider>

@@ -12,6 +12,9 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
+    return NextResponse.json({ error: "Ruxsatingiz yo'q" }, { status: 403 });
+  }
   const { name, color } = await req.json();
   if (!name) return NextResponse.json({ error: "Name required" }, { status: 400 });
   try {

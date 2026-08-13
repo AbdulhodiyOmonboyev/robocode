@@ -76,14 +76,24 @@ export default function TeachersPage() {
     setCreating(true);
     const res = await fetch("/api/users", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...newForm, role: "teacher" }),
+      body: JSON.stringify({ ...newForm, role: "MENTOR" }),
     });
     if (res.ok) {
       toast.success("O'qituvchi qo'shildi");
       setShowCreate(false);
       setNewForm({ fullName: "", username: "", password: "" });
       load();
-    } else toast.error("Qo'shib bo'lmadi (ruxsat kerak)");
+    } else {
+      const err = await res.json().catch(() => ({}));
+      let msg = "Qo'shib bo'lmadi";
+      if (typeof err.error === "string") {
+        msg = err.error;
+      } else if (err.error?.fieldErrors) {
+        const firstField = Object.values(err.error.fieldErrors).find((v) => Array.isArray(v) && v.length) as string[] | undefined;
+        if (firstField?.[0]) msg = firstField[0];
+      }
+      toast.error(msg);
+    }
     setCreating(false);
   };
 

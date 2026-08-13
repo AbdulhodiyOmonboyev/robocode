@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { canManageGrades, isManager } from "@/lib/permissions";
 
 const schema = z.object({
   amount: z.coerce.number().int(),
@@ -12,6 +13,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const user = session.user;
+  // Coin berish/olish faqat baholarni boshqarish huquqi bor xodimlarga (yoki menejer/adminga) ruxsat etiladi.
+  if (!canManageGrades(user) && !isManager(user)) {
+    return NextResponse.json({ error: "Bu amal uchun ruxsatingiz yo'q" }, { status: 403 });
+  }
   const { id } = await params;
 
   const body = await req.json();

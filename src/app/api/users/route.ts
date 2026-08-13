@@ -29,19 +29,30 @@ const createUserSchema = z.object({
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const currentUser = session.user;
+  const isAdminRole = currentUser.role === "SUPER_ADMIN" || currentUser.role === "ADMIN";
+  // To'liq ma'lumot (email, telefon, huquq bayroqlari) faqat adminlarga yoki xodimlarni
+  // boshqarish huquqi borlarga. Boshqa xodimlar (masalan operator) lidga/guruhga xodim
+  // biriktirish uchun shu ro'yxatga muhtoj, shuning uchun ularga faqat xavfsiz, minimal
+  // ma'lumot (ism, rol) qaytariladi — email/telefon/huquqlar emas.
+  const canSeeFullList = isAdminRole || currentUser.canManageUsers;
 
   const users = await db.user.findMany({
     orderBy: { createdAt: "desc" },
-    select: {
-      id: true, fullName: true, username: true, email: true, phone: true,
-      role: true, isActive: true, avatarUrl: true, createdAt: true, lastLoginAt: true,
-      canManageLeads: true, canManageCourses: true, canManageUsers: true,
-      canViewReports: true, canExportData: true,
-      canSeePayments: true, canManagePayments: true, canSeeStudentContacts: true,
-      canManageAttendance: true, canManageGrades: true, canSeeReports: true,
-      canManageExpenses: true,
-      _count: { select: { leads: true } },
-    },
+    select: canSeeFullList
+      ? {
+          id: true, fullName: true, username: true, email: true, phone: true,
+          role: true, isActive: true, avatarUrl: true, createdAt: true, lastLoginAt: true,
+          canManageLeads: true, canManageCourses: true, canManageUsers: true,
+          canViewReports: true, canExportData: true,
+          canSeePayments: true, canManagePayments: true, canSeeStudentContacts: true,
+          canManageAttendance: true, canManageGrades: true, canSeeReports: true,
+          canManageExpenses: true,
+          _count: { select: { leads: true } },
+        }
+      : {
+          id: true, fullName: true, role: true, isActive: true, avatarUrl: true,
+        },
   });
 
   return NextResponse.json(users);
