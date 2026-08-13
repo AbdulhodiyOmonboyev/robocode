@@ -9,7 +9,7 @@ const loginSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
 });
-
+  
 const studentLoginSchema = z.object({
   phone: z.string().min(1),
   code: z.string().min(1),
