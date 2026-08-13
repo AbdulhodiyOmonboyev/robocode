@@ -1,16 +1,60 @@
-# React + Vite
+# frontend — Vite + React (JSX)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Next.js ilovasidan ko'chirilgan mijoz tomoni. Backend (`../backend`, port 4000)
+bilan faqat REST orqali gaplashadi.
 
-Currently, two official plugins are available:
+```bash
+npm install
+cp .env.example .env   # VITE_API_URL=http://localhost:4000
+npm run dev            # http://localhost:5173
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tuzilma
 
-## React Compiler
+```
+src/
+├── main.jsx              BrowserRouter + AuthProvider + Toaster
+├── App.jsx               barcha yo'llar jadvali
+├── index.css             Next'dagi globals.css (Tailwind v4, binafsha dizayn)
+├── context/AuthContext   sessiya: login / logout / token
+├── routes/guards.jsx     RequireAuth, RequireRole
+├── layouts/              Next'dagi route layout'lar o'rnida
+├── pages/                sahifalar (src/app/**/page.tsx dan)
+├── components/           landing, dashboard, teacher, student, shared, ui
+├── hooks/, lib/          utils, constants, permissions, export
+└── scripts/              migrate-from-next.mjs (bir martalik ko'chirish skripti)
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Next.js → Vite moslashtiruvchi qatlam
 
-## Expanding the Oxlint configuration
+Ko'chirishda 190+ chaqiruvni qayta yozmaslik uchun uchta ingichka modul yozilgan.
+Ular Next API'lari bilan bir xil imzoga ega, shuning uchun sahifalar kodi deyarli
+tegilmagan:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| Next.js               | Bu yerda                                  |
+| --------------------- | ----------------------------------------- |
+| `fetch("/api/...")`   | `apiFetch()` — `@/lib/api` (baseURL + JWT) |
+| `next/navigation`     | `@/lib/router` (react-router ustida)      |
+| `next-auth/react`     | `@/lib/session` (AuthContext ustida)      |
+| `next/link`           | `@/components/ui/link` (`href` propi bilan) |
+| `next/dynamic`        | `React.lazy` + `<Suspense>`               |
+| server layout + guard | `layouts/*` + `routes/guards.jsx`         |
+
+`@/lib/api` ikki narsani beradi: `api` (axios instance) va `apiFetch` (nativ
+`fetch` imzosidagi o'ram). Ikkalasi ham `VITE_API_URL` ni baseURL qilib oladi va
+`localStorage`dagi tokenni `Authorization` header'ga qo'yadi; 401 kelganda
+sessiyani tozalab `/login` ga qaytaradi.
+
+## Manzillar
+
+Manzillar Next.js versiyasidagi bilan bir xil qoldirilgan — `(dashboard)` route
+group bo'lgani uchun uning sahifalari `/leads`, `/settings` kabi yuqori darajada
+turadi (`App.jsx` da "pathless" layout route sifatida).
+
+## Ko'chirish skripti
+
+`scripts/migrate-from-next.mjs` — `../src` dagi TSX fayllarni tiplardan tozalab
+(TypeScript `transpileModule`, `jsx: preserve`) shu yerga JSX qilib ko'chirgan va
+yuqoridagi importlarni almashtirgan bir martalik skript. Tarix uchun saqlangan;
+qayta ishga tushirilsa, qo'lda yozilgan fayllar (`App.jsx`, `main.jsx`,
+`LoginPage.jsx`, `HomePage.jsx`, `layouts/*`) qayta yozilmaydi.

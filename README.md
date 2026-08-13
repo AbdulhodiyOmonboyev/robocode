@@ -1,38 +1,65 @@
 # CRM O'quv Markaz
 
-## Monorepo structure (in progress — `refactor/split`)
+## Monorepo structure (`refactor/split`)
 
-This repository is being split into a standalone backend and frontend. The
-existing Next.js app below keeps running unchanged during the migration.
+Bu repozitoriy alohida backend va frontend'ga bo'lingan. Jonli sayt hozircha
+`master` branchdagi Next.js ilovasida ishlab turibdi — u tegilmagan.
 
 ```
 .
 ├── backend/    Express API (port 4000)
-├── frontend/   Vite + React app (port 5173)
-└── ...         existing Next.js app (port 3000, unchanged)
+├── frontend/   Vite + React SPA (port 5173)
+└── ...         eski Next.js ilovasi (port 3000, o'zgarishsiz)
 ```
 
-### backend/ — Express API, port `4000`
+## Ishga tushirish
+
+Ikkita terminal kerak: biri backend, ikkinchisi frontend. **Backend birinchi
+ishga tushishi kerak** — frontend unga `http://localhost:4000` orqali ulanadi.
+
+### 1. Backend — Express API, port `4000`
 
 ```bash
 cd backend
 npm install
-cp .env.example .env   # fill in DATABASE_URL / JWT_SECRET
-npm start               # node src/server.js
+cp .env.example .env   # DATABASE_URL, JWT_SECRET, FRONTEND_ORIGIN to'ldiriladi
+npm run dev            # yoki: npm start
 ```
 
-Stack: Express, `@prisma/client` + `prisma`, `bcryptjs`, `jsonwebtoken`, `cors`,
-`dotenv`, `zod`.
+`.env`:
 
-### frontend/ — Vite + React, port `5173`
+| O'zgaruvchi       | Qiymat                                          |
+| ----------------- | ----------------------------------------------- |
+| `PORT`            | `4000`                                          |
+| `DATABASE_URL`    | Postgres (Supabase) ulanish satri               |
+| `JWT_SECRET`      | JWT imzolash kaliti                             |
+| `FRONTEND_ORIGIN` | `http://localhost:5173` — CORS shu origin uchun |
+
+Tekshirish: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
+
+### 2. Frontend — Vite + React, port `5173`
 
 ```bash
 cd frontend
 npm install
-npm run dev
+cp .env.example .env   # VITE_API_URL=http://localhost:4000
+npm run dev            # http://localhost:5173
 ```
 
-Stack: Vite, React (JS), Tailwind CSS.
+Boshqa buyruqlar: `npm run build` (dist/ ga yig'adi), `npm run preview`,
+`npm run lint` (oxlint).
+
+`VITE_API_URL` ko'rsatilmasa, `http://localhost:4000` standart qiymat sifatida
+ishlatiladi (`src/lib/api.js`).
+
+### Kirish (login) oqimi
+
+1. `/login` sahifasi `POST /api/auth/login` ga `{ username, password }` yuboradi
+   (username o'rniga telefon raqam ham bo'ladi).
+2. Backend `{ token, user }` qaytaradi; token `localStorage`ga yoziladi.
+3. Har bir keyingi so'rovga `Authorization: Bearer <token>` header qo'shiladi.
+4. Himoyalangan sahifalar `RequireAuth` / `RequireRole` guard'lari ortida turadi;
+   token bo'lmasa yoki 401 kelsa — `/login` ga qaytariladi.
 
 ---
 

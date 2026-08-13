@@ -1,10 +1,22 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { Toaster } from "sonner";
 
-createRoot(document.getElementById('root')).render(
+import App from "./App.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx";
+import SessionRoleSync from "./components/shared/SessionRoleSync.jsx";
+import "./index.css";
+
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <App />
+    <BrowserRouter>
+      <AuthProvider>
+        {/* Admin rol/ruxsatni o'zgartirsa, ochiq sessiyani fonda yangilaydi */}
+        <SessionRoleSync />
+        <App />
+        <Toaster position="top-right" richColors closeButton />
+      </AuthProvider>
+    </BrowserRouter>
   </StrictMode>,
-)
+);

@@ -1,122 +1,149 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// Butun ilovaning yo'llar jadvali.
+//
+// Manzillar Next.js versiyasidagi bilan bir xil: `(dashboard)` route group
+// bo'lgani uchun uning sahifalari `/leads`, `/settings` kabi yuqori darajada
+// turadi — shuning uchun bu yerda ular "pathless" layout route ichida.
+// Sidebar/CommandPalette'dagi barcha havolalar shu sababli tegilmadi.
+import { Route, Routes } from "react-router-dom";
 
-function App() {
-  const [count, setCount] = useState(0)
+import DashboardLayout from "@/layouts/DashboardLayout";
+import TeacherLayout from "@/layouts/TeacherLayout";
+import StudentLayout from "@/layouts/StudentLayout";
+import { FinanceLayout, ReceptionLayout } from "@/layouts/PortalLayout";
 
+// Ochiq sahifalar
+import HomePage from "@/pages/HomePage";
+import LoginPage from "@/pages/LoginPage";
+import ApplyPage from "@/pages/ApplyPage";
+import ReceiptPage from "@/pages/ReceiptPage";
+import MiniappProfilePage from "@/pages/MiniappProfilePage";
+import NotFoundPage from "@/pages/NotFoundPage";
+
+// Boshqaruv paneli
+import AnalyticsPage from "@/pages/AnalyticsPage";
+import AttendancePage from "@/pages/AttendancePage";
+import BonusesPage from "@/pages/BonusesPage";
+import CashflowPage from "@/pages/CashflowPage";
+import ChangelogPage from "@/pages/ChangelogPage";
+import CoursesPage from "@/pages/CoursesPage";
+import DashboardPage from "@/pages/DashboardPage";
+import DebtorsPage from "@/pages/DebtorsPage";
+import ExamsPage from "@/pages/ExamsPage";
+import ExpensesPage from "@/pages/ExpensesPage";
+import FinancialReportPage from "@/pages/FinancialReportPage";
+import GroupsPage from "@/pages/GroupsPage";
+import IncomesPage from "@/pages/IncomesPage";
+import LeaderboardPage from "@/pages/LeaderboardPage";
+import LeadDetailPage from "@/pages/LeadDetailPage";
+import LeadsKanbanPage from "@/pages/LeadsKanbanPage";
+import LeadsNewPage from "@/pages/LeadsNewPage";
+import LeadsPage from "@/pages/LeadsPage";
+import LogsPage from "@/pages/LogsPage";
+import PaymentsPage from "@/pages/PaymentsPage";
+import PayrollPage from "@/pages/PayrollPage";
+import PermissionsPage from "@/pages/PermissionsPage";
+import ProfilePage from "@/pages/ProfilePage";
+import RemindersPage from "@/pages/RemindersPage";
+import ReportsPage from "@/pages/ReportsPage";
+import SchedulePage from "@/pages/SchedulePage";
+import SettingsPage from "@/pages/SettingsPage";
+import StaffAttendancePage from "@/pages/StaffAttendancePage";
+import StudentDetailPage from "@/pages/StudentDetailPage";
+import StudentsPage from "@/pages/StudentsPage";
+import TasksPage from "@/pages/TasksPage";
+import TeacherReportPage from "@/pages/TeacherReportPage";
+import TeachersPage from "@/pages/TeachersPage";
+import TimetablePage from "@/pages/TimetablePage";
+import UnauthorizedPage from "@/pages/UnauthorizedPage";
+import UsersPage from "@/pages/UsersPage";
+
+// O'qituvchi kabineti
+import TeacherDashboardPage from "@/pages/TeacherDashboardPage";
+import TeacherGroupPage from "@/pages/TeacherGroupPage";
+import TeacherHomeworkPage from "@/pages/TeacherHomeworkPage";
+import TeacherProfilePage from "@/pages/TeacherProfilePage";
+import TeacherStudentPage from "@/pages/TeacherStudentPage";
+import TeacherStudentsPage from "@/pages/TeacherStudentsPage";
+
+// O'quvchi kabineti + portallar
+import StudentDashboardPage from "@/pages/StudentDashboardPage";
+import FinancePage from "@/pages/FinancePage";
+import ReceptionPage from "@/pages/ReceptionPage";
+
+export default function App() {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <Routes>
+      {/* --- Ochiq sahifalar --- */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/apply" element={<ApplyPage />} />
+      <Route path="/receipt/:id" element={<ReceiptPage />} />
+      <Route path="/miniapp/profil" element={<MiniappProfilePage />} />
 
-      <div className="ticks"></div>
+      {/* --- Boshqaruv paneli (sobiq "(dashboard)" route group) --- */}
+      <Route element={<DashboardLayout />}>
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/attendance" element={<AttendancePage />} />
+        <Route path="/bonuses" element={<BonusesPage />} />
+        <Route path="/cashflow" element={<CashflowPage />} />
+        <Route path="/changelog" element={<ChangelogPage />} />
+        <Route path="/courses" element={<CoursesPage />} />
+        <Route path="/debtors" element={<DebtorsPage />} />
+        <Route path="/exams" element={<ExamsPage />} />
+        <Route path="/expenses" element={<ExpensesPage />} />
+        <Route path="/financial-report" element={<FinancialReportPage />} />
+        <Route path="/groups" element={<GroupsPage />} />
+        <Route path="/incomes" element={<IncomesPage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/leads" element={<LeadsPage />} />
+        <Route path="/leads/kanban" element={<LeadsKanbanPage />} />
+        <Route path="/leads/new" element={<LeadsNewPage />} />
+        <Route path="/leads/:id" element={<LeadDetailPage />} />
+        <Route path="/logs" element={<LogsPage />} />
+        <Route path="/payments" element={<PaymentsPage />} />
+        <Route path="/payroll" element={<PayrollPage />} />
+        <Route path="/permissions" element={<PermissionsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/reminders" element={<RemindersPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/schedule" element={<SchedulePage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/staff-attendance" element={<StaffAttendancePage />} />
+        <Route path="/students" element={<StudentsPage />} />
+        <Route path="/students/:id" element={<StudentDetailPage />} />
+        <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/teacher-report" element={<TeacherReportPage />} />
+        <Route path="/teachers" element={<TeachersPage />} />
+        <Route path="/timetable" element={<TimetablePage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <Route path="/users" element={<UsersPage />} />
+      </Route>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {/* --- O'qituvchi kabineti --- */}
+      <Route path="/teacher" element={<TeacherLayout />}>
+        <Route path="dashboard" element={<TeacherDashboardPage />} />
+        <Route path="groups/:id" element={<TeacherGroupPage />} />
+        <Route path="homework" element={<TeacherHomeworkPage />} />
+        <Route path="profile" element={<TeacherProfilePage />} />
+        <Route path="students" element={<TeacherStudentsPage />} />
+        <Route path="students/:id" element={<TeacherStudentPage />} />
+      </Route>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* --- O'quvchi kabineti --- */}
+      <Route path="/student" element={<StudentLayout />}>
+        <Route path="dashboard" element={<StudentDashboardPage />} />
+      </Route>
+
+      {/* --- Buxgalter va Reception portallari --- */}
+      <Route path="/finance" element={<FinanceLayout />}>
+        <Route index element={<FinancePage />} />
+      </Route>
+      <Route path="/reception" element={<ReceptionLayout />}>
+        <Route index element={<ReceptionPage />} />
+      </Route>
+
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
 }
-
-export default App
