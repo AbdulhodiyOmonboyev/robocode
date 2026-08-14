@@ -14,6 +14,11 @@ export default defineConfig({
     },
   },
   server: {
+    // strictPort: false — 5173 band bo'lsa Vite keyingi bo'sh portga o'tadi.
+    // Backend'ning CORS sozlamasi har qanday localhost portiga ruxsat bergani
+    // uchun bu ulanishni buzmaydi (backend/src/server.js).
     port: 5173,
+    strictPort: false,
+    host: true,
   },
 })

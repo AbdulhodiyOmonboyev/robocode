@@ -45,7 +45,16 @@ import { telegramAdminRouter, telegramPublicRouter } from "./routes/telegram.js"
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173" }));
+// Dev'da har qanday localhost portiga (5173, 5174, ...) ruxsat beramiz.
+// Productionда FRONTEND_ORIGIN o'rnatilsa — faqat o'sha originga ruxsat.
+const allowedOrigin = (origin, cb) => {
+  if (!origin) return cb(null, true); // Postman/curl kabi originsiz so'rovlar
+  if (process.env.FRONTEND_ORIGIN && origin === process.env.FRONTEND_ORIGIN) return cb(null, true);
+  if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true);
+  if (/^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) return cb(null, true);
+  return cb(null, false);
+};
+app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 
 // ---- Public (no auth) ----
