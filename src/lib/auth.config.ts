@@ -8,6 +8,9 @@ const RECEPTION_PREFIX = "/reception";
 const FINANCE_PREFIX = "/finance";
 const STUDENT_PREFIX = "/student";
 const DASHBOARD_HOME_PATH = "/dashboard";
+// Faqat admin (yoki xodimlarni boshqarish huquqi bo'lganlar) kira oladigan sahifalar —
+// oddiy xodim (operator, reception va h.k.) manzilni to'g'ridan-to'g'ri yozib kirsa ham bloklanadi.
+const ADMIN_ONLY_PREFIXES = ["/settings", "/users", "/permissions", "/logs"];
 
 const isAdminRole = (role: string) => role === "SUPER_ADMIN" || role === "ADMIN";
 // Sessions issued before the "student" account type existed have no accountType in their
@@ -71,6 +74,13 @@ export const authConfig: NextAuthConfig = {
         if (nextUrl.pathname.startsWith(STUDENT_PREFIX) && !isStudent(user)) {
           return Response.redirect(new URL(landingPath(user), nextUrl));
         }
+        if (
+          ADMIN_ONLY_PREFIXES.some((p) => nextUrl.pathname.startsWith(p)) &&
+          !isAdminRole(user.role) &&
+          !user.canManageUsers
+        ) {
+          return Response.redirect(new URL("/dashboard", nextUrl));
+        }
       }
       return true;
     },
@@ -96,10 +106,20 @@ export const authConfig: NextAuthConfig = {
         token.isTeacher = user.isTeacher;
         token.accountType = user.accountType;
       }
-      // Client called useSession().update(partial) — e.g. after saving name/avatar on the profile page
+      // Client called useSession().update(partial) — e.g. after saving name/avatar on the profile page,
+      // or after SessionRoleSync detected a role/permission change made by an admin elsewhere.
       if (trigger === "update" && session) {
         if (typeof session.fullName === "string") token.fullName = session.fullName;
         if ("avatarUrl" in session) token.avatarUrl = safeAvatar(session.avatarUrl);
+        if (typeof session.role === "string") token.role = session.role;
+        const boolFields = [
+          "canManageLeads", "canManageCourses", "canManageUsers", "canViewReports", "canExportData",
+          "canSeePayments", "canManagePayments", "canSeeStudentContacts", "canManageAttendance",
+          "canManageGrades", "canSeeReports", "canManageExpenses",
+        ] as const;
+        for (const f of boolFields) {
+          if (typeof session[f] === "boolean") token[f] = session[f];
+        }
       }
       return token;
     },

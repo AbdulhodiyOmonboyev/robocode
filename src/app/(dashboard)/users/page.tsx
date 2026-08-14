@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useConfirm } from "@/components/ui/confirm";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { cn, formatDate, getInitials } from "@/lib/utils";
-import UserFormModal from "@/components/forms/UserFormModal";
+import UserFormModal from "@/components/dashboard/UserFormModal";
 
 const BRAND = "#5E2CA5";
 

@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { LandingPage } from "@/components/landing/LandingPage";
+import { COURSES, FAQ_ITEMS } from "@/components/landing/translations";
+
+// Matches the pinned "Robocode IT Academy" location linked from the footer's Google Maps URL.
+const MAP_LAT = 40.7468701;
+const MAP_LNG = 72.3453432;
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL ||
@@ -49,14 +54,40 @@ export default async function Home() {
   const centerName = settingsMap["center_name"] || "Robocode IT Academy";
   const logo = settingsMap["brand_logo"] || "";
 
-  const jsonLd = {
+  const orgJsonLd = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
+    "@id": `${BASE_URL}/#organization`,
     name: centerName,
     description: "Andijondagi IT akademiya — dasturlash va robototexnika bo'yicha amaliy kurslar.",
     url: BASE_URL,
+    logo: `${BASE_URL}/api/branding/logo`,
+    image: `${BASE_URL}/api/branding/logo`,
+    telephone: ["+998998999005", "+998930759005"],
     address: { "@type": "PostalAddress", addressLocality: "Andijon", addressCountry: "UZ" },
+    geo: { "@type": "GeoCoordinates", latitude: MAP_LAT, longitude: MAP_LNG },
+    sameAs: ["https://instagram.com/aka.yakubov", "https://t.me/robocodee", "https://robocode.uz"],
   };
+
+  const coursesJsonLd = COURSES.uz.map((c) => ({
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: c.name,
+    description: c.modules.join(". "),
+    provider: { "@type": "EducationalOrganization", name: centerName, sameAs: BASE_URL },
+  }));
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_ITEMS.uz.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
+
+  const jsonLd = [orgJsonLd, ...coursesJsonLd, faqJsonLd];
 
   return (
     <>

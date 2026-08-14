@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/components/shared/Sidebar";
-import Topbar from "@/components/shared/Topbar";
-import CommandPalette from "@/components/shared/CommandPalette";
+import Sidebar from "@/components/dashboard/Sidebar";
+import Topbar from "@/components/dashboard/Topbar";
+import CommandPalette from "@/components/dashboard/CommandPalette";
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);

@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import PortalShell from "@/components/portal/PortalShell";
-import type { PortalNavItem } from "@/components/portal/PortalSidebar";
+import PortalShell from "@/components/shared/PortalShell";
+import type { PortalNavItem } from "@/components/shared/PortalSidebar";
 
 const navItems: PortalNavItem[] = [{ href: "/reception", label: "Lidlar", icon: "users" }];
 

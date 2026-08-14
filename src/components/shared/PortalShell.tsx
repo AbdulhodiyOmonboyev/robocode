@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import PortalSidebar, { type PortalNavItem } from "@/components/portal/PortalSidebar";
-import PortalTopbar from "@/components/portal/PortalTopbar";
+import PortalSidebar, { type PortalNavItem } from "@/components/shared/PortalSidebar";
+import PortalTopbar from "@/components/shared/PortalTopbar";
 
 interface PortalShellProps {
   navItems: PortalNavItem[];

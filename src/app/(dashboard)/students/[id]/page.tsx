@@ -40,16 +40,27 @@ export default function StudentDetailPage({ params }: { params: Promise<{ id: st
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [leadRes, paymentsRes] = await Promise.all([
-      fetch(`/api/leads/${id}`),
-      fetch(`/api/payments?leadId=${id}&limit=200`),
-    ]);
-    if (!leadRes.ok) { router.push("/students"); return; }
-    const leadData = await leadRes.json();
-    const paymentsData = await paymentsRes.json();
-    setStudent(leadData);
-    setPayments(paymentsData.payments || []);
-    setLoading(false);
+    try {
+      const [leadRes, paymentsRes] = await Promise.all([
+        fetch(`/api/leads/${id}`),
+        fetch(`/api/payments?leadId=${id}&limit=200`),
+      ]);
+      if (!leadRes.ok) { router.push("/students"); return; }
+      const leadData = await leadRes.json();
+      setStudent(leadData);
+      if (paymentsRes.ok) {
+        const paymentsData = await paymentsRes.json().catch(() => ({}));
+        setPayments(paymentsData.payments || []);
+      } else {
+        setPayments([]);
+      }
+    } catch {
+      // Tarmoq/server xatosi bo'lsa ham sahifa "crash" bo'lmasin — bo'sh holatda qoladi,
+      // foydalanuvchi qayta urinib ko'rishi mumkin.
+      setStudent(null);
+    } finally {
+      setLoading(false);
+    }
   }, [id, router]);
 
   useEffect(() => { load(); }, [load]);
