@@ -6,21 +6,21 @@ export const NAV_ITEMS: Record<Lang, { label: string; href: string }[]> = {
   uz: [
     { label: "Biz haqimizda", href: "#about" },
     { label: "Kurslar", href: "#courses" },
-    { label: "Startup Studio", href: "#startup-studio" },
+    { label: "Startup", href: "#startup-studio" },
     { label: "Jamoa", href: "#team" },
     { label: "Aloqa", href: "#contact" },
   ],
   ru: [
     { label: "О нас", href: "#about" },
     { label: "Курсы", href: "#courses" },
-    { label: "Startup Studio", href: "#startup-studio" },
+    { label: "Startup", href: "#startup-studio" },
     { label: "Команда", href: "#team" },
     { label: "Контакты", href: "#contact" },
   ],
   en: [
     { label: "About us", href: "#about" },
     { label: "Courses", href: "#courses" },
-    { label: "Startup Studio", href: "#startup-studio" },
+    { label: "Startup", href: "#startup-studio" },
     { label: "Team", href: "#team" },
     { label: "Contact", href: "#contact" },
   ],
@@ -42,11 +42,14 @@ export const T = {
     whyUsTitle: "Bizni tanlash uchun sabablar",
     coursesLabel: "Kurslar",
     coursesTitle: "Sizga mos yo’nalishni tanlang",
+    coursesPriceNote: "Barcha kurslarimiz atiga 743 ming so'mdan",
     pricingLabel: "Tariflar",
     pricingTitle: "Narxlar",
     pricingIncludedTitle: "Narxga nimalar kiradi:",
     testimonialsLabel: "Fikrlar",
     testimonialsTitle: "Bitiruvchilarimiz nima deydi",
+    partnersLabel: "Hamkorlar",
+    partnersTitle: "Biz bilan hamkorlar",
     studioLead: "Startapingiz uchun",
     studioDesc:
       "Startup — innovatsion g’oya asosida yaratilgan loyiha bo’lib, muammoni hal qilish va tez rivojlanishga qaratilgan.",
@@ -106,11 +109,14 @@ export const T = {
     whyUsTitle: "Причины выбрать нас",
     coursesLabel: "Курсы",
     coursesTitle: "Выберите подходящее направление",
+    coursesPriceNote: "Все наши курсы от 743 тысяч сумов",
     pricingLabel: "Тарифы",
     pricingTitle: "Цены",
     pricingIncludedTitle: "Что входит в стоимость:",
     testimonialsLabel: "Отзывы",
     testimonialsTitle: "Что говорят наши выпускники",
+    partnersLabel: "Партнеры",
+    partnersTitle: "Наши партнеры",
     studioLead: "Инвестиции в ваш стартап —",
     studioDesc:
       "Стартап — это проект, основанный на инновационной идее, направленный на решение проблемы и быстрый рост.",
@@ -169,11 +175,14 @@ export const T = {
     whyUsTitle: "Reasons to choose us",
     coursesLabel: "Courses",
     coursesTitle: "Choose the track that fits you",
+    coursesPriceNote: "All our courses from 743,000 UZS",
     pricingLabel: "Plans",
     pricingTitle: "Pricing",
     pricingIncludedTitle: "What’s included:",
     testimonialsLabel: "Testimonials",
     testimonialsTitle: "What our graduates say",
+    partnersLabel: "Partners",
+    partnersTitle: "Our partners",
     studioLead: "Investment for your startup —",
     studioDesc: "A startup is a project built on an innovative idea, aimed at solving a problem and growing fast.",
     studioHelp: "Our dedicated team helps you go from idea to MVP and an international accelerator (UZCombinator).",
@@ -219,19 +228,19 @@ export const T = {
 
 export const STATS: Record<Lang, { value: string; label: string }[]> = {
   uz: [
-    { value: "+3000", label: "Bitiruvchi" },
-    { value: "70%", label: "Kursni tamomlaganlar daromad topib kelmoqda" },
-    { value: "$300 – $3000", label: "Bitiruvchilarning o’rtacha daromadi" },
+    { value: "3500+", label: "Bitiruvchi" },
+    { value: "85%", label: "Kursni tamomlaganlar daromad topib kelmoqda" },
+    { value: "$150 – $2500", label: "Bitiruvchilarning o’rtacha daromadi" },
   ],
   ru: [
-    { value: "+3000", label: "Выпускников" },
-    { value: "70%", label: "Выпускников уже зарабатывают" },
-    { value: "$300 – $3000", label: "Средний доход выпускников" },
+    { value: "3500+", label: "Выпускников" },
+    { value: "85%", label: "Выпускников уже зарабатывают" },
+    { value: "$150 – $2500", label: "Средний доход выпускников" },
   ],
   en: [
-    { value: "+3000", label: "Graduates" },
-    { value: "70%", label: "Of graduates already earning" },
-    { value: "$300 – $3000", label: "Average graduate income" },
+    { value: "3500+", label: "Graduates" },
+    { value: "85%", label: "Of graduates already earning" },
+    { value: "$150 – $2500", label: "Average graduate income" },
   ],
 };
 
@@ -258,7 +267,7 @@ export const FEATURES: Record<Lang, { icon: "handshake" | "chart" | "gift" | "ta
 
 export const WHY_US: Record<
   Lang,
-  { icon: "hammer" | "gradCap" | "cpu" | "users" | "award" | "briefcase"; title: string; desc: string }[]
+  { icon: "hammer" | "gradCap" | "cpu" | "users" | "award"; title: string; desc: string }[]
 > = {
   uz: [
     { icon: "hammer", title: "Amaliy loyihalar", desc: "Har bir mavzu real loyihalar orqali mustahkamlanadi." },
@@ -266,7 +275,6 @@ export const WHY_US: Record<
     { icon: "cpu", title: "Zamonaviy jihozlar", desc: "Yangi kompyuterlar va robototexnika uskunalari." },
     { icon: "users", title: "Kichik guruhlar", desc: "Har bir o'quvchiga individual e'tibor." },
     { icon: "award", title: "Sertifikat", desc: "Kursni tugatgan har bir o'quvchiga sertifikat." },
-    { icon: "briefcase", title: "Ish bilan ta'minlash", desc: "Eng yaxshi bitiruvchilarga ish topishda ko'maklashamiz." },
   ],
   ru: [
     { icon: "hammer", title: "Практические проекты", desc: "Каждая тема закрепляется через реальные проекты." },
@@ -274,7 +282,6 @@ export const WHY_US: Record<
     { icon: "cpu", title: "Современное оборудование", desc: "Новые компьютеры и оборудование для робототехники." },
     { icon: "users", title: "Малые группы", desc: "Индивидуальное внимание каждому ученику." },
     { icon: "award", title: "Сертификат", desc: "Сертификат каждому, кто завершил курс." },
-    { icon: "briefcase", title: "Помощь с трудоустройством", desc: "Помогаем лучшим выпускникам найти работу." },
   ],
   en: [
     { icon: "hammer", title: "Hands-on projects", desc: "Every topic is reinforced through real projects." },
@@ -282,150 +289,41 @@ export const WHY_US: Record<
     { icon: "cpu", title: "Modern equipment", desc: "New computers and robotics hardware." },
     { icon: "users", title: "Small groups", desc: "Individual attention for every student." },
     { icon: "award", title: "Certificate", desc: "A certificate for every graduate of the course." },
-    { icon: "briefcase", title: "Job placement support", desc: "We help our top graduates find jobs." },
   ],
 };
 
-export type Course = { name: string; duration: string | null; modules: string[] };
+export type Course = { name: string; slug: string; duration: string | null; modules: string[] };
 
 export const COURSES: Record<Lang, Course[]> = {
   uz: [
-    {
-      name: "Robototexnika",
-      duration: "12 oy",
-      modules: [
-        "Elektronika va fizika — real amaliyot, tranzistorlar, mikrosxemalar",
-        "Dasturlash asoslari — Scratch, mBlock, multfilm va o’yinlar",
-        "Aqlli robotlar — kod yozish, datchiklar, Wi-Fi/Bluetooth boshqaruvi",
-      ],
-    },
-    {
-      name: "Front-end",
-      duration: "6 oy",
-      modules: ["1-oy: HTML", "2–3-oy: CSS — Flexbox, Grid, adaptiv", "4–5-oy: JavaScript — DOM, funksiyalar", "6-oy: React + real loyihalar"],
-    },
-    {
-      name: "Back-end",
-      duration: "6 oy",
-      modules: ["REST API, ma’lumotlar bazasi, autentifikatsiya", "Real loyihalar — Blog API, Todo App", "Natija: GitHub portfolio, serverga joylash, login tizimi"],
-    },
-    {
-      name: "Grafik va Web dizayn",
-      duration: "12 oy",
-      modules: ["Photoshop — 3 oy", "Illustrator — 3 oy", "UI/UX & Web dizayn — Figma, 6 oy", "Natija: grafik dizaynerdan UI/UX mutaxassisiga"],
-    },
-    {
-      name: "Startup",
-      duration: "2 oy",
-      modules: ["Blog platforma", "Online do’kon", "Auth + Dashboard", "API + AI integratsiya", "Final startup — deploy"],
-    },
-    {
-      name: "Foundation",
-      duration: "14 kun",
-      modules: ["Computer asoslari, OT + Google", "Word/Docs, Excel/Sheets, PowerPoint/Canva", "AI tools, Figma + UI tools, Cloud tools", "Imtihon va mentor session"],
-    },
-    {
-      name: "Web (UI/UX) dizayn",
-      duration: null,
-      modules: ["Figma", "Responsive saytlar", "Mobil ilovalar", "Branding"],
-    },
-    {
-      name: "Vibe Coding",
-      duration: null,
-      modules: ["Zamonaviy front-end texnologiyalari va AI yordamida tez ishlab chiqish", "Responsive web interfeyslar", "Real mijoz loyihalari"],
-    },
+    { name: "Robototexnika", slug: "robototexnika", duration: "10 oy", modules: ["Elektronika va fizika — real amaliyot, tranzistorlar, mikrosxemalar", "Dasturlash asoslari — Scratch, mBlock, multfilm va o’yinlar", "Aqlli robotlar — kod yozish, datchiklar, Wi-Fi/Bluetooth boshqaruvi"] },
+    { name: "Foundation", slug: "foundation", duration: "2 oy", modules: ["Computer asoslari, OT + Google", "Word/Docs, Excel/Sheets, PowerPoint/Canva", "AI tools, Figma + UI tools, Cloud tools", "Imtihon va mentor session"] },
+    { name: "Front-end", slug: "front-end", duration: "6 oy", modules: ["1-oy: HTML", "2–3-oy: CSS — Flexbox, Grid, adaptiv", "4–5-oy: JavaScript — DOM, funksiyalar", "6-oy: React + real loyihalar"] },
+    { name: "Back-end", slug: "back-end", duration: "6 oy", modules: ["REST API, ma’lumotlar bazasi, autentifikatsiya", "Real loyihalar — Blog API, Todo App", "Natija: GitHub portfolio, serverga joylash, login tizimi"] },
+    { name: "Grafik va Web dizayn", slug: "grafik-va-web-dizayn", duration: "6 oy", modules: ["Photoshop — 3 oy", "Illustrator — 3 oy", "UI/UX & Web dizayn — Figma, 6 oy", "Natija: grafik dizaynerdan UI/UX mutaxassisiga"] },
+    { name: "Startup", slug: "startup", duration: "5 oy", modules: ["Blog platforma", "Online do’kon", "Auth + Dashboard", "API + AI integratsiya", "Final startup — deploy"] },
+    { name: "Web (UI/UX) dizayn", slug: "web-uiux-dizayn", duration: "6 oy", modules: ["Figma", "Responsive saytlar", "Mobil ilovalar", "Branding"] },
+    { name: "Vibe Coding", slug: "vibe-coding", duration: "2 oy", modules: ["Zamonaviy front-end texnologiyalari va AI yordamida tez ishlab chiqish", "Responsive web interfeyslar", "Real mijoz loyihalari"] },
   ],
   ru: [
-    {
-      name: "Робототехника",
-      duration: "12 мес",
-      modules: [
-        "Электроника и физика — практика, транзисторы, микросхемы",
-        "Основы программирования — Scratch, mBlock, мультфильмы и игры",
-        "Умные роботы — код, датчики, управление по Wi-Fi/Bluetooth",
-      ],
-    },
-    {
-      name: "Front-end",
-      duration: "6 мес",
-      modules: ["1 мес: HTML", "2–3 мес: CSS — Flexbox, Grid, адаптив", "4–5 мес: JavaScript — DOM, функции", "6 мес: React + реальные проекты"],
-    },
-    {
-      name: "Back-end",
-      duration: "6 мес",
-      modules: ["REST API, базы данных, аутентификация", "Реальные проекты — Blog API, Todo App", "Результат: портфолио на GitHub, деплой, система входа"],
-    },
-    {
-      name: "Графика и веб-дизайн",
-      duration: "12 мес",
-      modules: ["Photoshop — 3 мес", "Illustrator — 3 мес", "UI/UX и веб-дизайн — Figma, 6 мес", "Результат: от графического дизайнера до UI/UX специалиста"],
-    },
-    {
-      name: "Startup",
-      duration: "2 мес",
-      modules: ["Блог-платформа", "Интернет-магазин", "Auth + Dashboard", "API + AI интеграция", "Финальный стартап — деплой"],
-    },
-    {
-      name: "Foundation",
-      duration: "14 дней",
-      modules: ["Основы компьютера, ОС + Google", "Word/Docs, Excel/Sheets, PowerPoint/Canva", "AI-инструменты, Figma, Cloud", "Экзамен и сессия с ментором"],
-    },
-    {
-      name: "Веб (UI/UX) дизайн",
-      duration: null,
-      modules: ["Figma", "Адаптивные сайты", "Мобильные приложения", "Брендинг"],
-    },
-    {
-      name: "Vibe Coding",
-      duration: null,
-      modules: ["Современные front-end технологии и быстрая разработка с AI", "Адаптивные веб-интерфейсы", "Реальные проекты клиентов"],
-    },
+    { name: "Робототехника", slug: "robototexnika", duration: "10 мес", modules: ["Электроника и физика — практика, транзисторы, микросхемы", "Основы программирования — Scratch, mBlock, мультфильмы и игры", "Умные роботы — код, датчики, управление по Wi-Fi/Bluetooth"] },
+    { name: "Foundation", slug: "foundation", duration: "2 мес", modules: ["Основы компьютера, ОС + Google", "Word/Docs, Excel/Sheets, PowerPoint/Canva", "AI-инструменты, Figma, Cloud", "Экзамен и сессия с ментором"] },
+    { name: "Front-end", slug: "front-end", duration: "6 мес", modules: ["1 мес: HTML", "2–3 мес: CSS — Flexbox, Grid, адаптив", "4–5 мес: JavaScript — DOM, функции", "6 мес: React + реальные проекты"] },
+    { name: "Back-end", slug: "back-end", duration: "6 мес", modules: ["REST API, базы данных, аутентификация", "Реальные проекты — Blog API, Todo App", "Результат: портфолио на GitHub, деплой, система входа"] },
+    { name: "Графика и веб-дизайн", slug: "grafika-veb-dizayn", duration: "6 мес", modules: ["Photoshop — 3 мес", "Illustrator — 3 мес", "UI/UX и веб-дизайн — Figma, 6 мес", "Результат: от графического дизайнера до UI/UX специалиста"] },
+    { name: "Startup", slug: "startup", duration: "5 мес", modules: ["Блог-платформа", "Интернет-магазин", "Auth + Dashboard", "API + AI интеграция", "Финальный стартап — деплой"] },
+    { name: "Веб (UI/UX) дизайн", slug: "veb-uiux-dizayn", duration: "6 мес", modules: ["Figma", "Адаптивные сайты", "Мобильные приложения", "Брендинг"] },
+    { name: "Vibe Coding", slug: "vibe-coding", duration: "2 мес", modules: ["Современные front-end технологии и быстрая разработка с AI", "Адаптивные веб-интерфейсы", "Реальные проекты клиентов"] },
   ],
   en: [
-    {
-      name: "Robotics",
-      duration: "12 mo",
-      modules: [
-        "Electronics & physics — hands-on practice, transistors, chips",
-        "Programming basics — Scratch, mBlock, animations and games",
-        "Smart robots — coding, sensors, Wi-Fi/Bluetooth control",
-      ],
-    },
-    {
-      name: "Front-end",
-      duration: "6 mo",
-      modules: ["Month 1: HTML", "Months 2–3: CSS — Flexbox, Grid, responsive", "Months 4–5: JavaScript — DOM, functions", "Month 6: React + real projects"],
-    },
-    {
-      name: "Back-end",
-      duration: "6 mo",
-      modules: ["REST API, databases, authentication", "Real projects — Blog API, Todo App", "Result: GitHub portfolio, deployment, login system"],
-    },
-    {
-      name: "Graphic & Web Design",
-      duration: "12 mo",
-      modules: ["Photoshop — 3 mo", "Illustrator — 3 mo", "UI/UX & Web Design — Figma, 6 mo", "Result: from graphic designer to UI/UX specialist"],
-    },
-    {
-      name: "Startup",
-      duration: "2 mo",
-      modules: ["Blog platform", "Online store", "Auth + Dashboard", "API + AI integration", "Final startup — deploy"],
-    },
-    {
-      name: "Foundation",
-      duration: "14 days",
-      modules: ["Computer basics, OS + Google", "Word/Docs, Excel/Sheets, PowerPoint/Canva", "AI tools, Figma + UI tools, Cloud tools", "Exam and mentor session"],
-    },
-    {
-      name: "Web (UI/UX) Design",
-      duration: null,
-      modules: ["Figma", "Responsive websites", "Mobile apps", "Branding"],
-    },
-    {
-      name: "Vibe Coding",
-      duration: null,
-      modules: ["Modern front-end technologies and fast AI-assisted development", "Responsive web interfaces", "Real client projects"],
-    },
+    { name: "Robotics", slug: "robotics", duration: "10 mo", modules: ["Electronics & physics — hands-on practice, transistors, chips", "Programming basics — Scratch, mBlock, animations and games", "Smart robots — coding, sensors, Wi-Fi/Bluetooth control"] },
+    { name: "Foundation", slug: "foundation", duration: "2 mo", modules: ["Computer basics, OS + Google", "Word/Docs, Excel/Sheets, PowerPoint/Canva", "AI tools, Figma + UI tools, Cloud tools", "Exam and mentor session"] },
+    { name: "Front-end", slug: "front-end", duration: "6 mo", modules: ["Month 1: HTML", "Months 2–3: CSS — Flexbox, Grid, responsive", "Months 4–5: JavaScript — DOM, functions", "Month 6: React + real projects"] },
+    { name: "Back-end", slug: "back-end", duration: "6 mo", modules: ["REST API, databases, authentication", "Real projects — Blog API, Todo App", "Result: GitHub portfolio, deployment, login system"] },
+    { name: "Graphic & Web Design", slug: "graphic-web-design", duration: "6 mo", modules: ["Photoshop — 3 mo", "Illustrator — 3 mo", "UI/UX & Web Design — Figma, 6 mo", "Result: from graphic designer to UI/UX specialist"] },
+    { name: "Startup", slug: "startup", duration: "5 mo", modules: ["Blog platform", "Online store", "Auth + Dashboard", "API + AI integration", "Final startup — deploy"] },
+    { name: "Web (UI/UX) Design", slug: "web-uiux-design", duration: "6 mo", modules: ["Figma", "Responsive websites", "Mobile apps", "Branding"] },
+    { name: "Vibe Coding", slug: "vibe-coding", duration: "2 mo", modules: ["Modern front-end technologies and fast AI-assisted development", "Responsive web interfaces", "Real client projects"] },
   ],
 };
 
@@ -434,16 +332,16 @@ export const COURSES: Record<Lang, Course[]> = {
 // (same order, one entry per course) so cards stay matched to the right course.
 export const PRICES: Record<Lang, { monthly: string[]; included: string[] }> = {
   uz: {
-    monthly: Array(8).fill("So’rov bo’yicha"),
+    monthly: Array(8).fill("743 ming so'm"),
     included: [
       "Tajribali mentor yordami",
       "Amaliy loyihalar va portfolio",
       "Kurs tugagach sertifikat",
-      "Ish topishga ko’maklashish",
+      "Ish topishga ko'maklashish",
     ],
   },
   ru: {
-    monthly: Array(8).fill("По запросу"),
+    monthly: Array(8).fill("743 000 сум"),
     included: [
       "Поддержка опытного ментора",
       "Практические проекты и портфолио",
@@ -452,7 +350,7 @@ export const PRICES: Record<Lang, { monthly: string[]; included: string[] }> = {
     ],
   },
   en: {
-    monthly: Array(8).fill("Price on request"),
+    monthly: Array(8).fill("743,000 UZS"),
     included: [
       "Support from an experienced mentor",
       "Hands-on projects and a portfolio",
@@ -682,7 +580,7 @@ export const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
     },
     {
       q: "Kursdan keyin ish topishga yordam berasizlarmi?",
-      a: "Ha, eng yaxshi bitiruvchilarimizga hamkor kompaniyalar va Startup Studio loyihalari orqali ish topishda ko’maklashamiz.",
+      a: "Ha, eng yaxshi bitiruvchilarimizga hamkor kompaniyalar va Startup loyihalari orqali ish topishda ko'maklashamiz.",
     },
     {
       q: "Bepul ishtirok etish imkoniyati bormi?",
@@ -716,7 +614,7 @@ export const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
     },
     {
       q: "Помогаете ли вы с трудоустройством после курса?",
-      a: "Да, лучшим выпускникам мы помогаем найти работу через партнёрские компании и проекты Startup Studio.",
+      a: "Да, лучшим выпускникам мы помогаем найти работу через партнёрские компании и проекты Startup.",
     },
     {
       q: "Есть ли возможность бесплатного участия?",
@@ -750,11 +648,28 @@ export const FAQ_ITEMS: Record<Lang, FaqItem[]> = {
     },
     {
       q: "Do you help graduates find a job?",
-      a: "Yes, we help our top graduates find jobs through partner companies and Startup Studio projects.",
+      a: "Yes, we help our top graduates find jobs through partner companies and Startup projects.",
     },
     {
       q: "Is free participation available?",
       a: "Yes, some tracks offer free participation depending on your base knowledge and English level.",
     },
   ],
+};
+
+export type Partner = { name: string };
+
+const PARTNERS_BASE: { name: string }[] = [
+  { name: "UZCombinator" },
+  { name: "TechVerse" },
+  { name: "Andijan IT Park" },
+  { name: "RoboLab" },
+  { name: "CodeCraft" },
+  { name: "DataFlow" },
+];
+
+export const PARTNERS: Record<Lang, Partner[]> = {
+  uz: PARTNERS_BASE.map((p) => ({ name: p.name })),
+  ru: PARTNERS_BASE.map((p) => ({ name: p.name })),
+  en: PARTNERS_BASE.map((p) => ({ name: p.name })),
 };

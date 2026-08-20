@@ -13,9 +13,8 @@ export function WhatAwaits() {
 
   return (
     <section id="about" className="border-b border-white/10">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+      <div className="w-full px-4 sm:px-6 py-20 sm:py-28 max-w-7xl mx-auto">
         <Reveal className="max-w-2xl">
-          <span className="landing-eyebrow">{t.aboutLabel}</span>
           <h2 className="landing-heading mt-3">{t.featuresTitle}</h2>
         </Reveal>
 
@@ -28,7 +27,7 @@ export function WhatAwaits() {
                   <div className="w-11 h-11 rounded-xl bg-violet-btn/20 flex items-center justify-center mb-5">
                     <Icon className="w-5 h-5 text-violet-accent" />
                   </div>
-                  <p className="text-sm text-white/90 leading-relaxed">{item.text}</p>
+                   <p className="text-sm text-white/90 leading-relaxed">{item.text}</p>
                 </div>
               </Reveal>
             );

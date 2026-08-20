@@ -13,9 +13,8 @@ export function WhyUs() {
 
   return (
     <section id="why-us" className="border-b border-white/10">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+      <div className="w-full px-4 sm:px-6 py-20 sm:py-28 max-w-7xl mx-auto">
         <Reveal className="max-w-2xl mx-auto text-center">
-          <span className="landing-eyebrow">{t.whyUsLabel}</span>
           <h2 className="landing-heading mt-3">{t.whyUsTitle}</h2>
         </Reveal>
 
@@ -24,12 +23,12 @@ export function WhyUs() {
             const Icon = ICONS[item.icon];
             return (
               <Reveal key={item.title} delay={i * 80}>
-                <div className="landing-card h-full p-7">
+                 <div className="landing-card h-full p-7">
                   <div className="w-11 h-11 rounded-xl bg-violet-btn/20 flex items-center justify-center mb-5">
                     <Icon className="w-5 h-5 text-violet-accent" />
                   </div>
-                  <h3 className="font-bold text-white">{item.title}</h3>
-                  <p className="mt-2 text-sm text-ink-muted leading-relaxed">{item.desc}</p>
+                   <h3 className="font-bold text-white text-sm">{item.title}</h3>
+                   <p className="mt-2 text-sm text-ink-muted leading-relaxed">{item.desc}</p>
                 </div>
               </Reveal>
             );

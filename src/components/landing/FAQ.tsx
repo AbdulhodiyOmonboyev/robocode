@@ -15,7 +15,6 @@ export function FAQ() {
     <section id="faq" className="border-b border-white/10">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
         <Reveal className="text-center">
-          <span className="landing-eyebrow">{t.faqLabel}</span>
           <h2 className="landing-heading mt-3">{t.faqTitle}</h2>
         </Reveal>
 

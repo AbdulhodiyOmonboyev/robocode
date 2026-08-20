@@ -6,18 +6,16 @@ import { InstagramGlyph } from "./InstagramGlyph";
 import { TelegramGlyph } from "./TelegramGlyph";
 import { useLang } from "./LangContext";
 
-// Coordinates match the pinned "Robocode IT Academy" location already linked from the footer's Google Maps URL.
-const MAP_LAT = 40.7468701;
-const MAP_LNG = 72.3453432;
+const MAP_LAT = 40.74694514180919;
+const MAP_LNG = 72.34549668260122;
 
 export function Contact() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   return (
     <section id="contact" className="border-b border-white/10">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+      <div className="w-full px-4 sm:px-6 py-20 sm:py-28 max-w-7xl mx-auto">
         <Reveal className="max-w-2xl mx-auto text-center">
-          <span className="landing-eyebrow">{t.contactLabel}</span>
           <h2 className="landing-heading mt-3">{t.contactTitle}</h2>
         </Reveal>
 
@@ -26,10 +24,10 @@ export function Contact() {
             <div className="landing-card h-full min-h-[320px] overflow-hidden">
               <iframe
                 title={t.contactMapTitle}
-                src={`https://www.google.com/maps?q=${MAP_LAT},${MAP_LNG}&z=15&output=embed`}
+                src="https://yandex.com/map-widget/v1/?ll=72.34549668260122%2C40.74694514180919&z=15&theme=dark&pt=72.34549668260122,40.74694514180919"
                 loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="w-full h-full min-h-[320px] grayscale-[30%] invert-[92%] contrast-[90%]"
+                allowFullScreen
+                className="w-full h-full min-h-[320px]"
               />
             </div>
           </Reveal>
@@ -43,12 +41,12 @@ export function Contact() {
                 <div>
                   <h3 className="font-bold text-white text-sm">{t.footerAddressLabel}</h3>
                   <a
-                    href={`https://www.google.com/maps?q=${MAP_LAT},${MAP_LNG}`}
+                    href="https://yandex.com/maps/?ll=72.34549668260122,40.74694514180919&z=15"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-1 block text-sm text-ink-muted hover:text-violet-accent transition-colors"
                   >
-                    Robocode IT Academy, Andijon
+                    Robocode IT Academy, P8WW+P7G, Ulitsa Lermontova, Andijan
                   </a>
                 </div>
               </div>
@@ -81,11 +79,11 @@ export function Contact() {
               </div>
 
               <div className="mt-auto flex flex-wrap gap-3 pt-2">
-                <a href="https://t.me/robocodee" target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm px-4 py-2.5">
+                <a href="https://t.me/robocode_andijan" target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm px-4 py-2.5">
                   <TelegramGlyph className="w-4 h-4 text-violet-accent" /> Telegram
                 </a>
                 <a
-                  href="https://instagram.com/aka.yakubov"
+                  href="https://instagram.com/robocode.uz"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-secondary text-sm px-4 py-2.5"

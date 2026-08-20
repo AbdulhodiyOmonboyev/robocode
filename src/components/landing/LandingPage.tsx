@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LangProvider } from "./LangContext";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
@@ -8,23 +8,27 @@ import { Stats } from "./Stats";
 import { WhatAwaits } from "./WhatAwaits";
 import { WhyUs } from "./WhyUs";
 import { Courses } from "./Courses";
-import { Pricing } from "./Pricing";
 import { Testimonials } from "./Testimonials";
 import { StartupStudio } from "./StartupStudio";
+import { Partners } from "./Partners";
 import { Team } from "./Team";
-import { FAQ } from "./FAQ";
 import { LeadForm } from "./LeadForm";
 import { Contact } from "./Contact";
 import { Footer } from "./Footer";
 import { StickyCTA } from "./StickyCTA";
+import { useSearchParams } from "next/navigation";
 
 export function LandingPage({ centerName, logo }: { centerName: string; logo: string }) {
   const [selectedCourse, setSelectedCourse] = useState("");
+  const searchParams = useSearchParams();
 
-  const scrollToForm = (courseName?: string) => {
-    if (courseName) setSelectedCourse(courseName);
-    document.getElementById("ariza")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  useEffect(() => {
+    const course = searchParams.get("course");
+    if (course) {
+      setSelectedCourse(course);
+      document.getElementById("ariza")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [searchParams]);
 
   return (
     <LangProvider>
@@ -38,12 +42,11 @@ export function LandingPage({ centerName, logo }: { centerName: string; logo: st
           <Stats />
           <WhatAwaits />
           <WhyUs />
-          <Courses onSelect={scrollToForm} />
-          <Pricing onSelect={scrollToForm} />
+          <Courses />
           <Testimonials />
-          <StartupStudio onSelect={() => scrollToForm()} />
+          <StartupStudio />
+          <Partners />
           <Team />
-          <FAQ />
           <LeadForm selectedCourse={selectedCourse} />
           <Contact />
         </main>

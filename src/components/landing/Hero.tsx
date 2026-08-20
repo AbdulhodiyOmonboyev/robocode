@@ -7,18 +7,23 @@ import { useLang } from "./LangContext";
 export function Hero() {
   const { t } = useLang();
   const parallaxRef = useRef<HTMLDivElement | null>(null);
+  const imageRef = useRef<HTMLDivElement | null>(null);
 
-  // Lightweight scroll fade/parallax: only transform + opacity, rAF-throttled,
-  // and capped to the hero's own height so it never fights scroll elsewhere.
   useEffect(() => {
     const el = parallaxRef.current;
+    const img = imageRef.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    el.style.willChange = "transform, opacity";
+    if (img) img.style.willChange = "transform";
     let ticking = false;
     const update = () => {
       ticking = false;
       const progress = Math.min(1, window.scrollY / (window.innerHeight * 0.9));
-      el.style.transform = `translateY(${progress * 40}px)`;
-      el.style.opacity = `${1 - progress * 0.6}`;
+      el.style.transform = `translate3d(0, -${progress * 30}px, 0)`;
+      el.style.opacity = `${1 - progress * 0.5}`;
+      if (img) {
+        img.style.transform = `translate3d(0, -${progress * 20}px, 0)`;
+      }
     };
     const onScroll = () => {
       if (!ticking) {
@@ -45,15 +50,20 @@ export function Hero() {
       />
       <div aria-hidden="true" className="landing-grain absolute inset-0 -z-10" />
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/mascot-white.png"
-        alt=""
-        aria-hidden="true"
-        className="hidden lg:block pointer-events-none select-none absolute right-10 xl:right-20 top-1/2 -translate-y-1/2 w-[420px] h-auto drop-shadow-[0_0_70px_rgba(166,87,242,0.2)]"
-      />
+      <div
+        ref={imageRef}
+        className="hidden lg:block absolute right-10 xl:right-20 top-1/2 -translate-y-1/2 pointer-events-none select-none"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/Gemini_Generated_Image_da2fb5da2fb5da2f.png"
+          alt=""
+          aria-hidden="true"
+          className="w-[420px] h-auto drop-shadow-[0_0_70px_rgba(166,87,242,0.2)]"
+        />
+      </div>
 
-      <div ref={parallaxRef} className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-24 sm:pt-24 sm:pb-32">
+      <div ref={parallaxRef} className="w-full px-4 sm:px-6 pt-16 pb-24 sm:pt-24 sm:pb-32 max-w-7xl mx-auto">
         <div className="max-w-3xl">
           <h1
             className="font-black uppercase tracking-tight text-white leading-[1.05]"
@@ -63,12 +73,8 @@ export function Hero() {
             <span className="text-violet-accent">{t.heroHighlight}</span>
             {t.heroSuffix}
           </h1>
-          <p className="mt-6 text-lg sm:text-xl text-ink-muted max-w-xl leading-relaxed">{t.heroSub}</p>
+           <p className="mt-6 text-lg sm:text-xl text-ink-muted max-w-xl leading-relaxed">{t.heroSub}</p>
           <div className="mt-9 flex flex-col sm:flex-row gap-3">
-            <a href="#ariza" className="btn-primary px-6 py-3.5">
-              {t.heroBtn1}
-              <ArrowRight className="w-4 h-4" />
-            </a>
             <a href="#courses" className="btn-secondary px-6 py-3.5">
               <PlayCircle className="w-4 h-4 text-violet-accent" />
               {t.heroBtn2}

@@ -56,10 +56,9 @@ export function LeadForm({ selectedCourse }: { selectedCourse?: string }) {
 
   return (
     <section id="ariza" className="border-b border-white/10">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+      <div className="w-full px-4 sm:px-6 py-20 sm:py-28 max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <Reveal>
-            <span className="landing-eyebrow">{t.formLabel}</span>
             <h2 className="landing-heading mt-3">{t.formTitle}</h2>
             <p className="mt-4 text-ink-muted leading-relaxed max-w-md">{t.formSub}</p>
           </Reveal>

@@ -27,7 +27,7 @@ export function Header({ centerName, logo }: { centerName: string; logo: string 
         scrolled ? "bg-[#08060F]/85 backdrop-blur-md border-b border-white/10" : "bg-transparent border-b border-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div className="w-full px-4 sm:px-6 h-16 flex items-center justify-between max-w-7xl mx-auto">
         <a href="#top" className="flex items-center gap-2.5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logo || "/api/branding/logo"} alt={centerName} className="w-9 h-9 rounded-lg object-contain bg-white shadow-sm flex-shrink-0" />
