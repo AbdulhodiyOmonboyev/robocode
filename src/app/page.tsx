@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { COURSES, FAQ_ITEMS } from "@/components/landing/translations";
@@ -96,7 +97,9 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <LandingPage centerName={centerName} logo={logo} />
+      <Suspense fallback={null}>
+        <LandingPage centerName={centerName} logo={logo} />
+      </Suspense>
     </>
   );
 }
