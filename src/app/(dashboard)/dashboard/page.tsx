@@ -109,7 +109,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/dashboard").then(r => r.json()).then(setData).finally(() => setLoading(false));
+    fetch("/api/dashboard").then(r => (r.ok ? r.json() : null)).then(setData).catch(() => setData(null)).finally(() => setLoading(false));
   }, []);
 
   if (loading) {

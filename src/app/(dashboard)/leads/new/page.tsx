@@ -8,14 +8,11 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
 import { cn, isPhoneComplete } from "@/lib/utils";
-
-const BRAND = "#5E2CA5";
+import { fetchArray } from "@/lib/fetch-json";
 
 const schema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 harf"),
@@ -74,9 +71,9 @@ export default function NewLeadPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/courses").then(r => r.json()),
-      fetch("/api/timeslots").then(r => r.json()),
-      fetch("/api/users").then(r => r.json()),
+      fetchArray<Course>("/api/courses"),
+      fetchArray<TimeSlot>("/api/timeslots"),
+      fetchArray<User>("/api/users"),
     ]).then(([c, t, u]) => { setCourses(c); setTimeSlots(t); setUsers(u); });
   }, []);
 
@@ -120,7 +117,6 @@ export default function NewLeadPage() {
     setCreatingCourse(false);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: FormData) => {
     setSaving(true);
     const lessonTime = timeFrom && timeTo ? `${timeFrom}–${timeTo}` : (timeFrom || timeTo || undefined);

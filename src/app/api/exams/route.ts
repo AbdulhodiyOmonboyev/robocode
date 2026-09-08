@@ -3,10 +3,11 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { hasPermission } from "@/lib/rbac";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const exams = await db.exam.findMany({
@@ -25,11 +26,11 @@ const schema = z.object({
   type: z.enum(["exam", "level_test"]).optional(),
   courseId: z.string().optional().nullable(),
   groupId: z.string().optional().nullable(),
-  date: z.string().min(1, "Sana kiriting"),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo\'lishi kerak"),
   maxScore: z.coerce.number().int().min(1).optional(),
 });
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const user = session.user;
@@ -55,3 +56,6 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json(exam, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/exams");
+export const POST = withApiErrors(POSTHandler, "POST /api/exams");

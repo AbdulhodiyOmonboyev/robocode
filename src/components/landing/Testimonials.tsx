@@ -80,6 +80,7 @@ export function Testimonials() {
                   <div className="flex items-center gap-4">
                      <div className="relative w-14 h-14 flex-shrink-0">
                        {item.photo ? (
+                         // eslint-disable-next-line @next/next/no-img-element
                          <img src={item.photo} alt={item.name} className="w-14 h-14 rounded-2xl object-cover" />
                        ) : (
                          <div className="w-14 h-14 rounded-2xl bg-violet-btn/20 text-violet-accent font-bold flex items-center justify-center text-lg">

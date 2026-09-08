@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import { isManager } from "@/lib/permissions";
 import { hasPermission } from "@/lib/rbac";
+import { withApiErrors, intParam } from "@/lib/api-handler";
 
 const createSchema = z.object({
   name: z.string().min(1, "Nom kiriting"),
@@ -17,13 +18,13 @@ const createSchema = z.object({
   startDate: z.string().optional().nullable(),
 });
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const page = intParam(searchParams.get("page"), 1, 1, 100000);
+  const limit = intParam(searchParams.get("limit"), 50, 1, 500);
   const skip = (page - 1) * limit;
 
   const where: Prisma.GroupWhereInput = {};
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ groups, total, page, limit, pages: Math.ceil(total / limit) });
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -79,3 +80,6 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json(group, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/groups");
+export const POST = withApiErrors(POSTHandler, "POST /api/groups");

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function DELETEHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
@@ -12,3 +13,5 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   await db.tag.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }
+
+export const DELETE = withApiErrors(DELETEHandler, "DELETE /api/tags/[id]");

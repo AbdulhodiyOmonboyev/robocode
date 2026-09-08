@@ -55,7 +55,7 @@ export default function AttendancePage() {
       const list = Array.isArray(d?.groups) ? d.groups : [];
       setGroups(list);
       if (list.length && !groupId) setGroupId(list[0].id);
-    });
+    }).catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(async () => {

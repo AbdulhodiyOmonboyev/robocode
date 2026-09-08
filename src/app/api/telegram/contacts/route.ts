@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
 async function getToken() {
   const s = await db.setting.findUnique({ where: { key: "telegram_bot_token" } });
@@ -8,7 +9,7 @@ async function getToken() {
 }
 
 // Returns recent people who messaged the bot (via getUpdates), so admin can link chat IDs.
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
@@ -39,3 +40,5 @@ export async function GET() {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/telegram/contacts");

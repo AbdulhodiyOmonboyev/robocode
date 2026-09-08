@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const tags = await db.tag.findMany({ orderBy: { name: "asc" } });
   return NextResponse.json(tags);
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
@@ -24,3 +25,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Bu nom band" }, { status: 409 });
   }
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/tags");
+export const POST = withApiErrors(POSTHandler, "POST /api/tags");

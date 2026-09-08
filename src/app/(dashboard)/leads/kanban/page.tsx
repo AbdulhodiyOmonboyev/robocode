@@ -12,6 +12,7 @@ import { formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Modal, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { fetchArray, fetchJson } from "@/lib/fetch-json";
 
 interface Stage { id: string; name: string; color: string; order: number; isWon: boolean; isLost: boolean; }
 interface Lead {
@@ -42,22 +43,22 @@ export default function KanbanPage() {
   }, []);
 
   const persist = (n: Set<string>) => { try { localStorage.setItem("kanbanCollapsed", JSON.stringify([...n])); } catch {} };
-  const toggleCollapse = (id: string) => setCollapsed(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); persist(n); return n; });
+  const toggleCollapse = (id: string) => setCollapsed(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); persist(n); return n; });
   const collapseEmpty = () => { const n = new Set(collapsed); stages.forEach(s => { if ((board[s.id] || []).length === 0) n.add(s.id); }); setCollapsed(n); persist(n); };
   const expandAll = () => { setCollapsed(new Set()); persist(new Set()); };
 
   const load = async () => {
     setLoading(true);
     const [st, lr] = await Promise.all([
-      fetch("/api/stages").then(r => r.json()),
-      fetch("/api/leads?limit=500").then(r => r.json()),
+      fetchArray<Stage>("/api/stages"),
+      fetchJson<{ leads?: Lead[] }>("/api/leads?limit=500", {}),
     ]);
-    const stageList: Stage[] = Array.isArray(st) ? st : [];
+    const stageList: Stage[] = st;
     setStages(stageList);
     const grouped: Board = {};
     stageList.forEach(s => (grouped[s.id] = []));
     const firstId = stageList[0]?.id;
-    (lr.leads || []).forEach((l: Lead) => {
+    (Array.isArray(lr.leads) ? lr.leads : []).forEach((l: Lead) => {
       const key = l.stageId && grouped[l.stageId] ? l.stageId : firstId;
       if (key && grouped[key]) grouped[key].push(l);
     });

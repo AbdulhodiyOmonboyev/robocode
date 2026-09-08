@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ function parseDataUrl(dataUrl: string): { mime: string; buffer: Buffer } | null 
 }
 
 // Public endpoint: serves the branding logo as raw image bytes (favicon, PWA icons, sidebar, login).
-export async function GET() {
+async function GETHandler() {
   try {
     const setting = await db.setting.findUnique({ where: { key: "brand_logo" } });
     const parsed = setting?.value ? parseDataUrl(setting.value) : null;
@@ -35,3 +36,5 @@ export async function GET() {
     },
   });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/branding/logo");

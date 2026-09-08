@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
 // Public form config: active courses + branding (no auth)
-export async function GET() {
+async function GETHandler() {
   try {
     const [courses, settings] = await Promise.all([
       db.course.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
@@ -31,7 +32,7 @@ const schema = z.object({
   website: z.string().optional(), // honeypot
 });
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Bad request" }, { status: 400 }); }
 
@@ -67,3 +68,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/public/lead");
+export const POST = withApiErrors(POSTHandler, "POST /api/public/lead");

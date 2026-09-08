@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { getTeacherGroupIds } from "@/lib/teacher";
 import { canManageGrades } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
 async function assertOwnsGroup(userId: string, role: string, groupId: string) {
   if (role === "SUPER_ADMIN" || role === "ADMIN") return true;
@@ -11,7 +12,7 @@ async function assertOwnsGroup(userId: string, role: string, groupId: string) {
   return groupIds.includes(groupId);
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id: groupId } = await params;
@@ -30,13 +31,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 const createSchema = z.object({
   title: z.string().min(1),
-  date: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo\'lishi kerak"),
   maxScore: z.number().min(1).max(1000).optional(),
   passingScore: z.number().min(0).max(1000).optional().nullable(),
   section: z.string().optional().nullable(),
 });
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function POSTHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canManageGrades(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -63,3 +64,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
   return NextResponse.json(exam, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/teacher/groups/[id]/exams");
+export const POST = withApiErrors(POSTHandler, "POST /api/teacher/groups/[id]/exams");

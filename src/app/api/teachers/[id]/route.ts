@@ -3,13 +3,14 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
+import { withApiErrors } from "@/lib/api-handler";
 
 const schema = z.object({
   salary: z.coerce.number().min(0).optional(),
   subject: z.string().optional().nullable(),
 });
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
@@ -28,3 +29,5 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const updated = await db.user.update({ where: { id }, data, select: { id: true, salary: true, subject: true } });
   return NextResponse.json({ id: updated.id, salary: updated.salary ? Number(updated.salary) : 0, subject: updated.subject || "" });
 }
+
+export const PATCH = withApiErrors(PATCHHandler, "PATCH /api/teachers/[id]");

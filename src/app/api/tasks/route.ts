@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { isManager } from "@/lib/permissions";
 import { hasPermission } from "@/lib/rbac";
+import { withApiErrors, intParam } from "@/lib/api-handler";
 
 const createSchema = z.object({
   title: z.string().min(2, "Sarlavha kamida 2 harf"),
@@ -29,13 +30,13 @@ const taskSelect = {
   tags: { select: { id: true, name: true, color: true } },
 } satisfies Prisma.TaskSelect;
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const page = intParam(searchParams.get("page"), 1, 1, 100000);
+  const limit = intParam(searchParams.get("limit"), 50, 1, 500);
   const skip = (page - 1) * limit;
 
   const assignedToId = searchParams.get("assignedToId") || ""; // xodim
@@ -79,7 +80,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ tasks, total, page, limit, pages: Math.ceil(total / limit) });
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const user = session.user;
@@ -110,3 +111,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(task, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/tasks");
+export const POST = withApiErrors(POSTHandler, "POST /api/tasks");

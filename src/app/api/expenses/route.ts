@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import type { Session } from "next-auth";
 import { canManageExpenses } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ function currentMonth() {
   return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canAccess(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -49,7 +50,7 @@ const schema = z.object({
   spentAt: z.string().optional().nullable(),
 });
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canAccess(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -71,3 +72,6 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json(expense, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/expenses");
+export const POST = withApiErrors(POSTHandler, "POST /api/expenses");

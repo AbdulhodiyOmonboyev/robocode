@@ -34,9 +34,6 @@ interface PaymentType { id: string; name: string; isActive: boolean; }
 function money(v: number | string) { return Number(v || 0).toLocaleString("ru-RU"); }
 function ym(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
 
-const inputCls =
-  "w-full px-3 py-2 text-[13px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition";
-
 const TH = "px-4 py-3 text-left text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap";
 
 export default function PaymentsPage() {
@@ -478,7 +475,9 @@ function AddPaymentModal({ presetLead, onClose, onSaved }: { presetLead?: Preset
     if (lead || leadQ.length < 1) { setLeadResults([]); return; }
     const t = setTimeout(async () => {
       const res = await fetch(`/api/leads?search=${encodeURIComponent(leadQ)}&limit=8`);
-      setLeadResults((await res.json()).leads || []);
+      if (!res.ok) { setLeadResults([]); return; }
+      const d = await res.json().catch(() => ({}));
+      setLeadResults(Array.isArray(d.leads) ? d.leads : []);
     }, 250);
     return () => clearTimeout(t);
   }, [leadQ, lead]);

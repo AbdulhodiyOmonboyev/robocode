@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ChangeEvent } from "react";
+import { useState, useEffect, type ChangeEvent, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -17,6 +17,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { useConfirm } from "@/components/ui/confirm";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { cn } from "@/lib/utils";
+import { fetchArray, fetchJson } from "@/lib/fetch-json";
 
 type Tab = "general" | "logo" | "paymentTypes" | "holidays" | "timeslots" | "tags" | "sms" | "telegram" | "users";
 
@@ -31,7 +32,7 @@ const TAG_COLORS = ["#6366f1","#10b981","#f59e0b","#f43f5e","#06b6d4","#8b5cf6",
 
 const VALID_TABS: Tab[] = ["general", "logo", "paymentTypes", "holidays", "timeslots", "tags", "sms", "telegram", "users"];
 
-export default function SettingsPage() {
+function SettingsPageInner() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const [tab, setTab] = useState<Tab>((tabParam && (VALID_TABS as string[]).includes(tabParam) ? tabParam : "general") as Tab);
@@ -99,13 +100,13 @@ export default function SettingsPage() {
     if (!smsTest) { toast.error("Telefon raqam kiriting"); return; }
     const res = await fetch("/api/sms/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: smsTest, text: "Test SMS — Robocode CRM" }) });
     const d = await res.json().catch(() => ({}));
-    res.ok ? toast.success("SMS yuborildi!") : toast.error(d.error || "Yuborilmadi");
+    if (res.ok) toast.success("SMS yuborildi!"); else toast.error(d.error || "Yuborilmadi");
   };
 
-  const loadSlots = () => fetch("/api/timeslots").then(r=>r.json()).then(setSlots);
-  const loadTags = () => fetch("/api/tags").then(r=>r.json()).then(setTags);
+  const loadSlots = () => fetchArray<TimeSlot>("/api/timeslots").then(setSlots);
+  const loadTags = () => fetchArray<Tag>("/api/tags").then(setTags);
   const loadTgSettings = async () => {
-    const s = await fetch("/api/settings").then(r=>r.json());
+    const s = await fetchJson<Record<string, string>>("/api/settings", {});
     setTgToken(s["telegram_bot_token"] || "");
     setEskiz({ email: s["eskiz_email"] || "", password: "", from: s["eskiz_from"] || "" });
     if (s["center_name"]) setCenterName(s["center_name"]);
@@ -122,13 +123,13 @@ export default function SettingsPage() {
 
   useEffect(() => {
     loadSlots(); loadTags(); loadTgSettings(); loadBotInfo(); loadPaymentTypes(); loadHolidays();
-    fetch("/api/users").then(r=>r.json()).then(setUsers);
+    fetchArray<UserOption>("/api/users").then(setUsers);
   }, []);
 
   const activateBot = async () => {
     setActivating(true);
     const res = await fetch("/api/telegram/setup", { method: "POST" });
-    const d = await res.json();
+    const d = await res.json().catch(() => ({}));
     setActivating(false);
     if (res.ok) { toast.success("Bot faollashtirildi! @" + d.username); setBotUsername(d.username || ""); setWebhookActive(true); }
     else toast.error(d.error || "Xatolik");
@@ -149,19 +150,19 @@ export default function SettingsPage() {
     setSaving(true);
     const ok = await saveSetting("telegram_bot_token", tgToken.trim());
     setSaving(false);
-    ok ? toast.success("Token saqlandi") : toast.error("Saqlab bo'lmadi");
+    if (ok) toast.success("Token saqlandi"); else toast.error("Saqlab bo'lmadi");
   };
 
   const saveChatId = async (userId: string) => {
     const ok = await saveSetting("telegram_chat_id_" + userId, (chatIds[userId] || "").trim());
-    ok ? toast.success("Chat ID saqlandi") : toast.error("Xatolik");
+    if (ok) toast.success("Chat ID saqlandi"); else toast.error("Xatolik");
   };
 
   const testChat = async (chatId: string) => {
     if (!chatId) { toast.error("Avval chat ID kiriting"); return; }
     const res = await fetch("/api/telegram/test", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ chatId }) });
-    const data = await res.json();
-    res.ok ? toast.success("Test xabar yuborildi! Telegram'ni tekshiring.") : toast.error(data.error || "Yuborilmadi");
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) toast.success("Test xabar yuborildi! Telegram'ni tekshiring."); else toast.error(data.error || "Yuborilmadi");
   };
 
   const sendQuickTest = async () => {
@@ -174,7 +175,7 @@ export default function SettingsPage() {
   const fetchContacts = async () => {
     setLoadingContacts(true);
     const res = await fetch("/api/telegram/contacts");
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (res.ok) { setContacts(data.contacts || []); if (!data.contacts?.length) toast.info("Hech kim botga yozmagan. Hodimlar botga /start yuborsin."); }
     else toast.error(data.error || "Xatolik");
     setLoadingContacts(false);
@@ -201,7 +202,7 @@ export default function SettingsPage() {
     setLogoSaving(true);
     const ok = await saveSetting("brand_logo", logo);
     setLogoSaving(false);
-    ok ? toast.success("Logo saqlandi! Sahifani yangilang.") : toast.error("Saqlab bo'lmadi");
+    if (ok) toast.success("Logo saqlandi! Sahifani yangilang."); else toast.error("Saqlab bo'lmadi");
   };
 
   const addSlot = async () => {
@@ -632,4 +633,14 @@ export default function SettingsPage() {
 
 function X({ className }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>;
+}
+
+// `useSearchParams` faqat <Suspense> ichida bo'lishi kerak — aks holda Next.js
+// butun sahifani klient tomonda render qilishga majbur bo'ladi (CSR bailout).
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SettingsPageInner />
+    </Suspense>
+  );
 }

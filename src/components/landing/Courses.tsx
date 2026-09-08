@@ -4,7 +4,7 @@ import { Reveal } from "./Reveal";
 import { useLang } from "./LangContext";
 import { COURSES } from "./translations";
 
-export function Courses({ onSelect }: { onSelect?: (courseName?: string) => void }) {
+export function Courses() {
   const { lang, t } = useLang();
   const courses = COURSES[lang];
 

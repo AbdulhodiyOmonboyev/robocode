@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LEAD_SOURCE_LABELS, WEEKDAYS } from "@/lib/constants";
 import { cn, formatDate, formatPhone, phoneToTel, phoneToTelegram } from "@/lib/utils";
+import { fetchArray } from "@/lib/fetch-json";
 
 interface ImportResult {
   total: number;
@@ -41,7 +42,7 @@ const BRAND = "#5E2CA5";
 const inputCls =
   "w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5E2CA5]/30 focus:border-[#5E2CA5]/50 transition";
 
-export default function LeadsPage() {
+function LeadsPageInner() {
   const searchParams = useSearchParams();
 
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -98,9 +99,9 @@ export default function LeadsPage() {
 
   useEffect(() => { loadLeads(); }, [loadLeads]);
   useEffect(() => {
-    fetch("/api/courses").then(r => r.json()).then(setCourses);
-    fetch("/api/users").then(r => r.json()).then(setUsers);
-    fetch("/api/stages").then(r => r.json()).then(setStages);
+    fetchArray<Course>("/api/courses").then(setCourses);
+    fetchArray<User>("/api/users").then(setUsers);
+    fetchArray<Stage>("/api/stages").then(setStages);
     fetch("/api/groups?limit=500").then(r => r.json()).then(d => setGroups(Array.isArray(d?.groups) ? d.groups : []));
   }, []);
 
@@ -133,7 +134,7 @@ export default function LeadsPage() {
 
   const toggleSelect = (id: string) => {
     const next = new Set(selected);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id); else next.add(id);
     setSelected(next);
   };
 
@@ -637,5 +638,15 @@ export default function LeadsPage() {
         </Modal>
       )}
     </div>
+  );
+}
+
+// `useSearchParams` faqat <Suspense> ichida bo'lishi kerak — aks holda Next.js
+// butun sahifani klient tomonda render qilishga majbur bo'ladi (CSR bailout).
+export default function LeadsPage() {
+  return (
+    <Suspense fallback={null}>
+      <LeadsPageInner />
+    </Suspense>
   );
 }

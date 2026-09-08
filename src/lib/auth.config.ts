@@ -12,6 +12,14 @@ const DASHBOARD_HOME_PATH = "/dashboard";
 // oddiy xodim (operator, reception va h.k.) manzilni to'g'ridan-to'g'ri yozib kirsa ham bloklanadi.
 const ADMIN_ONLY_PREFIXES = ["/settings", "/users", "/permissions", "/logs"];
 
+// `pathname.startsWith(prefix)` yetarli emas edi: "/students" ham "/student" bilan,
+// "/teachers" va "/teacher-report" ham "/teacher" bilan, "/financial-report" esa
+// "/finance" bilan boshlanadi. Natijada admin uchun mo'ljallangan sahifalar
+// noto'g'ri portal qoidasiga tushib, foydalanuvchi /dashboard ga qaytarilardi.
+// Shu sababli faqat to'liq segment mosligini tekshiramiz.
+const inSection = (pathname: string, prefix: string) =>
+  pathname === prefix || pathname.startsWith(prefix + "/");
+
 const isAdminRole = (role: string) => role === "SUPER_ADMIN" || role === "ADMIN";
 // Sessions issued before the "student" account type existed have no accountType in their
 // JWT yet — treat that as "staff" so already-logged-in admin/teacher sessions keep working.
@@ -42,16 +50,23 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isPublic =
-        PUBLIC_PATHS.some((p) => nextUrl.pathname.startsWith(p)) || PUBLIC_EXACT_PATHS.includes(nextUrl.pathname);
+        PUBLIC_PATHS.some((p) => inSection(nextUrl.pathname, p)) || PUBLIC_EXACT_PATHS.includes(nextUrl.pathname);
 
-      if (!isPublic && !isLoggedIn) return false;
+      if (!isPublic && !isLoggedIn) {
+        // API chaqiruvi bo'lsa login sahifasiga redirect qilish noto'g'ri:
+        // klient `fetch` redirectni kuzatib HTML oladi va `res.json()` otiladi.
+        if (nextUrl.pathname.startsWith("/api/")) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        return false;
+      }
 
       if (isLoggedIn) {
         const user = auth!.user;
         if (nextUrl.pathname === "/login") {
           return Response.redirect(new URL(landingPath(user), nextUrl));
         }
-        if (nextUrl.pathname.startsWith(TEACHER_PREFIX) && !user.isTeacher && user.role !== "MENTOR" && !isAdminRole(user.role)) {
+        if (inSection(nextUrl.pathname, TEACHER_PREFIX) && !user.isTeacher && user.role !== "MENTOR" && !isAdminRole(user.role)) {
           return Response.redirect(new URL("/dashboard", nextUrl));
         }
         // Admin's own home page — a teacher/mentor (who isn't also an admin) has no business
@@ -60,22 +75,26 @@ export const authConfig: NextAuthConfig = {
         if (nextUrl.pathname === DASHBOARD_HOME_PATH && (user.isTeacher || user.role === "MENTOR") && !isAdminRole(user.role)) {
           return Response.redirect(new URL(landingPath(user), nextUrl));
         }
-        if (nextUrl.pathname.startsWith(RECEPTION_PREFIX) && user.role !== "RECEPTION" && !isAdminRole(user.role)) {
+        if (inSection(nextUrl.pathname, RECEPTION_PREFIX) && user.role !== "RECEPTION" && !isAdminRole(user.role)) {
           return Response.redirect(new URL("/dashboard", nextUrl));
         }
-        if (nextUrl.pathname.startsWith(FINANCE_PREFIX) && user.role !== "ACCOUNTANT" && !isAdminRole(user.role)) {
+        if (inSection(nextUrl.pathname, FINANCE_PREFIX) && user.role !== "ACCOUNTANT" && !isAdminRole(user.role)) {
           return Response.redirect(new URL("/dashboard", nextUrl));
         }
         // Students' session id is a Lead id, not a User id — confine them to their own
         // portal so they never reach staff pages/APIs that assume session.user.id is a User.
-        if (isStudent(user) && !nextUrl.pathname.startsWith(STUDENT_PREFIX) && !nextUrl.pathname.startsWith("/api/student")) {
+        if (isStudent(user) && !inSection(nextUrl.pathname, STUDENT_PREFIX) && !inSection(nextUrl.pathname, "/api/student")) {
+          // API uchun HTML sahifaga redirect emas, toza JSON javob.
+          if (nextUrl.pathname.startsWith("/api/")) {
+            return Response.json({ error: "Forbidden" }, { status: 403 });
+          }
           return Response.redirect(new URL("/student/dashboard", nextUrl));
         }
-        if (nextUrl.pathname.startsWith(STUDENT_PREFIX) && !isStudent(user)) {
+        if (inSection(nextUrl.pathname, STUDENT_PREFIX) && !isStudent(user)) {
           return Response.redirect(new URL(landingPath(user), nextUrl));
         }
         if (
-          ADMIN_ONLY_PREFIXES.some((p) => nextUrl.pathname.startsWith(p)) &&
+          ADMIN_ONLY_PREFIXES.some((p) => inSection(nextUrl.pathname, p)) &&
           !isAdminRole(user.role) &&
           !user.canManageUsers
         ) {

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { STAFF_WORK_START, STAFF_LATE_GRACE_MINUTES } from "@/lib/constants";
+import { withApiErrors, parseDateParam } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +25,14 @@ function computeStatus(checkIn: Date): "ontime" | "late" {
 }
 
 // GET ?date=YYYY-MM-DD -> all active users + their StaffAttendance record for that date
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const date = searchParams.get("date") || todayStr();
-  const d = toDate(date);
+  const d = parseDateParam(date);
+  if (!d) return NextResponse.json({ error: "Noto'g'ri sana (YYYY-MM-DD kutilgan)" }, { status: 400 });
 
   const [users, records] = await Promise.all([
     db.user.findMany({
@@ -62,10 +64,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ date, staff });
 }
 
-const checkInSchema = z.object({ userId: z.string().min(1), date: z.string().optional() });
+const checkInSchema = z.object({ userId: z.string().min(1), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo\'lishi kerak").optional() });
 
 // POST { userId, date? } -> check-in (marks ontime/late based on STAFF_WORK_START)
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -94,10 +96,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ success: true, record });
 }
 
-const checkOutSchema = z.object({ userId: z.string().min(1), date: z.string().optional() });
+const checkOutSchema = z.object({ userId: z.string().min(1), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo\'lishi kerak").optional() });
 
 // PATCH { userId, date? } -> check-out
-export async function PATCH(req: NextRequest) {
+async function PATCHHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -124,3 +126,7 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ success: true, record });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/staff-attendance");
+export const POST = withApiErrors(POSTHandler, "POST /api/staff-attendance");
+export const PATCH = withApiErrors(PATCHHandler, "PATCH /api/staff-attendance");

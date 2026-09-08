@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import type { Session } from "next-auth";
+import { withApiErrors } from "@/lib/api-handler";
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -16,7 +17,7 @@ function canManage(user: Session["user"]) {
   return ["SUPER_ADMIN", "ADMIN"].includes(user.role);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canManage(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -30,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json(stage);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function DELETEHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canManage(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -47,3 +48,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   return NextResponse.json({ success: true, movedTo: fallback?.id ?? null });
 }
+
+export const PATCH = withApiErrors(PATCHHandler, "PATCH /api/stages/[id]");
+export const DELETE = withApiErrors(DELETEHandler, "DELETE /api/stages/[id]");

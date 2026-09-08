@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { WEEKDAYS } from "@/lib/constants";
 import { cn, formatPhone, getInitials } from "@/lib/utils";
+import { fetchArray } from "@/lib/fetch-json";
 
 const BRAND = "#5E2CA5";
 const dayLabel = (v: string) => WEEKDAYS.find(d => d.value === v)?.label || v;
@@ -73,8 +74,8 @@ export default function GroupsPage() {
   }, [load, page]);
 
   useEffect(() => {
-    fetch("/api/courses").then(r => r.json()).then(setCourses);
-    fetch("/api/users").then(r => r.json()).then(setUsers);
+    fetchArray<CourseOption>("/api/courses").then(setCourses);
+    fetchArray<UserOption>("/api/users").then(setUsers);
   }, []);
 
   const create = async () => {
@@ -89,7 +90,7 @@ export default function GroupsPage() {
       setShowCreate(false);
       setForm({ name: "", courseId: "", teacherId: "", timeFrom: "", timeTo: "", room: "", startDate: "" });
       setDays([]);
-      page === 1 ? load(1) : setPage(1);
+      if (page === 1) load(1); else setPage(1);
     } else toast.error("Yaratilmadi");
     setCreating(false);
   };

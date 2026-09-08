@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { hasPermission } from "@/lib/rbac";
 import { buildLeadsWhere } from "@/lib/leads";
+import { withApiErrors, intParam } from "@/lib/api-handler";
 
 const createSchema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 harf"),
@@ -30,15 +31,15 @@ const createSchema = z.object({
   reminderTitle: z.string().optional(),
 });
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = session.user;
   const { searchParams } = new URL(req.url);
 
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const page = intParam(searchParams.get("page"), 1, 1, 100000);
+  const limit = intParam(searchParams.get("limit"), 50, 1, 500);
   const skip = (page - 1) * limit;
 
   const where = await buildLeadsWhere(searchParams, user);
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ leads, total, page, limit, pages: Math.ceil(total / limit) });
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -135,3 +136,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(lead, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/leads");
+export const POST = withApiErrors(POSTHandler, "POST /api/leads");

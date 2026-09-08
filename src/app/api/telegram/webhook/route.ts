@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -125,7 +126,7 @@ async function createLead(token: string, chatId: number, userId: string, data: L
   await send(token, chatId, msg);
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const token = await getToken();
   if (!token) return NextResponse.json({ ok: true });
   const origin = req.nextUrl.origin;
@@ -362,3 +363,5 @@ async function doSearch(token: string, chatId: number, q: string) {
   }
   await send(token, chatId, out.trim());
 }
+
+export const POST = withApiErrors(POSTHandler, "POST /api/telegram/webhook");

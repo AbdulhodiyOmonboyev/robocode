@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sendSms } from "@/lib/sms";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
@@ -14,3 +15,5 @@ export async function POST(req: NextRequest) {
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
   return NextResponse.json({ success: true });
 }
+
+export const POST = withApiErrors(POSTHandler, "POST /api/sms/test");

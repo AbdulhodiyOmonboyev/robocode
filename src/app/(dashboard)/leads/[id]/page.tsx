@@ -45,7 +45,6 @@ interface Lead {
 
 interface CourseOption { id: string; name: string; }
 interface UserOption { id: string; fullName: string; }
-interface StageOption { id: string; name: string; }
 
 type Tab = "activity" | "reminders" | "payments" | "attendance" | "scores";
 
@@ -72,8 +71,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const [addingReminder, setAddingReminder] = useState(false);
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [users, setUsers] = useState<UserOption[]>([]);
-  const [, setTimeSlots] = useState<{ id: string; label: string }[]>([]);
-  const [stages, setStages] = useState<StageOption[]>([]);
   const [botUsername, setBotUsername] = useState("");
 
   const load = async () => {
@@ -83,12 +80,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- faqat id o'zgarganda qayta yuklanadi
   useEffect(() => { load(); }, [id]);
   useEffect(() => {
-    fetch("/api/courses").then(r=>r.json()).then(setCourses);
-    fetch("/api/users").then(r=>r.json()).then(setUsers);
-    fetch("/api/timeslots").then(r=>r.json()).then(setTimeSlots);
-    fetch("/api/stages").then(r=>r.json()).then(setStages);
+    fetch("/api/courses").then(r=>r.json()).then(d=>setCourses(Array.isArray(d)?d:[])).catch(()=>{});
+    fetch("/api/users").then(r=>r.json()).then(d=>setUsers(Array.isArray(d)?d:[])).catch(()=>{});
     fetch("/api/settings?prefix=telegram_bot_username").then(r=>r.json()).then(m=>setBotUsername(m.telegram_bot_username||"")).catch(()=>{});
   }, []);
 
@@ -138,14 +134,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     setSaving(false);
   };
 
-  const changeStage = async (stageId: string) => {
-    const res = await fetch(`/api/leads/${id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stageId }),
-    });
-    if (res.ok) { const s = stages.find((x)=>x.id===stageId); toast.success(`Bosqich → ${s?.name||""}`); load(); }
-  };
-
   const togglePin = async () => {
     await fetch(`/api/leads/${id}`, { method: "PATCH", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ isPinned: !lead?.isPinned }) });
     load();
@@ -184,7 +172,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   if (loading) return <div className="animate-pulse space-y-4"><div className="h-32 bg-white dark:bg-gray-900 rounded-2xl"/><div className="h-80 bg-white dark:bg-gray-900 rounded-2xl"/></div>;
   if (!lead) return null;
 
-  const currentStageIdx = stages.findIndex((s)=>s.id===lead.stageId);
   const total = (lead.payments || []).reduce((a: number, p) => a + Number(p.amount || 0), 0);
   const att = lead.attendances || [];
   const present = att.filter((a) => a.status === "present").length;

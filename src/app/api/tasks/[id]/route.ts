@@ -6,6 +6,7 @@ import { logAudit } from "@/lib/audit";
 import type { Prisma } from "@/generated/prisma/client";
 import { isManager } from "@/lib/permissions";
 import { hasPermission } from "@/lib/rbac";
+import { withApiErrors } from "@/lib/api-handler";
 
 const updateSchema = z.object({
   title: z.string().min(2).optional(),
@@ -30,7 +31,7 @@ const taskSelect = {
   tags: { select: { id: true, name: true, color: true } },
 } satisfies Prisma.TaskSelect;
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const user = session.user;
@@ -65,7 +66,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json(task);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function DELETEHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const user = session.user;
@@ -83,3 +84,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   await logAudit(user.id, user.name || user.fullName, "task_deleted", "Task", id);
   return NextResponse.json({ success: true });
 }
+
+export const PATCH = withApiErrors(PATCHHandler, "PATCH /api/tasks/[id]");
+export const DELETE = withApiErrors(DELETEHandler, "DELETE /api/tasks/[id]");

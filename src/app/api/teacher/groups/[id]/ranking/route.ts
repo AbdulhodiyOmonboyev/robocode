@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTeacherGroupIds } from "@/lib/teacher";
+import { withApiErrors } from "@/lib/api-handler";
 
 async function assertOwnsGroup(userId: string, role: string, groupId: string) {
   if (role === "SUPER_ADMIN" || role === "ADMIN") return true;
@@ -10,7 +11,7 @@ async function assertOwnsGroup(userId: string, role: string, groupId: string) {
 }
 
 // GET ?month=YYYY-MM&metric=score|coin&mode=avg|total
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id: groupId } = await params;
@@ -65,3 +66,5 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   return NextResponse.json({ metric, mode, ranking: ranked });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/teacher/groups/[id]/ranking");

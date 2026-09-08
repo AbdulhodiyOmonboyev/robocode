@@ -11,6 +11,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { useConfirm } from "@/components/ui/confirm";
 import { Modal, ModalPrimaryButton, ModalSecondaryButton } from "@/components/ui/modal";
 import { cn, getInitials } from "@/lib/utils";
+import { fetchArray } from "@/lib/fetch-json";
 
 const BRAND = "#5E2CA5";
 
@@ -84,13 +85,13 @@ export default function ExamsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/exams");
-    setExams(await res.json());
+    const data = await fetchArray<Exam>("/api/exams");
+    setExams(data);
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    fetch("/api/groups?limit=500").then(r => r.json()).then(d => setGroups(Array.isArray(d?.groups) ? d.groups : []));
+    fetch("/api/groups?limit=500").then(r => r.json()).then(d => setGroups(Array.isArray(d?.groups) ? d.groups : [])).catch(() => {});
   }, []);
 
   const create = async () => {

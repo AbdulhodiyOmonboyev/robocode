@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { LandingPage } from "@/components/landing/LandingPage";
-import { COURSES, FAQ_ITEMS } from "@/components/landing/translations";
+import { COURSES } from "@/components/landing/translations";
 
 // Matches the pinned "Robocode IT Academy" location linked from the footer's Google Maps URL.
 const MAP_LAT = 40.7468701;
@@ -78,21 +78,15 @@ export default async function Home() {
     provider: { "@type": "EducationalOrganization", name: centerName, sameAs: BASE_URL },
   }));
 
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: FAQ_ITEMS.uz.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: { "@type": "Answer", text: item.a },
-    })),
-  };
-
-  const jsonLd = [orgJsonLd, ...coursesJsonLd, faqJsonLd];
+  // FAQPage sxemasi olib tashlandi: "landing yangi versiya" (1764743) commitida
+  // <FAQ /> bo'limi sahifadan chiqarilgan, ammo structured data qolib ketgan edi.
+  // Google FAQ rich result uchun savol-javob sahifada ko'rinib turishini talab
+  // qiladi — ko'rinmas mazmun uchun markup qo'yish qoidabuzarlik hisoblanadi.
+  // <FAQ /> qaytarilsa, bu blokni ham qayta qo'shish mumkin.
+  const jsonLd = [orgJsonLd, ...coursesJsonLd];
 
   return (
     <>
-      {/* eslint-disable-next-line react/no-danger */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}

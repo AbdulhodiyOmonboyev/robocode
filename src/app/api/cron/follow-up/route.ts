@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ async function send(token: string, chatId: string, text: string) {
 }
 
 // Daily: notify staff about leads that have been inactive in their stage too long.
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (process.env.NODE_ENV === "production" && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -75,3 +76,5 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ stale: stale.length, messagesSent: sent });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/cron/follow-up");

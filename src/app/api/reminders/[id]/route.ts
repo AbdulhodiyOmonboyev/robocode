@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -19,3 +20,5 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const reminder = await db.reminder.update({ where: { id }, data });
   return NextResponse.json(reminder);
 }
+
+export const PATCH = withApiErrors(PATCHHandler, "PATCH /api/reminders/[id]");

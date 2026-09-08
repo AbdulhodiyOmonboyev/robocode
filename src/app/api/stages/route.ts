@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { withApiErrors } from "@/lib/api-handler";
 
 const createSchema = z.object({
   name: z.string().min(1, "Nom kiriting"),
   color: z.string().optional(),
 });
 
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -19,7 +20,7 @@ export async function GET() {
   return NextResponse.json(stages);
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -43,3 +44,6 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json(stage, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/stages");
+export const POST = withApiErrors(POSTHandler, "POST /api/stages");

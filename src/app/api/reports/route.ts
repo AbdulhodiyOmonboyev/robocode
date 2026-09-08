@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { startOfDay, endOfDay, parseISO } from "date-fns";
+import { startOfDay, endOfDay } from "date-fns";
 import type { Prisma } from "@/generated/prisma/client";
+import { withApiErrors, parseDateParam } from "@/lib/api-handler";
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -13,8 +14,16 @@ export async function GET(req: NextRequest) {
   const to = searchParams.get("to");
 
   const dateFilter: Prisma.DateTimeFilter = {};
-  if (from) dateFilter.gte = startOfDay(parseISO(from));
-  if (to) dateFilter.lte = endOfDay(parseISO(to));
+  if (from) {
+    const d = parseDateParam(from);
+    if (!d) return NextResponse.json({ error: "Noto'g'ri 'from' sanasi" }, { status: 400 });
+    dateFilter.gte = startOfDay(d);
+  }
+  if (to) {
+    const d = parseDateParam(to);
+    if (!d) return NextResponse.json({ error: "Noto'g'ri 'to' sanasi" }, { status: 400 });
+    dateFilter.lte = endOfDay(d);
+  }
   const where: Prisma.LeadWhereInput = Object.keys(dateFilter).length ? { createdAt: dateFilter } : {};
 
   const stages = await db.stage.findMany({ orderBy: { order: "asc" } });
@@ -71,3 +80,5 @@ export async function GET(req: NextRequest) {
     })),
   });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/reports");

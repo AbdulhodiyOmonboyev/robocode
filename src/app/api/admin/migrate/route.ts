@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PERMISSION_CATALOG } from "@/lib/permission-catalog";
+import { withApiErrors } from "@/lib/api-handler";
 
 // Existing boolean flags this User already has → the new Permission catalog rows they
 // should map to. Run once after the tables above exist, so nobody's current access is
@@ -338,7 +339,7 @@ const statements: string[] = [
   `CREATE INDEX IF NOT EXISTS "UserPermission_userId_idx" ON "UserPermission"("userId")`,
 ];
 
-export async function POST() {
+async function POSTHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
@@ -401,3 +402,5 @@ export async function POST() {
 
   return NextResponse.json({ done: true, ok, results, seeded, bridged });
 }
+
+export const POST = withApiErrors(POSTHandler, "POST /api/admin/migrate");

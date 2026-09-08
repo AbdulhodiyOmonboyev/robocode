@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Trophy } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
+import { fetchArray } from "@/lib/fetch-json";
 
 const BRAND = "#5E2CA5";
 
@@ -45,9 +46,9 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/leaderboard?period=${period}`)
-      .then(r => r.json())
-      .then(d => { setList(Array.isArray(d) ? d : []); setLoading(false); });
+    fetchArray<LeaderboardEntry>(`/api/leaderboard?period=${period}`)
+      .then(setList)
+      .finally(() => setLoading(false));
   }, [period]);
 
   const top3   = list.slice(0, 3);

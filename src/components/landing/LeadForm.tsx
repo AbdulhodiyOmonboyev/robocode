@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { User, Phone, BookOpen, MessageSquare, Check } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { isPhoneComplete } from "@/lib/utils";
@@ -18,9 +18,13 @@ export function LeadForm({ selectedCourse }: { selectedCourse?: string }) {
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (selectedCourse) setForm((f) => ({ ...f, courseName: selectedCourse }));
-  }, [selectedCourse]);
+  // `?course=` query paramdan kelgan tanlov. Effekt o'rniga render paytida
+  // solishtiramiz — React tavsiyasi bo'yicha bu ortiqcha qayta render bermaydi.
+  const [prevCourse, setPrevCourse] = useState(selectedCourse);
+  if (selectedCourse && selectedCourse !== prevCourse) {
+    setPrevCourse(selectedCourse);
+    setForm((f) => ({ ...f, courseName: selectedCourse }));
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,16 +41,23 @@ export function LeadForm({ selectedCourse }: { selectedCourse?: string }) {
     // The landing page's courses are marketing copy, not CRM Course records
     // (no matching courseId), so the choice is folded into the note instead.
     const note = [form.courseName ? `Kurs: ${form.courseName}` : null, form.note.trim() || null].filter(Boolean).join("\n");
-    const res = await fetch("/api/public/lead", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName: form.fullName, phone: form.phone, note, website: form.website }),
-    });
-    setLoading(false);
-    if (res.ok) setDone(true);
-    else {
-      const d = await res.json().catch(() => ({}));
-      setError(d.error || t.formErrGeneric);
+    try {
+      const res = await fetch("/api/public/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName: form.fullName, phone: form.phone, note, website: form.website }),
+      });
+      if (res.ok) setDone(true);
+      else {
+        const d = await res.json().catch(() => ({}));
+        setError(d.error || t.formErrGeneric);
+      }
+    } catch {
+      // Tarmoq uzilishi: `fetch` otiladi. Ushlamasak tugma abadiy
+      // "Yuborilmoqda..." holatida qolib ketadi.
+      setError(t.formErrGeneric);
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { subHours } from "date-fns";
+import { withApiErrors } from "@/lib/api-handler";
 
 // Vercel Cron — runs every minute: "* * * * *"
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   // Verify cron secret in production
   const authHeader = req.headers.get("authorization");
   if (process.env.NODE_ENV === "production" && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -64,3 +65,5 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ notified, timestamp: now });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/cron/check-reminders");

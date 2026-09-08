@@ -10,7 +10,7 @@ const MAP_LAT = 40.74694514180919;
 const MAP_LNG = 72.34549668260122;
 
 export function Contact() {
-  const { t, lang } = useLang();
+  const { t } = useLang();
 
   return (
     <section id="contact" className="border-b border-white/10">
@@ -24,7 +24,7 @@ export function Contact() {
             <div className="landing-card h-full min-h-[320px] overflow-hidden">
               <iframe
                 title={t.contactMapTitle}
-                src="https://yandex.com/map-widget/v1/?ll=72.34549668260122%2C40.74694514180919&z=15&theme=dark&pt=72.34549668260122,40.74694514180919"
+                src={`https://yandex.com/map-widget/v1/?ll=${MAP_LNG}%2C${MAP_LAT}&z=15&theme=dark&pt=${MAP_LNG},${MAP_LAT}`}
                 loading="lazy"
                 allowFullScreen
                 className="w-full h-full min-h-[320px]"
@@ -41,7 +41,7 @@ export function Contact() {
                 <div>
                   <h3 className="font-bold text-white text-sm">{t.footerAddressLabel}</h3>
                   <a
-                    href="https://yandex.com/maps/?ll=72.34549668260122,40.74694514180919&z=15"
+                    href={`https://yandex.com/maps/?ll=${MAP_LNG},${MAP_LAT}&z=15`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-1 block text-sm text-ink-muted hover:text-violet-accent transition-colors"

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { getInitials } from "@/lib/utils";
+import { fetchJson } from "@/lib/fetch-json";
 
 interface SessionUser {
   id: string;
@@ -56,8 +57,7 @@ export default function TeacherProfilePage() {
   }, [user]);
 
   useEffect(() => {
-    fetch("/api/teacher/profile")
-      .then((r) => r.json())
+    fetchJson<Partial<ProfileData>>("/api/teacher/profile", {})
       .then((d) => setProfile({
         phone: d.phone ?? "",
         language: d.language ?? "",

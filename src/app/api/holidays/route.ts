@@ -2,19 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const holidays = await db.holiday.findMany({ orderBy: { date: "asc" } });
   return NextResponse.json(holidays);
 }
 
-const schema = z.object({ date: z.string().min(1), name: z.string().min(1, "Nom kiriting") });
+const schema = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo\'lishi kerak"), name: z.string().min(1, "Nom kiriting") });
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
@@ -30,3 +31,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Bu sana allaqachon qo'shilgan" }, { status: 400 });
   }
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/holidays");
+export const POST = withApiErrors(POSTHandler, "POST /api/holidays");

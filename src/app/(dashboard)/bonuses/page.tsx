@@ -44,7 +44,7 @@ export default function BonusesPage() {
     setLoading(false);
   }, [month]);
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { fetch("/api/users").then(r => r.json()).then(d => setUsers(Array.isArray(d) ? d : [])); }, []);
+  useEffect(() => { fetch("/api/users").then(r => r.json()).then(d => setUsers(Array.isArray(d) ? d : [])).catch(() => {}); }, []);
 
   const save = async () => {
     if (!form.userId) { toast.error("Xodimni tanlang"); return; }

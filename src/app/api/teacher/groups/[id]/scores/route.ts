@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { getTeacherGroupIds } from "@/lib/teacher";
 import { canManageGrades } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
 async function assertOwnsGroup(userId: string, role: string, groupId: string) {
   if (role === "SUPER_ADMIN" || role === "ADMIN") return true;
@@ -16,7 +17,7 @@ function toDate(s: string) {
 }
 
 // GET ?month=YYYY-MM -> { students, journal: { [date]: { [leadId]: score } } }
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id: groupId } = await params;
@@ -52,11 +53,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 const saveSchema = z.object({
-  date: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo\'lishi kerak"),
   records: z.array(z.object({ leadId: z.string(), score: z.number().min(0).max(100) })),
 });
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function POSTHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canManageGrades(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -82,3 +83,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   return NextResponse.json({ success: true, saved: records.length });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/teacher/groups/[id]/scores");
+export const POST = withApiErrors(POSTHandler, "POST /api/teacher/groups/[id]/scores");

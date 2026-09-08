@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -21,3 +22,5 @@ export async function GET() {
 
   return NextResponse.json({ groups });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/teacher/dashboard");

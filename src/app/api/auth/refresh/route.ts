@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
 // Bu route har doim Node.js runtime'da ishlaydi (middleware/edge emas), shuning uchun
 // bu yerda Prisma'dan bemalol foydalanish mumkin. Admin birovning rolini yoki
 // ruxsatlarini o'zgartirganda, o'sha foydalanuvchi qayta login qilmasdan ham yangi
 // huquqlarini olishi uchun frontend shu route'ni davriy tekshiradi.
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -34,3 +35,5 @@ export async function GET() {
 
   return NextResponse.json(dbUser);
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/auth/refresh");

@@ -90,7 +90,7 @@ export default function UsersPage() {
       toast.success("Hodim o'chirildi");
       loadUsers();
     } else {
-      const err = await res.json();
+      const err = await res.json().catch(() => ({}));
       toast.error(err.error || "Xatolik yuz berdi");
     }
   };

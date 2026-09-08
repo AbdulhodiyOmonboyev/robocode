@@ -5,13 +5,14 @@ import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { LEAD_STATUS_LABELS, LEAD_SOURCE_LABELS } from "@/lib/constants";
 import { buildLeadsWhere } from "@/lib/leads";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
 // Exports exactly the leads the /leads table currently shows — same filters
 // (search, status, course, source, assignedTo, date range, archived/frozen toggles)
 // as GET /api/leads, built via the shared buildLeadsWhere() helper.
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -48,3 +49,5 @@ export async function GET(req: NextRequest) {
     },
   });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/leads/export");

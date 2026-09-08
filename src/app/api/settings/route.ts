@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import type { Session } from "next-auth";
+import { withApiErrors } from "@/lib/api-handler";
 
 const schema = z.object({
   key: z.string().min(1),
@@ -13,7 +14,7 @@ function canManage(user: Session["user"]) {
   return ["SUPER_ADMIN", "ADMIN"].includes(user.role);
 }
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(map);
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canManage(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -45,3 +46,6 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json({ key: setting.key, value: setting.value });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/settings");
+export const POST = withApiErrors(POSTHandler, "POST /api/settings");

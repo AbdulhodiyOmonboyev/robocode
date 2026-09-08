@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Download, ScrollText } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
+import { fetchArray } from "@/lib/fetch-json";
 
 const BRAND = "#5E2CA5";
 
@@ -43,7 +44,7 @@ export default function LogsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/logs").then(r => r.json()).then(d => { setLogs(Array.isArray(d) ? d : []); setLoading(false); });
+    fetchArray<AuditLogEntry>("/api/logs").then(setLogs).finally(() => setLoading(false));
   }, []);
 
   const exportCSV = () => {

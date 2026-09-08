@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTeacherGroupIds } from "@/lib/teacher";
 import { canManageGrades } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
 async function assertOwnsGroup(userId: string, role: string, groupId: string) {
   if (role === "SUPER_ADMIN" || role === "ADMIN") return true;
@@ -10,7 +11,7 @@ async function assertOwnsGroup(userId: string, role: string, groupId: string) {
   return groupIds.includes(groupId);
 }
 
-export async function DELETE(
+async function DELETEHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; examId: string }> }
 ) {
@@ -28,3 +29,5 @@ export async function DELETE(
   await db.exam.delete({ where: { id: examId } });
   return NextResponse.json({ success: true });
 }
+
+export const DELETE = withApiErrors(DELETEHandler, "DELETE /api/teacher/groups/[id]/exams/[examId]");

@@ -5,8 +5,9 @@ import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { LEAD_STATUS_LABELS, LEAD_SOURCE_LABELS } from "@/lib/constants";
 import { Prisma, type LeadStatus } from "@/generated/prisma/client";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -63,3 +64,5 @@ export async function GET(req: NextRequest) {
     },
   });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/reports/export");

@@ -3,8 +3,9 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, format } from "date-fns";
 import type { Prisma } from "@/generated/prisma/client";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -182,3 +183,5 @@ export async function GET() {
     recentActivities,
   });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/dashboard");

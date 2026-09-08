@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDebtors } from "@/lib/debtors";
 import { hasPermission } from "@/lib/rbac";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -20,3 +21,5 @@ export async function GET(req: NextRequest) {
   const result = await getDebtors(month);
   return NextResponse.json(result);
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/debtors");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ArrowRight, PlayCircle } from "lucide-react";
+import { PlayCircle } from "lucide-react";
 import { useLang } from "./LangContext";
 
 export function Hero() {

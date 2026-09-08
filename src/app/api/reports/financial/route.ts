@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canSeeReports } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -108,7 +109,7 @@ function toCSV(report: Awaited<ReturnType<typeof buildReport>>): string {
   return "﻿" + lines.join("\r\n");
 }
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const isAdminRole = ["SUPER_ADMIN", "ADMIN"].includes(session.user.role);
@@ -133,3 +134,5 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(report);
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/reports/financial");

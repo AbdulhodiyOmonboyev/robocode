@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { getTeacherGroupIds } from "@/lib/teacher";
 import { canManageGrades } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
 async function assertOwnsGroup(userId: string, role: string, groupId: string) {
   if (role === "SUPER_ADMIN" || role === "ADMIN") return true;
@@ -15,7 +16,7 @@ const saveSchema = z.object({
   records: z.array(z.object({ leadId: z.string(), score: z.number().min(0).max(100) })),
 });
 
-export async function POST(
+async function POSTHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; exerciseId: string }> }
 ) {
@@ -46,3 +47,5 @@ export async function POST(
 
   return NextResponse.json({ success: true, saved: parsed.data.records.length });
 }
+
+export const POST = withApiErrors(POSTHandler, "POST /api/teacher/groups/[id]/exercises/[exerciseId]/scores");

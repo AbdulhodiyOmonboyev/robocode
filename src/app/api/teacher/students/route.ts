@@ -3,13 +3,14 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTeacherGroupIds } from "@/lib/teacher";
 import { canSeePayments, canSeeStudentContacts } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
 function currentMonth() {
   const t = new Date(Date.now() + 5 * 3600 * 1000);
   return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -63,3 +64,5 @@ export async function GET(req: NextRequest) {
     })),
   });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/teacher/students");

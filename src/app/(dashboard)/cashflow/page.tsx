@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchJson } from "@/lib/fetch-json";
 
 function money(v: number) { return Number(v || 0).toLocaleString("ru-RU"); }
 function short(v: number) { return v >= 1000000 ? (v / 1000000).toFixed(1) + "M" : Math.round(v / 1000) + "k"; }
@@ -17,7 +18,7 @@ export default function CashflowPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/cashflow").then(r => r.json()).then(d => { setData(d); setLoading(false); });
+    fetchJson<CashflowData | null>("/api/cashflow", null).then(setData).finally(() => setLoading(false));
   }, []);
 
   if (loading) {

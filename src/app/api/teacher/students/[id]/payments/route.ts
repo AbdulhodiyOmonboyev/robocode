@@ -3,8 +3,9 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTeacherGroupIds } from "@/lib/teacher";
 import { canSeePayments } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canSeePayments(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -30,3 +31,5 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   return NextResponse.json({ payments });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/teacher/students/[id]/payments");

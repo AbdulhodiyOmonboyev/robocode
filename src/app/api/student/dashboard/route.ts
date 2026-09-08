@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
 function currentMonth() {
   const t = new Date(Date.now() + 5 * 3600 * 1000);
   return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session || session.user.accountType !== "student") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -66,3 +67,5 @@ export async function GET() {
     payment: { balance, month: currentMonth() },
   });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/student/dashboard");

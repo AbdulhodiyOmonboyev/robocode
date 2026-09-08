@@ -3,8 +3,9 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTeacherGroupIds } from "@/lib/teacher";
 import type { Prisma } from "@/generated/prisma/client";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -56,3 +57,5 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ exercises });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/teacher/homework");

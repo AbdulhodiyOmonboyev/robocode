@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import type { Session } from "next-auth";
 import { canSeeReports, canManagePayments } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ function currentMonth() {
   return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdmin(session.user) && !canSeeReports(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -44,12 +45,12 @@ export async function GET(req: NextRequest) {
 const schema = z.object({
   userId: z.string().min(1, "Xodimni tanlang"),
   amount: z.coerce.number().positive("Summa noto'g'ri"),
-  month: z.string().min(7),
+  month: z.string().regex(/^\d{4}-\d{2}$/, "Oy YYYY-MM formatida bo\'lishi kerak"),
   type: z.enum(["salary", "bonus"]).optional(),
   note: z.string().optional().nullable(),
 });
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdmin(session.user) && !canManagePayments(session.user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -72,3 +73,6 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json(record, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/payroll");
+export const POST = withApiErrors(POSTHandler, "POST /api/payroll");

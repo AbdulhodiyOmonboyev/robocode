@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { PERMISSION_CATALOG, TIER_LABELS, type PermissionTier } from "@/lib/permission-catalog";
 import { cn, getInitials } from "@/lib/utils";
+import { fetchArray } from "@/lib/fetch-json";
 
 interface StaffUser { id: string; fullName: string; username: string; role: string; }
 
@@ -37,9 +38,8 @@ export default function PermissionsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/users")
-      .then((r) => r.json())
-      .then((data) => setUsers(Array.isArray(data) ? data : []))
+    fetchArray<StaffUser>("/api/users")
+      .then(setUsers)
       .finally(() => setLoadingUsers(false));
   }, []);
 

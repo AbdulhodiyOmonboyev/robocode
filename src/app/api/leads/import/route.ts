@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import { hasPermission } from "@/lib/rbac";
 import { logAudit } from "@/lib/audit";
 import type { LeadSource } from "@/generated/prisma/client";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ function pick(row: Record<string, unknown>, keys: string[]): string {
   return "";
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -118,3 +119,5 @@ export async function POST(req: NextRequest) {
     errors,
   });
 }
+
+export const POST = withApiErrors(POSTHandler, "POST /api/leads/import");

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { getTeacherGroupIds } from "@/lib/teacher";
+import { withApiErrors } from "@/lib/api-handler";
 
 const updateSchema = z.object({
   status: z.enum(["unchecked", "checked"]).optional(),
@@ -10,7 +11,7 @@ const updateSchema = z.object({
   teacherNote: z.string().optional().nullable(),
 });
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ submissionId: string }> }) {
+async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ submissionId: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { submissionId } = await params;
@@ -45,3 +46,5 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ su
 
   return NextResponse.json(updated);
 }
+
+export const PATCH = withApiErrors(PATCHHandler, "PATCH /api/teacher/homework/[submissionId]");

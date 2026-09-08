@@ -33,8 +33,6 @@ interface Task {
 
 type Board = Record<TaskStatus, Task[]>;
 
-const BRAND = "#5E2CA5";
-
 const COLUMNS: { id: TaskStatus; label: string }[] = [
   { id: "TODO", label: "Bajarilmagan" },
   { id: "IN_PROGRESS", label: "Jarayonda" },
@@ -73,8 +71,8 @@ export default function TasksPage() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    fetch("/api/users").then(r => r.json()).then(d => setUsers(Array.isArray(d) ? d : []));
-    fetch("/api/tags").then(r => r.json()).then(d => setTags(Array.isArray(d) ? d : []));
+    fetch("/api/users").then(r => r.json()).then(d => setUsers(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch("/api/tags").then(r => r.json()).then(d => setTags(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   const setFilter = (key: keyof typeof filters, value: string) =>

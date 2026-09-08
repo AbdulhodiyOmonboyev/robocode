@@ -5,6 +5,7 @@ import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import type { Prisma } from "@/generated/prisma/client";
 import { hasPermission } from "@/lib/rbac";
+import { withApiErrors } from "@/lib/api-handler";
 
 const updateSchema = z.object({
   fullName: z.string().min(2).optional(),
@@ -38,7 +39,7 @@ const updateSchema = z.object({
   tagIds: z.array(z.string()).optional(),
 });
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json(lead);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -122,7 +123,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json(updated);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function DELETEHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -136,3 +137,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   await logAudit(user.id, user.name || user.fullName, "lead_deleted", "Lead", id);
   return NextResponse.json({ success: true });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/leads/[id]");
+export const PATCH = withApiErrors(PATCHHandler, "PATCH /api/leads/[id]");
+export const DELETE = withApiErrors(DELETEHandler, "DELETE /api/leads/[id]");

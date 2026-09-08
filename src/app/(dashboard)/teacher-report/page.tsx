@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Download, CalendarCheck, Star, Users2 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
+import { fetchArray } from "@/lib/fetch-json";
 
 const BRAND = "#5E2CA5";
 
@@ -26,9 +27,9 @@ export default function TeacherReportPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/reports/teacher-performance")
-      .then(r => r.json())
-      .then(d => { setList(Array.isArray(d) ? d : []); setLoading(false); });
+    fetchArray<TeacherStat>("/api/reports/teacher-performance")
+      .then(setList)
+      .finally(() => setLoading(false));
   }, []);
 
   const exportCSV = async () => {

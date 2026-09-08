@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import { hasPermission } from "@/lib/rbac";
+import { withApiErrors } from "@/lib/api-handler";
 
 const updateSchema = z.object({
   fullName: z.string().min(2).optional(),
@@ -36,7 +37,7 @@ const updateSchema = z.object({
   telegram: z.string().optional().nullable(),
 });
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -120,7 +121,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json(updated);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function DELETEHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -138,3 +139,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   await db.user.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }
+
+export const PATCH = withApiErrors(PATCHHandler, "PATCH /api/users/[id]");
+export const DELETE = withApiErrors(DELETEHandler, "DELETE /api/users/[id]");

@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+async function GETHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const types = await db.paymentType.findMany({ orderBy: { createdAt: "asc" } });
@@ -14,7 +15,7 @@ export async function GET() {
 
 const schema = z.object({ name: z.string().min(1, "Nom kiriting") });
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
@@ -26,3 +27,6 @@ export async function POST(req: NextRequest) {
   const t = await db.paymentType.create({ data: { name: parsed.data.name.trim() } });
   return NextResponse.json(t, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/payment-types");
+export const POST = withApiErrors(POSTHandler, "POST /api/payment-types");

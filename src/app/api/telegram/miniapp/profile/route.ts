@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyTelegramInitData } from "@/lib/telegram-auth";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ function ym(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const token = await getToken();
   if (!token) return NextResponse.json({ error: "Bot sozlanmagan" }, { status: 500 });
 
@@ -127,3 +128,5 @@ export async function POST(req: NextRequest) {
     },
   });
 }
+
+export const POST = withApiErrors(POSTHandler, "POST /api/telegram/miniapp/profile");

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
+import { fetchArray, fetchJson } from "@/lib/fetch-json";
 
 const DAYS_UZ = ["Yak", "Du", "Se", "Ch", "Pa", "Ju", "Sh"];
 const DAYS_EN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -49,9 +50,12 @@ export default function SchedulePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/timeslots").then(r => r.json()),
-      fetch("/api/leads?limit=200").then(r => r.json()).then(d => d.leads),
-    ]).then(([s, l]) => { setSlots(s); setLeads(l); setLoading(false); });
+      fetchArray<Slot>("/api/timeslots"),
+      fetchJson<{ leads?: Lead[] }>("/api/leads?limit=200", {}),
+    ]).then(([s, d]) => {
+      setSlots(s);
+      setLeads(Array.isArray(d.leads) ? d.leads : []);
+    }).finally(() => setLoading(false));
   }, []);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));

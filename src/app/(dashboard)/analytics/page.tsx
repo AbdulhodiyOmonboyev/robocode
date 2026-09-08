@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Users, GraduationCap, Wallet, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchJson } from "@/lib/fetch-json";
 
 interface AnalyticsData {
   bySource: { source: string; count: number; enrolled: number; revenue: number; conversion: number }[];
@@ -27,7 +28,7 @@ export default function AnalyticsPage() {
   const [period, setPeriod] = useState("6");
 
   useEffect(() => {
-    fetch("/api/analytics").then(r => r.json()).then(d => { setData(d); setLoading(false); });
+    fetchJson<AnalyticsData | null>("/api/analytics", null).then(setData).finally(() => setLoading(false));
   }, []);
 
   const monthly = useMemo(() => {

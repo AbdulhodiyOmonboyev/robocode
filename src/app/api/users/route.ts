@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { hasPermission } from "@/lib/rbac";
+import { withApiErrors } from "@/lib/api-handler";
 
 const createUserSchema = z.object({
   fullName: z.string().min(2, "Ism kamida 2 harf"),
@@ -39,7 +40,7 @@ const createUserSchema = z.object({
   canManageExpenses: z.boolean().default(false),
 });
 
-export async function GET(req: NextRequest) {
+async function GETHandler() {
   const session = await auth();
 
   if (!session) {
@@ -106,7 +107,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(users);
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   // ------------------------------------------------------------
   // 1. Sessionni tekshiramiz
   // ------------------------------------------------------------
@@ -290,3 +291,6 @@ export async function POST(req: NextRequest) {
     }
   );
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/users");
+export const POST = withApiErrors(POSTHandler, "POST /api/users");

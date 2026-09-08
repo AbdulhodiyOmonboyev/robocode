@@ -3,13 +3,14 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { canManageGrades, isManager } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
 const schema = z.object({
   amount: z.coerce.number().int(),
   reason: z.string().min(1, "Sabab kiriting"),
 });
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function POSTHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const user = session.user;
@@ -30,3 +31,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   return NextResponse.json({ success: true, coins: lead.coins });
 }
+
+export const POST = withApiErrors(POSTHandler, "POST /api/leads/[id]/coins");

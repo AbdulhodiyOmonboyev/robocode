@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
 // One-off, admin-only staff import. Idempotent: an existing username is left
 // completely untouched (including its password), so re-running never resets a
 // staff member who has already changed theirs.
-const SHARED_PASSWORD = "robo9005";
+// Kodda qattiq yozilgan parol qolmasligi uchun env orqali almashtiriladi;
+// mavjud xodimlar loginini buzmaslik uchun eski qiymat default bo'lib qoladi.
+const SHARED_PASSWORD = process.env.SEED_STAFF_PASSWORD || "robo9005";
 const BCRYPT_ROUNDS = 12;
 
 const STAFF: { fullName: string; username: string; phone: string }[] = [
@@ -25,7 +28,7 @@ const STAFF: { fullName: string; username: string; phone: string }[] = [
   { fullName: "Mushtariy", username: "mushtariy", phone: "+998934733438" },
 ];
 
-export async function POST() {
+async function POSTHandler() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
@@ -73,3 +76,5 @@ export async function POST() {
 
   return NextResponse.json({ ok: true, created: created.length, createdUsernames: created, skipped });
 }
+
+export const POST = withApiErrors(POSTHandler, "POST /api/admin/seed-staff");

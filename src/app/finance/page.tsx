@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Plus, Wallet, TrendingDown, Banknote, BarChart3 } from "lucide-react";
@@ -32,12 +32,14 @@ export default function FinancePage() {
   const canManageExpenses = isAdminRole || !!session?.user?.canManageExpenses;
   const canSeeReports = isAdminRole || !!session?.user?.canSeeReports;
 
-  const availableTabs: { key: Tab; label: string; icon: typeof Wallet }[] = [
+  // useMemo bo'lmasa massiv har renderda qaytadan yaratiladi va quyidagi
+  // useEffect ham har renderda ishga tushib ketadi.
+  const availableTabs: { key: Tab; label: string; icon: typeof Wallet }[] = useMemo(() => [
     ...(canSeePayments ? [{ key: "payments" as const, label: "To'lovlar", icon: Wallet }] : []),
     ...(canManageExpenses ? [{ key: "expenses" as const, label: "Xarajatlar", icon: TrendingDown }] : []),
     ...(canSeeReports ? [{ key: "payroll" as const, label: "Maoshlar", icon: Banknote }] : []),
     ...(canSeeReports ? [{ key: "report" as const, label: "Hisobot", icon: BarChart3 }] : []),
-  ];
+  ], [canSeePayments, canManageExpenses, canSeeReports]);
 
   const [tab, setTab] = useState<Tab | null>(null);
   useEffect(() => {

@@ -15,6 +15,14 @@ const eslintConfig = defineConfig([
     "migrate*.cjs",
     "set-token.cjs",
     "test-db.cjs",
+    // Generatsiya qilingan va build natijasi bo'lgan kod — lint qilinmaydi.
+    "src/generated/**",
+    "**/generated/prisma/**",
+    "**/dist/**",
+    "**/node_modules/**",
+    // Eski (Vite + Express) versiya: alohida ilova, Next lint qoidalari unga tegishli emas.
+    "frontend/**",
+    "backend/**",
   ]),
   {
     rules: {

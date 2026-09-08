@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Trophy, Wallet, Users, MapPin, BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { WEEKDAYS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { fetchJson } from "@/lib/fetch-json";
 
 interface Group {
   id: string;
@@ -17,7 +17,6 @@ interface Group {
 }
 
 const JS_DAY_TO_VALUE = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const dayLabel = (v: string) => WEEKDAYS.find((d) => d.value === v)?.label || v;
 
 export default function TeacherDashboardPage() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -25,9 +24,8 @@ export default function TeacherDashboardPage() {
   const [filter, setFilter] = useState<"all" | "today">("all");
 
   useEffect(() => {
-    fetch("/api/teacher/dashboard")
-      .then((r) => r.json())
-      .then((d) => setGroups(Array.isArray(d?.groups) ? d.groups : []))
+    fetchJson<{ groups?: Group[] }>("/api/teacher/dashboard", {})
+      .then((d) => setGroups(Array.isArray(d.groups) ? d.groups : []))
       .finally(() => setLoading(false));
   }, []);
 

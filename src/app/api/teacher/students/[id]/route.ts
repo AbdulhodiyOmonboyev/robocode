@@ -3,8 +3,9 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTeacherGroupIds } from "@/lib/teacher";
 import { canSeeStudentContacts } from "@/lib/permissions";
+import { withApiErrors } from "@/lib/api-handler";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
@@ -40,3 +41,5 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     phone: canSeeStudentContacts(session.user) ? lead.phone : null,
   });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/teacher/students/[id]");

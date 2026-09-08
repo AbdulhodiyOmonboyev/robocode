@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { startOfDay, endOfDay, addDays } from "date-fns";
 import { Prisma, type ReminderStatus } from "@/generated/prisma/client";
+import { withApiErrors, intParam } from "@/lib/api-handler";
 
 const createSchema = z.object({
   leadId: z.string(),
@@ -15,14 +16,14 @@ const createSchema = z.object({
   notifyEmail: z.boolean().default(false),
 });
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = session.user;
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") || "";
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const limit = intParam(searchParams.get("limit"), 50, 1, 500);
 
   const now = new Date();
   const todayStart = startOfDay(now);
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ reminders, overdue, today, upcoming, done, totalToday });
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -75,3 +76,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(reminder, { status: 201 });
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/reminders");
+export const POST = withApiErrors(POSTHandler, "POST /api/reminders");

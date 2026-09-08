@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { withApiErrors } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
 // Public endpoint: returns brand logo + name for login/sidebar (no auth required).
-export async function GET() {
+async function GETHandler() {
   try {
     const settings = await db.setting.findMany({
       where: { key: { in: ["brand_logo", "center_name"] } },
@@ -19,3 +20,5 @@ export async function GET() {
     return NextResponse.json({ logo: "", name: "Robocode CRM" });
   }
 }
+
+export const GET = withApiErrors(GETHandler, "GET /api/branding");
