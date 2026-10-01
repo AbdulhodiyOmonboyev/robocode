@@ -12,6 +12,7 @@ import { Testimonials } from "./Testimonials";
 import { StartupStudio } from "./StartupStudio";
 import { Partners } from "./Partners";
 import { Team } from "./Team";
+import { Objections } from "./Objections";
 import { LeadForm } from "./LeadForm";
 import { Contact } from "./Contact";
 import { Footer } from "./Footer";
@@ -47,6 +48,7 @@ export function LandingPage({ centerName, logo }: { centerName: string; logo: st
           <StartupStudio />
           <Partners />
           <Team />
+          <Objections />
           <LeadForm selectedCourse={selectedCourse} />
           <Contact />
         </main>

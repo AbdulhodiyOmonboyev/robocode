@@ -40,6 +40,7 @@ export const T = {
     featuresTitle: "Sizni nimalar kutyapti",
     whyUsLabel: "Nega biz",
     whyUsTitle: "Bizni tanlash uchun sabablar",
+    objectionsTitle: "Sizni nima to'xtatyapti?",
     coursesLabel: "Kurslar",
     coursesTitle: "Sizga mos yo’nalishni tanlang",
     coursesPriceNote: "Barcha kurslarimiz atiga 743 ming so'mdan",
@@ -107,6 +108,7 @@ export const T = {
     featuresTitle: "Что вас ждёт",
     whyUsLabel: "Почему мы",
     whyUsTitle: "Причины выбрать нас",
+    objectionsTitle: "Что вас останавливает?",
     coursesLabel: "Курсы",
     coursesTitle: "Выберите подходящее направление",
     coursesPriceNote: "Все наши курсы от 743 тысяч сумов",
@@ -173,6 +175,7 @@ export const T = {
     featuresTitle: "What’s waiting for you",
     whyUsLabel: "Why us",
     whyUsTitle: "Reasons to choose us",
+    objectionsTitle: "What's holding you back?",
     coursesLabel: "Courses",
     coursesTitle: "Choose the track that fits you",
     coursesPriceNote: "All our courses from 743,000 UZS",
@@ -289,6 +292,29 @@ export const WHY_US: Record<
     { icon: "cpu", title: "Modern equipment", desc: "New computers and robotics hardware." },
     { icon: "users", title: "Small groups", desc: "Individual attention for every student." },
     { icon: "award", title: "Certificate", desc: "A certificate for every graduate of the course." },
+  ],
+};
+
+// Har bir yozilishni to'xtatadigan real e'tirozga to'g'ridan-to'g'ri, qisqa javob —
+// LeadForm'dan oldin, oxirgi shubhalarni yo'qotish uchun.
+export const OBJECTIONS: Record<Lang, { q: string; a: string }[]> = {
+  uz: [
+    { q: "Yoshim katta, kech emasmi?", a: "Bizda 16 dan 45 yoshgacha o'quvchilar bor. Dasturlashni boshlashga hech qachon kech emas." },
+    { q: "Vaqtim yo'q, ishlayman", a: "Kechki va dam olish kuni guruhlari bor — ishni tashlab ketish shart emas." },
+    { q: "Bilimim yo'q, noldan boshlayman", a: "Barcha kurslar noldan boshlanadi — oldindan bilim talab qilinmaydi." },
+    { q: "Pulim yetarli emas", a: "Oylik bo'lib-bo'lib to'lash imkoniyati bor — katta summa bir yo'la kerak emas." },
+  ],
+  ru: [
+    { q: "Мне уже поздно начинать?", a: "У нас учатся от 16 до 45 лет. Начинать программирование никогда не поздно." },
+    { q: "Нет времени, я работаю", a: "Есть вечерние группы и группы выходного дня — работу бросать не нужно." },
+    { q: "Нет знаний, начинаю с нуля", a: "Все курсы начинаются с нуля — предварительные знания не требуются." },
+    { q: "Не хватает денег", a: "Есть помесячная оплата — вся сумма сразу не нужна." },
+  ],
+  en: [
+    { q: "Am I too old to start?", a: "Our students range from 16 to 45. It's never too late to start programming." },
+    { q: "I don't have time, I work", a: "We have evening and weekend groups — no need to quit your job." },
+    { q: "I have no experience", a: "Every course starts from zero — no prior knowledge required." },
+    { q: "I can't afford it", a: "Monthly installment payments are available — no need for the full amount upfront." },
   ],
 };
 
