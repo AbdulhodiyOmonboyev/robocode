@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Reveal } from "./Reveal";
 import { useLang } from "./LangContext";
 import { COURSES } from "./translations";
@@ -30,6 +31,15 @@ export function Courses() {
                      </li>
                    ))}
                 </ul>
+                {/* `?course=<name>#ariza` — LandingPage'dagi useSearchParams effekti buni
+                    o'qib, pastdagi ariza formasiga scroll qiladi va kursni oldindan tanlaydi. */}
+                <Link
+                  href={`?course=${encodeURIComponent(c.name)}#ariza`}
+                  scroll={false}
+                  className="mt-4 inline-flex items-center justify-center text-xs font-semibold text-violet-accent hover:underline"
+                >
+                  {t.navCta}
+                </Link>
               </div>
             </Reveal>
           ))}

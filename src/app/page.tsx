@@ -67,7 +67,7 @@ export default async function Home() {
     telephone: ["+998998999005", "+998930759005"],
     address: { "@type": "PostalAddress", addressLocality: "Andijon", addressCountry: "UZ" },
     geo: { "@type": "GeoCoordinates", latitude: MAP_LAT, longitude: MAP_LNG },
-    sameAs: ["https://instagram.com/aka.yakubov", "https://t.me/robocodee", "https://robocode.uz"],
+    sameAs: ["https://instagram.com/robocode.uz", "https://t.me/robocode_andijan"],
   };
 
   const coursesJsonLd = COURSES.uz.map((c) => ({
