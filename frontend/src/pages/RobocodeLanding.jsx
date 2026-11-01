@@ -2539,7 +2539,7 @@ export default function RobocodeLanding() {
   </div>
 
   {/* INTERACTIVE ROBOT AI CHAT WINDOW (Opens on the right side) */}
-  <div id="robot-chat-window" className="fixed bottom-24 right-4 sm:right-6 z-50 w-[360px] sm:w-[390px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[82vh] glass-card rounded-3xl border border-brand-neon/60 shadow-2xl flex flex-col overflow-hidden hidden transition-all duration-300">
+  <div id="robot-chat-window" className="fixed bottom-24 right-4 sm:right-6 z-50 w-[360px] sm:w-[390px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[82vh] bg-brand-card rounded-3xl border border-brand-neon/60 shadow-2xl flex flex-col overflow-hidden hidden transition-all duration-300">
     {/* Chat Header */}
     <div className="px-5 py-4 bg-brand-card/90 border-b border-brand-border flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3">

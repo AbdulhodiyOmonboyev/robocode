@@ -1,0 +1,16 @@
+# Faqat frontend (Vite + React) statik sayt sifatida deploy qilinadi.
+[build]
+  base = "frontend"
+  command = "npm ci --include=dev && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Ildizdagi Next.js ilovasi uchun avtomatik qo'shiladigan plaginni o'chirish
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+# React Router (BrowserRouter) uchun — barcha yo'llar index.html ga
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
